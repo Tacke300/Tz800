@@ -233,8 +233,27 @@
       document.getElementById('buttonMenu').style.display = 'flex';
     }
 
-    function showBase() {
-      alert("Bạn nhấn nút BASE");
+    async function showBase() {
+      try {
+        const { data, error } = await client
+          .from('apikey')
+          .select('api_key, api_secret, passphrase')
+          .eq('telegram_id', userTelegramId)
+          .single();
+
+        if (data) {
+          document.getElementById('apikeyinput').value = data.api_key || '';
+          document.getElementById('apisecretinput').value = data.api_secret || '';
+          document.getElementById('passphraseinput').value = data.passphrase || '';
+
+          showPopup('popup');
+        } else {
+          alert("Không tìm thấy API để hiển thị.");
+        }
+      } catch (err) {
+        console.error('Lỗi lấy dữ liệu BASE:', err);
+        alert("Lỗi khi lấy dữ liệu BASE.");
+      }
     }
 
     // Gọi khi load trang
