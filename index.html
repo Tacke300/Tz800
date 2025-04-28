@@ -1,73 +1,258 @@
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-  }
-</style>
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>TZ800 - BOT TRADE OKX</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TZ800 - TRADE BOT OKX</title>
+
   <style>
-    html, body {
+    /* Marquee chạy ngang */
+    .marquee {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      font-size: 24px;
+      font-weight: bold;
+      color: transparent;
+      background-color: #000;
+      padding: 10px 0;
+      z-index: 9999;
+      text-align: center;
+      background-clip: text;
+      -webkit-background-clip: text;
+      background-image: linear-gradient(90deg, #ff00cc, #3333ff, #00ffcc);
+      animation: moveLeftRight 1.5s linear infinite alternate;
+    }
+
+    @keyframes moveLeftRight {
+      0% {
+        transform: translateX(0%);
+      }
+      100% {
+        transform: translateX(calc(100% - 100vw));
+      }
+    }
+
+    body {
       margin: 0;
       padding: 0;
-      height: 100%;
-    }
-    .container {
-      width: 100%;
-      height: 100%;
+      padding-top: 60px; /* Chừa chỗ cho marquee trên cùng */
+      height: 100vh;
+      background-color: #000000;
+      color: #ffffff;
+      font-family: 'Arial', sans-serif;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(to right, #00c6ff, #0072ff); /* Màu nền đẹp */
-      color: white;
-      font-family: Arial, sans-serif;
     }
-    h1 {
-      font-size: 2.5em;
+    .div1 {
+      display: flex;
+    }
+    .box {
+      width: 50%;
+      height: 200px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      font-size: 2rem;
+      background-color: #000;
+      border: 1px solid #ffffff;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      border-radius: 10px;
+    }
+    .box.green {
+      font-size: 20px;
+      color: lime;
+    }
+    .box.red {
+      font-size: 20px;
+      color: red;
+    }
+    .all {
+      background-color: #888;
       text-align: center;
+      border: 1px solid #ffffff;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      border-radius: 10px;
+    }
+    .menu {
+      display: flex;
+      width: 100%;
+      border: 1px solid #ffffff;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .left-button {
+      margin-right: auto;
+    }
+    .right-button {
+      margin-left: auto;
+    }
+    .popup, .apikey {
+      display: none;
+      margin-top: 20px;
+      padding: 20px;
+      background-color: #222;
+      border: 1px solid #555;
+      border-radius: 8px;
+      animation: slideUp 0.5s ease forwards;
+    }
+    @keyframes slideUp {
+      0% {
+        transform: translateY(100vh);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+      }
     }
     button {
-      padding: 15px 30px;
-      font-size: 1.2em;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #444;
+      color: white;
       border: none;
-      border-radius: 8px;
-      background: white;
-      color: #0072ff;
-      font-weight: bold;
+      border-radius: 5px;
       cursor: pointer;
-      margin-top: 20px;
+      margin: 5px;
     }
     button:hover {
-      background: #e0e0e0;
+      background-color: #666;
+    }
+    input {
+      display: block;
+      margin: 10px 0;
+      padding: 8px;
+      width: 100%;
+      border-radius: 5px;
+      border: 1px solid #888;
     }
   </style>
+
 </head>
 <body>
 
-  <div class="container">
-    <h1>Chào bạn đến với WebApp</h1>
-    <button onclick="chao()">Bấm vào đây</button>
+  <!-- Marquee chạy ngang -->
+  <div class="marquee">
+    TZ800 - TRADE BOT OKX
+  </div>
+
+  <div class="div1">
+    <div class="box green">
+      <p>WIN</p>
+    </div>
+    <div class="box red">
+      <p>LOSE</p>
+    </div>
+  </div>
+<div class="all">
+  <p>ID: <span id="userId">Đang tải...</span></p> 
+</div>
+
+  <br><br><br>
+
+  <div class="menu" id="buttonMenu">
+    <button onclick="showPopup('popup')" class="left-button">SET API</button>
+    <button onclick="showPopup('apikey')" class="right-button">?</button>
+  </div>
+  <div class="menu">
+    <button onclick="showbase('base')" class="left-button">BASE</button>
+  </div>
+
+  <!-- POPUP 1 -->
+  <div id="popup" class="popup">
+    <p>API KEY:</p>
+    <input type="text" id="apikeyinput">
+
+    <p>API SECRET:</p>
+    <input type="text" id="apisecretinput">
+
+    <p>PASSPHRASE:</p>
+    <input type="text" id="passphraseinput">
+
+    <button onclick="submitData()">SUBMIT</button>
+    <button onclick="closePopup()">ĐÓNG</button>
+  </div>
+
+  <!-- POPUP 2 -->
+  <div id="apikey" class="apikey">
+    <p>Log into OKX: Access your OKX account and verify that your account meets all trading requirements.</p>
+    <p>Navigate to API Management: Follow these steps:</p>
+    <p>Open account profile</p>
+    <p>Select API section</p>
+    <p>Click 'Create V5 API Key' This creates your bot's access credentials.</p>
+    <p>Configure Key Details: Select all permissions</p>
+    <p><strong>Note:</strong> The API Secret is only displayed once when you create the key. If you lose it, you will need to create a new API.</p>
+    <p><strong>Then paste it here</strong></p>
+    <button onclick="closePopup()">ĐÓNG</button>
   </div>
 
   <script>
-    function chao() {
-      alert("Chúc bạn một ngày vui vẻ!");
+    function showPopup(id) {
+      // Ẩn menu button
+      document.getElementById('buttonMenu').style.display = 'none';
+
+      // Ẩn hết tất cả popup
+      document.getElementById('popup').style.display = 'none';
+      document.getElementById('apikey').style.display = 'none';
+
+      // Hiện đúng popup cần mở
+      document.getElementById(id).style.display = 'block';
     }
+
+    function closePopup() {
+      // Ẩn tất cả popup
+      document.getElementById('popup').style.display = 'none';
+      document.getElementById('apikey').style.display = 'none';
+
+      // Hiện lại menu button
+      document.getElementById('buttonMenu').style.display = 'flex';
+    }
+
+    function submitData() {
+      var apiKey = document.getElementById('apikeyinput').value;
+      var apiSecret = document.getElementById('apisecretinput').value;
+      var passphrase = document.getElementById('passphraseinput').value;
+
+      alert("API KEY: " + apiKey + "\nAPI SECRET: " + apiSecret + "\nPASSPHRASE: " + passphrase);
+    }
+  <!-- Thêm thư viện Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<script>
+  // Khởi tạo Supabase client
+  const supabaseUrl = 'https://your-project.supabase.co'; // <-- thay bằng URL project của bạn
+  const supabaseKey = 'your-public-anon-key'; // <-- thay bằng PUBLIC ANON KEY
+  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+  async function fetchUserId() {
+    try {
+      const { data, error } = await supabase
+        .from('your_table_name') // <-- thay bằng tên bảng bạn lưu ID
+        .select('id')  // <-- cột bạn muốn lấy, ví dụ 'id'
+        .eq('username', 'your-username') // <-- hoặc thêm điều kiện nếu cần, ví dụ username nào đó
+        .single(); // nếu chỉ lấy 1 dòng
+
+      if (error) {
+        console.error('Lỗi lấy ID:', error);
+        document.getElementById('userId').innerText = 'Lỗi tải ID';
+      } else {
+        document.getElementById('userId').innerText = data.id;
+      }
+    } catch (err) {
+      console.error('Lỗi:', err);
+      document.getElementById('userId').innerText = 'Lỗi kết nối';
+    }
+  }
+
+  // Gọi hàm lấy ID khi web load
+  fetchUserId();
+</script>
   </script>
 
-
-
-
-
-  <h3>TZ800 BOT</h3>
 </body>
-</html> 
+</html>
