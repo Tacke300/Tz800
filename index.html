@@ -135,25 +135,25 @@
 <script>
   const supabase = supabase.createClient('https://tramnanrzruzvkehpydl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
   
-  const userTelegramId = '123456789'; // <-- THAY id Telegram của bạn vào đây
+  const userTelegramId = '123456789'; // <-- THAY ID telegram vào đây
 
   async function fetchOrInsertTelegramId() {
     try {
       let { data, error } = await supabase
         .from('telegram_id')
-        .select('id')
+        .select('telegram_id')
         .eq('telegram_id', userTelegramId)
         .maybeSingle();
       if (data) {
-        document.getElementById('userId').innerText = data.id;
+        document.getElementById('userId').innerText = data.telegram_id;
       } else {
         let { data: newData, error: insertError } = await supabase
           .from('telegram_id')
           .insert([{ telegram_id: userTelegramId }])
-          .select()
+          .select('telegram_id')
           .single();
         if (insertError) throw insertError;
-        document.getElementById('userId').innerText = newData.id;
+        document.getElementById('userId').innerText = newData.telegram_id;
       }
     } catch (err) {
       console.error(err);
