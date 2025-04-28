@@ -32,9 +32,8 @@
 </table>
 
 <script>
-  // Kết nối với Supabase
-  const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co'; // URL của bạn
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'; // API key của bạn
+  const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
   const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
   async function sendTelegramID() {
@@ -46,7 +45,7 @@
 
     // Kiểm tra nếu telegram_id đã tồn tại
     const { data: existing, error: fetchError } = await supabase
-      .from('telegram_id')  // Đúng tên bảng
+      .from('tz800')
       .select('telegram_id')
       .eq('telegram_id', telegram_id)
       .maybeSingle();
@@ -63,7 +62,7 @@
 
     // Nếu chưa có, chèn mới
     const { data, error } = await supabase
-      .from('telegram_id')
+      .from('tz800')
       .insert([{ telegram_id: telegram_id }]);
 
     if (error) {
@@ -77,7 +76,7 @@
 
   async function fetchTelegramIDs() {
     const { data, error } = await supabase
-      .from('telegram_id') // Đúng tên bảng
+      .from('tz800')
       .select('telegram_id');
 
     if (error) {
@@ -93,7 +92,6 @@
     }
   }
 
-  // Khi mở trang sẽ tự load danh sách
   fetchTelegramIDs();
 </script>
 
