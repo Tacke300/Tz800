@@ -35,7 +35,7 @@
   async function insertDataToSupabase(data) {
   const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';  // Thay bằng URL Supabase của anh
   const SUPABASE_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';  // Thay bằng API key
-  const TABLE_NAME = 'tz800';             // Thay bằng tên bảng Supabase
+  const TABLE_NAME = 'telegram_id';             // Thay bằng tên bảng Supabase
 
   const response = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}`, {
     method: 'POST',
