@@ -27,3 +27,4 @@ export default async function handler(req, res) {
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+https://api.telegram.org/bot<7648930428:AAFDIISTuWwa-aNmyWgItakI_tMwuTEXNkw>/setWebhook?url=https://tz800.vercel.app/api/webhook
