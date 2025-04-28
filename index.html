@@ -32,29 +32,12 @@
 </table>
 
 <script>
-  async function insertDataToSupabase(data) {
-  const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';  // Thay bằng URL Supabase của anh
-  const SUPABASE_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';  // Thay bằng API key
-  const TABLE_NAME = 'telegram_id';             // Thay bằng tên bảng Supabase
-
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}`, {
-    method: 'POST',
-    headers: {
-      'apikey': SUPABASE_API_KEY,
-      'Authorization': `Bearer ${SUPABASE_API_KEY}`,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation' // để nhận lại dữ liệu vừa insert
-    },
-    body: JSON.stringify(data)  // data là object muốn insert
-  });
-
-  const result = await response.json();
-  console.log(result);
-}
   // Kết nối với Supabase
-  const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co'; // <-- Thay bằng Supabase URL của anh
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';     // <-- Thay bằng anon key
+  const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
   const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+  const tableName = 'telegram_id'; // <-- GHI ĐÚNG TÊN BẢNG của anh
 
   async function sendTelegramID() {
     const telegram_id = document.getElementById('telegram_id_input').value.trim();
@@ -62,10 +45,10 @@
       alert('Vui lòng nhập Telegram ID');
       return;
     }
-sendTelegramId('123456789');
+
     // Kiểm tra nếu telegram_id đã tồn tại
     const { data: existing, error: fetchError } = await supabase
-      .from('your_table_name')  // <-- Thay bằng tên bảng của anh
+      .from(tableName)
       .select('telegram_id')
       .eq('telegram_id', telegram_id)
       .maybeSingle();
@@ -82,7 +65,7 @@ sendTelegramId('123456789');
 
     // Nếu chưa có, chèn mới
     const { data, error } = await supabase
-      .from('your_table_name')
+      .from(tableName)
       .insert([{ telegram_id: telegram_id }]);
 
     if (error) {
@@ -90,13 +73,13 @@ sendTelegramId('123456789');
     } else {
       alert('Đã gửi thành công!');
       fetchTelegramIDs();
-      document.getElementById('telegram_id_input').value = ''; // Xóa input sau khi gửi
+      document.getElementById('telegram_id_input').value = '';
     }
   }
 
   async function fetchTelegramIDs() {
     const { data, error } = await supabase
-      .from('your_table_name') // <-- Thay bằng tên bảng
+      .from(tableName)
       .select('telegram_id');
 
     if (error) {
