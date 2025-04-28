@@ -84,6 +84,11 @@
       border-radius: 5px;
       border: none;
     }
+    #apiInfo {
+      margin-top: 20px;
+      font-size: 16px;
+      word-wrap: break-word;
+    }
   </style>
 </head>
 
@@ -97,6 +102,8 @@
   </div>
 
   <div id="userId">Đang tải ID...</div>
+
+  <div id="apiInfo">Đang tải API...</div>
 
   <div class="menu" id="buttonMenu">
     <button onclick="showPopup('popup')" class="left-button">SET API</button>
@@ -136,7 +143,7 @@
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
     const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-    // Lấy Telegram ID tự động từ URL
+    // Lấy Telegram ID từ URL
     function getTelegramIdFromUrl() {
       const params = new URLSearchParams(window.location.search);
       return params.get('id') || null;
@@ -147,6 +154,7 @@
     async function fetchOrInsertTelegramId() {
       if (!userTelegramId) {
         document.getElementById('userId').innerText = 'Không tìm thấy ID!';
+        document.getElementById('apiInfo').innerText = '';
         return;
       }
 
@@ -179,6 +187,34 @@
       }
     }
 
+    async function fetchApiKeyInfo() {
+      if (!userTelegramId) {
+        document.getElementById('apiInfo').innerText = '';
+        return;
+      }
+
+      try {
+        const { data, error } = await client
+          .from('apikey')
+          .select('api_key, api_secret, passphrase')
+          .eq('telegram_id', userTelegramId)
+          .single();
+
+        if (data) {
+          document.getElementById('apiInfo').innerHTML = `
+            <p><strong>API Key:</strong> ${data.api_key}</p>
+            <p><strong>API Secret:</strong> ${data.api_secret}</p>
+            <p><strong>Passphrase:</strong> ${data.passphrase}</p>
+          `;
+        } else {
+          document.getElementById('apiInfo').innerText = 'Chưa có API!';
+        }
+      } catch (err) {
+        console.error('Lỗi lấy API:', err);
+        document.getElementById('apiInfo').innerText = 'Lỗi tải API';
+      }
+    }
+
     async function submitData() {
       var apiKey = document.getElementById('apikeyinput').value.trim();
       var apiSecret = document.getElementById('apisecretinput').value.trim();
@@ -205,6 +241,7 @@
         } else {
           alert("Đã lưu API thành công!");
           closePopup();
+          fetchApiKeyInfo();
         }
       } catch (err) {
         console.error('Submit Error:', err);
@@ -229,6 +266,7 @@
 
     // Gọi khi load trang
     fetchOrInsertTelegramId();
+    fetchApiKeyInfo();
   </script>
 
 </body>
