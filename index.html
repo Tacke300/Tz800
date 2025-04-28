@@ -132,10 +132,9 @@
 
   <script>
     // Khởi tạo Supabase
-    const { createClient } = supabase;
     const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
-    const client = createClient(supabaseUrl, supabaseKey);
+    const client = supabase.createClient(supabaseUrl, supabaseKey);
 
     // Lấy Telegram ID tự động từ URL
     function getTelegramIdFromUrl() {
@@ -181,9 +180,9 @@
     }
 
     async function submitData() {
-      var apiKey = document.getElementById('apikeyinput').value;
-      var apiSecret = document.getElementById('apisecretinput').value;
-      var passphrase = document.getElementById('passphraseinput').value;
+      var apiKey = document.getElementById('apikeyinput').value.trim();
+      var apiSecret = document.getElementById('apisecretinput').value.trim();
+      var passphrase = document.getElementById('passphraseinput').value.trim();
 
       if (!apiKey || !apiSecret || !passphrase) {
         alert("Vui lòng nhập đủ thông tin API!");
