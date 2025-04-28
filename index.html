@@ -65,6 +65,7 @@
       display: flex;
       justify-content: center;
       gap: 20px;
+      flex-wrap: wrap;
     }
 
     .left-button, .right-button {
@@ -120,9 +121,6 @@
   <div class="menu" id="buttonMenu">
     <button onclick="showPopup('popup')" class="left-button">SET API</button>
     <button onclick="showPopup('apikey')" class="right-button">?</button>
-  </div>
-
-  <div class="menu">
     <button onclick="showBase()" class="left-button">BASE</button>
   </div>
 
@@ -153,58 +151,28 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    // Các hàm mở popup
-    function showPopup(id) {
-      document.querySelectorAll('.popup, .apikey').forEach(p => p.style.display = 'none');
-      document.getElementById('buttonMenu').style.display = 'none';
-      document.getElementById(id).style.display = 'block';
-    }
-
-    function closePopup() {
-      document.querySelectorAll('.popup, .apikey').forEach(p => p.style.display = 'none');
-      document.getElementById('buttonMenu').style.display = 'flex';
-    }
-
-    function submitData() {
-      var apiKey = document.getElementById('apikeyinput').value;
-      var apiSecret = document.getElementById('apisecretinput').value;
-      var passphrase = document.getElementById('passphraseinput').value;
-
-      alert("API KEY: " + apiKey + "\nAPI SECRET: " + apiSecret + "\nPASSPHRASE: " + passphrase);
-
-      closePopup();
-    }
-
-    function showBase() {
-      alert("Bạn nhấn nút BASE");
-    }
-
     // Khởi tạo Supabase Client
     const { createClient } = supabase;
-    const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';    // <-- URL thật
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'; // <-- Public Key
+    const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';    
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
     const client = createClient(supabaseUrl, supabaseKey);
 
-    // Hàm lấy hoặc thêm telegram_id
-    async function fetchOrInsertTelegramId() {
-      const telegramId = 'your-telegram-id';   // <-- Thay bằng id thật hoặc lấy tự động
+    let userTelegramId = 'your-telegram-id'; // <-- Thay bằng ID thực tế
 
+    async function fetchOrInsertTelegramId() {
       try {
-        // 1. Check xem đã có chưa
         const { data, error } = await client
-          .from('telegram_id')      // <-- Table của bạn
+          .from('telegram_id')
           .select('id')
-          .eq('telegram_id', telegramId)
+          .eq('telegram_id', userTelegramId)
           .single();
 
         if (data) {
-          // Nếu đã có
           document.getElementById('userId').innerText = data.id;
         } else {
-          // Nếu chưa có, thì insert mới
           const { data: newData, error: insertError } = await client
             .from('telegram_id')
-            .insert([{ telegram_id: telegramId }])
+            .insert([{ telegram_id: userTelegramId }])
             .select()
             .single();
 
@@ -219,6 +187,54 @@
         console.error('Lỗi kết nối:', err);
         document.getElementById('userId').innerText = 'Lỗi kết nối';
       }
+    }
+
+    async function submitData() {
+      var apiKey = document.getElementById('apikeyinput').value;
+      var apiSecret = document.getElementById('apisecretinput').value;
+      var passphrase = document.getElementById('passphraseinput').value;
+
+      if (!apiKey || !apiSecret || !passphrase) {
+        alert("Vui lòng nhập đủ thông tin API!");
+        return;
+      }
+
+      try {
+        const { data, error } = await client
+          .from('apikey')
+          .insert([{ 
+            telegram_id: userTelegramId,
+            api_key: apiKey,
+            api_secret: apiSecret,
+            passphrase: passphrase
+          }]);
+
+        if (error) {
+          alert("Lỗi lưu API: " + error.message);
+          console.error(error);
+        } else {
+          alert("Đã lưu API thành công!");
+          closePopup();
+        }
+      } catch (err) {
+        console.error('Submit Error:', err);
+        alert("Đã xảy ra lỗi.");
+      }
+    }
+
+    function showPopup(id) {
+      document.querySelectorAll('.popup, .apikey').forEach(p => p.style.display = 'none');
+      document.getElementById('buttonMenu').style.display = 'none';
+      document.getElementById(id).style.display = 'block';
+    }
+
+    function closePopup() {
+      document.querySelectorAll('.popup, .apikey').forEach(p => p.style.display = 'none');
+      document.getElementById('buttonMenu').style.display = 'flex';
+    }
+
+    function showBase() {
+      alert("Bạn nhấn nút BASE");
     }
 
     // Gọi khi load trang
