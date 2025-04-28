@@ -6,6 +6,7 @@
   <title>TZ800 - TRADE BOT OKX</title>
 
   <style>
+    /* CSS đẹp và mượt */
     body {
       margin: 0;
       padding: 0;
@@ -14,6 +15,7 @@
       color: white;
       text-align: center;
     }
+
     .marquee {
       background-color: #ff9800;
       padding: 15px;
@@ -21,15 +23,18 @@
       font-weight: bold;
       animation: marquee 10s linear infinite;
     }
+
     @keyframes marquee {
       0% { transform: translateX(100%); }
       100% { transform: translateX(-100%); }
     }
+
     .div1 {
       display: flex;
       justify-content: center;
       margin-top: 20px;
     }
+
     .box {
       width: 120px;
       height: 80px;
@@ -41,22 +46,27 @@
       font-size: 20px;
       font-weight: bold;
     }
+
     .green {
       background-color: #4caf50;
     }
+
     .red {
       background-color: #f44336;
     }
+
     .all {
       margin-top: 20px;
       font-size: 18px;
     }
+
     .menu {
       margin-top: 30px;
       display: flex;
       justify-content: center;
       gap: 20px;
     }
+
     .left-button, .right-button {
       padding: 10px 20px;
       font-size: 18px;
@@ -67,9 +77,11 @@
       cursor: pointer;
       transition: background-color 0.3s;
     }
+
     .left-button:hover, .right-button:hover {
       background-color: #0b7dda;
     }
+
     .popup, .apikey {
       display: none;
       background-color: #333;
@@ -77,6 +89,7 @@
       border-radius: 10px;
       margin: 20px;
     }
+
     input[type="text"] {
       width: 80%;
       padding: 10px;
@@ -84,6 +97,7 @@
       border-radius: 5px;
       border: none;
     }
+
     button {
       margin: 10px;
     }
@@ -139,11 +153,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    const { createClient } = supabase;
-    const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co'; 
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'; 
-    const client = createClient(supabaseUrl, supabaseKey);
-
+    // Các hàm mở popup
     function showPopup(id) {
       document.querySelectorAll('.popup, .apikey').forEach(p => p.style.display = 'none');
       document.getElementById('buttonMenu').style.display = 'none';
@@ -155,73 +165,64 @@
       document.getElementById('buttonMenu').style.display = 'flex';
     }
 
-    async function submitData() {
-      var apiKey = document.getElementById('apikeyinput').value.trim();
-      var apiSecret = document.getElementById('apisecretinput').value.trim();
-      var passphrase = document.getElementById('passphraseinput').value.trim();
+    function submitData() {
+      var apiKey = document.getElementById('apikeyinput').value;
+      var apiSecret = document.getElementById('apisecretinput').value;
+      var passphrase = document.getElementById('passphraseinput').value;
 
-      if (!apiKey || !apiSecret || !passphrase) {
-        alert("Vui lòng nhập đủ thông tin!");
-        return;
-      }
-
-      // Lưu vào Supabase
-      const { data, error } = await client
-        .from('api_keys')   // Table tên "api_keys" (bạn phải tạo sẵn)
-        .insert([
-          { api_key: apiKey, api_secret: apiSecret, passphrase: passphrase }
-        ]);
-
-      if (error) {
-        alert('Lỗi khi lưu vào Supabase: ' + error.message);
-      } else {
-        alert('Lưu thành công vào Supabase!');
-      }
-
-      // Lưu vào LocalStorage
-      localStorage.setItem('apiKey', apiKey);
-      localStorage.setItem('apiSecret', apiSecret);
-      localStorage.setItem('passphrase', passphrase);
+      alert("API KEY: " + apiKey + "\nAPI SECRET: " + apiSecret + "\nPASSPHRASE: " + passphrase);
 
       closePopup();
-    }
-
-    function loadLocalStorage() {
-      const apiKey = localStorage.getItem('apiKey');
-      const apiSecret = localStorage.getItem('apiSecret');
-      const passphrase = localStorage.getItem('passphrase');
-
-      if (apiKey) document.getElementById('apikeyinput').value = apiKey;
-      if (apiSecret) document.getElementById('apisecretinput').value = apiSecret;
-      if (passphrase) document.getElementById('passphraseinput').value = passphrase;
     }
 
     function showBase() {
       alert("Bạn nhấn nút BASE");
     }
 
-    async function fetchUserId() {
+    // Khởi tạo Supabase Client
+    const { createClient } = supabase;
+    const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';    // <-- URL thật
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'; // <-- Public Key
+    const client = createClient(supabaseUrl, supabaseKey);
+
+    // Hàm lấy hoặc thêm telegram_id
+    async function fetchOrInsertTelegramId() {
+      const telegramId = 'your-telegram-id';   // <-- Thay bằng id thật hoặc lấy tự động
+
       try {
+        // 1. Check xem đã có chưa
         const { data, error } = await client
-          .from('telegram_id')
+          .from('telegram_id')      // <-- Table của bạn
           .select('id')
-          .eq('username', 'your-username') // Thay bằng username thực tế
+          .eq('telegram_id', telegramId)
           .single();
 
-        if (error) {
-          console.error('Lỗi lấy ID:', error);
-          document.getElementById('userId').innerText = 'Lỗi tải ID';
-        } else {
+        if (data) {
+          // Nếu đã có
           document.getElementById('userId').innerText = data.id;
+        } else {
+          // Nếu chưa có, thì insert mới
+          const { data: newData, error: insertError } = await client
+            .from('telegram_id')
+            .insert([{ telegram_id: telegramId }])
+            .select()
+            .single();
+
+          if (newData) {
+            document.getElementById('userId').innerText = newData.id;
+          } else {
+            console.error('Insert Error:', insertError);
+            document.getElementById('userId').innerText = 'Lỗi ghi ID';
+          }
         }
       } catch (err) {
-        console.error('Lỗi:', err);
+        console.error('Lỗi kết nối:', err);
         document.getElementById('userId').innerText = 'Lỗi kết nối';
       }
     }
 
-    fetchUserId();
-    loadLocalStorage();
+    // Gọi khi load trang
+    fetchOrInsertTelegramId();
   </script>
 
 </body>
