@@ -2,230 +2,172 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TZ800 BOT</title>
+  <title>Quản lý API Key</title>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #ffffff;
-      text-align: center;
+    #popup, #apikey {
+      display: none;
+      background: #fff;
+      padding: 20px;
+      border: 1px solid #ccc;
+      margin: 20px auto;
+      width: 300px;
+      border-radius: 8px;
     }
-    .marquee {
-      background-color: #ff9800;
-      padding: 15px 0;
-      font-size: 24px;
-      font-weight: bold;
-      overflow: hidden;
-      position: relative;
-    }
-    .marquee p {
-      display: inline-block;
-      white-space: nowrap;
-      animation: marquee 10s linear infinite;
-      margin: 0;
-    }
-    @keyframes marquee {
-      0% { transform: translateX(100%); }
-      100% { transform: translateX(-100%); }
-    }
-    .box-container {
+    #buttonMenu {
       display: flex;
-      justify-content: center;
-      margin-top: 20px;
-    }
-    .box {
-      width: 120px;
-      height: 80px;
-      margin: 10px;
-      border-radius: 10px;
-      display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      font-weight: bold;
-    }
-    .green {
-      background-color: #4caf50;
-    }
-    .red {
-      background-color: #f44336;
-    }
-    #userId {
-      margin-top: 20px;
-      font-size: 18px;
-      font-weight: bold;
-    }
-    .menu {
-      margin-top: 30px;
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      flex-wrap: wrap;
+      margin-top: 40px;
+      gap: 10px;
     }
     button {
       padding: 10px 20px;
-      font-size: 18px;
-      border: none;
-      border-radius: 8px;
-      background-color: #2196f3;
-      color: white;
+      font-size: 16px;
       cursor: pointer;
-      transition: background-color 0.3s;
-      margin: 10px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+      border-radius: 5px;
     }
     button:hover {
-      background-color: #0b7dda;
-    }
-    .popup, .apikey {
-      display: none;
-      background-color: #333;
-      padding: 20px;
-      border-radius: 10px;
-      margin: 20px;
-    }
-    input[type="text"], input[type="password"] {
-      width: 80%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-      border: none;
+      background-color: #45a049;
     }
   </style>
 </head>
 <body>
 
-<div class="marquee">
-  <p>TZ800 - TRADE BOT OKX</p>
-</div>
+  <div id="buttonMenu">
+    <div>ID Telegram: <span id="userId"></span></div>
+    <button onclick="showBase()">Xem API Đã Lưu</button>
+    <button onclick="showAPIKey()">Thêm API Key Mới</button>
+  </div>
 
-<div class="box-container">
-  <div class="box green">WIN</div>
-  <div class="box red">LOSE</div>
-</div>
+  <div id="popup">
+    <h3>Thông tin API</h3>
+    <input id="apikeyinput" type="text" placeholder="API KEY" style="width: 100%; margin-bottom: 10px;">
+    <input id="apisecretinput" type="text" placeholder="API SECRET" style="width: 100%; margin-bottom: 10px;">
+    <input id="passphraseinput" type="text" placeholder="PASSPHRASE" style="width: 100%; margin-bottom: 10px;">
+    <button onclick="submitData()">Gửi API Key</button>
+    <button onclick="closePopup()" style="background-color: #f44336;">Đóng</button>
+  </div>
 
-<p>ID: <span id="userId">Đang tải...</span></p>
+  <div id="apikey">
+    <h3>Nhập API Mới</h3>
+    <input id="apikeyinput" type="text" placeholder="API KEY" style="width: 100%; margin-bottom: 10px;">
+    <input id="apisecretinput" type="text" placeholder="API SECRET" style="width: 100%; margin-bottom: 10px;">
+    <input id="passphraseinput" type="text" placeholder="PASSPHRASE" style="width: 100%; margin-bottom: 10px;">
+    <button onclick="submitData()">Gửi API Key</button>
+    <button onclick="closePopup()" style="background-color: #f44336;">Đóng</button>
+  </div>
 
-<div class="menu" id="buttonMenu">
-  <button onclick="showPopup()">SET API</button>
-  <button onclick="showAPIKey()">?</button>
-  <button onclick="showBase()">BASE</button>
-</div>
+  <!-- Import Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/supabase.min.js"></script>
+  <script>
+    const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // <-- Bạn thay bằng key đầy đủ ở đây
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-<div id="popup" class="popup">
-  <p>API KEY:</p>
-  <input type="text" id="apikeyinput">
-  <p>API SECRET:</p>
-  <input type="password" id="apisecretinput">
-  <p>PASSPHRASE:</p>
-  <input type="text" id="passphraseinput"><br>
-  <button onclick="submitData()">SUBMIT</button>
-  <button onclick="closePopup()">ĐÓNG</button>
-</div>
+    const userTelegramId = '123456789'; // <-- Điền đúng Telegram ID của người dùng
 
-<div id="apikey" class="apikey">
-  <p>Đăng nhập OKX → API Management → Create API Key (API v5) → Chọn quyền giao dịch.</p>
-  <p><strong>Note:</strong> API SECRET chỉ hiện 1 lần sau khi tạo, nhớ lưu lại!</p>
-  <button onclick="closePopup()">ĐÓNG</button>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const supabase = supabase.createClient('https://tramnanrzruzvkehpydl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0');
-  
-  const userTelegramId = '123456789'; // <-- THAY ID telegram vào đây
-
-  async function fetchOrInsertTelegramId() {
-    try {
-      let { data, error } = await supabase
-        .from('telegram_id')
-        .select('telegram_id')
-        .eq('telegram_id', userTelegramId)
-        .maybeSingle();
-      if (data) {
-        document.getElementById('userId').innerText = data.telegram_id;
-      } else {
-        let { data: newData, error: insertError } = await supabase
+    async function fetchOrInsertTelegramId() {
+      try {
+        const { data, error } = await supabase
           .from('telegram_id')
-          .insert([{ telegram_id: userTelegramId }])
           .select('telegram_id')
-          .single();
-        if (insertError) throw insertError;
-        document.getElementById('userId').innerText = newData.telegram_id;
-      }
-    } catch (err) {
-      console.error(err);
-      document.getElementById('userId').innerText = "Lỗi";
-    }
-  }
+          .eq('telegram_id', userTelegramId);
 
-  async function submitData() {
-    const apiKey = document.getElementById('apikeyinput').value.trim();
-    const apiSecret = document.getElementById('apisecretinput').value.trim();
-    const passphrase = document.getElementById('passphraseinput').value.trim();
-    if (!apiKey || !apiSecret || !passphrase) {
-      alert("Vui lòng nhập đủ thông tin!");
-      return;
+        if (error) throw error;
+
+        if (data.length > 0) {
+          document.getElementById('userId').innerText = data[0].telegram_id;
+        } else {
+          const { data: insertedData, error: insertError } = await supabase
+            .from('telegram_id')
+            .insert([{ telegram_id: userTelegramId }])
+            .select();
+          if (insertError) throw insertError;
+          document.getElementById('userId').innerText = insertedData[0].telegram_id;
+        }
+      } catch (err) {
+        console.error('Lỗi fetchOrInsertTelegramId:', err.message);
+        document.getElementById('userId').innerText = "Lỗi";
+      }
     }
-    try {
-      let { error } = await supabase
-        .from('apikey')
-        .insert([{ telegram_id: userTelegramId, api_key: apiKey, api_secret: apiSecret, passphrase: passphrase }]);
-      if (error) {
-        alert("Có lỗi: " + error.message);
-      } else {
+
+    async function submitData() {
+      const apiKey = document.getElementById('apikeyinput').value.trim();
+      const apiSecret = document.getElementById('apisecretinput').value.trim();
+      const passphrase = document.getElementById('passphraseinput').value.trim();
+
+      if (!apiKey || !apiSecret || !passphrase) {
+        alert("Vui lòng nhập đủ API KEY, SECRET và PASSPHRASE!");
+        return;
+      }
+
+      try {
+        const { error } = await supabase
+          .from('apikey')
+          .insert([
+            {
+              telegram_id: userTelegramId,
+              api_key: apiKey,
+              api_secret: apiSecret,
+              passphrase: passphrase
+            }
+          ]);
+        if (error) throw error;
         alert("Đã lưu API thành công!");
         closePopup();
+      } catch (err) {
+        console.error('Lỗi submitData:', err.message);
+        alert("Gửi API thất bại: " + err.message);
       }
-    } catch (err) {
-      console.error(err);
-      alert("Đã xảy ra lỗi!");
     }
-  }
 
-  async function showBase() {
-    try {
-      let { data, error } = await supabase
-        .from('apikey')
-        .select('*')
-        .eq('telegram_id', userTelegramId)
-        .maybeSingle();
-      if (data) {
-        document.getElementById('apikeyinput').value = data.api_key || '';
-        document.getElementById('apisecretinput').value = data.api_secret || '';
-        document.getElementById('passphraseinput').value = data.passphrase || '';
-        showPopup();
-      } else {
-        alert("Không tìm thấy API!");
+    async function showBase() {
+      try {
+        const { data, error } = await supabase
+          .from('apikey')
+          .select('*')
+          .eq('telegram_id', userTelegramId);
+
+        if (error) throw error;
+
+        if (data.length > 0) {
+          const info = data[0];
+          document.getElementById('apikeyinput').value = info.api_key || '';
+          document.getElementById('apisecretinput').value = info.api_secret || '';
+          document.getElementById('passphraseinput').value = info.passphrase || '';
+          showPopup();
+        } else {
+          alert("Không tìm thấy API!");
+        }
+      } catch (err) {
+        console.error('Lỗi showBase:', err.message);
+        alert("Đã xảy ra lỗi!");
       }
-    } catch (err) {
-      console.error(err);
-      alert("Đã xảy ra lỗi khi lấy dữ liệu!");
     }
-  }
 
-  function showPopup() {
-    document.getElementById('popup').style.display = 'block';
-    document.getElementById('apikey').style.display = 'none';
-    document.getElementById('buttonMenu').style.display = 'none';
-  }
+    function showPopup() {
+      document.getElementById('popup').style.display = 'block';
+      document.getElementById('apikey').style.display = 'none';
+      document.getElementById('buttonMenu').style.display = 'none';
+    }
 
-  function showAPIKey() {
-    document.getElementById('apikey').style.display = 'block';
-    document.getElementById('popup').style.display = 'none';
-    document.getElementById('buttonMenu').style.display = 'none';
-  }
+    function showAPIKey() {
+      document.getElementById('apikey').style.display = 'block';
+      document.getElementById('popup').style.display = 'none';
+      document.getElementById('buttonMenu').style.display = 'none';
+    }
 
-  function closePopup() {
-    document.getElementById('popup').style.display = 'none';
-    document.getElementById('apikey').style.display = 'none';
-    document.getElementById('buttonMenu').style.display = 'flex';
-  }
+    function closePopup() {
+      document.getElementById('popup').style.display = 'none';
+      document.getElementById('apikey').style.display = 'none';
+      document.getElementById('buttonMenu').style.display = 'flex';
+    }
 
-  fetchOrInsertTelegramId();
-</script>
+    fetchOrInsertTelegramId();
+  </script>
 
 </body>
 </html>
