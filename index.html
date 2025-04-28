@@ -43,7 +43,7 @@
       alert('Vui lòng nhập Telegram ID');
       return;
     }
-
+sendTelegramId('123456789');
     // Kiểm tra nếu telegram_id đã tồn tại
     const { data: existing, error: fetchError } = await supabase
       .from('your_table_name')  // <-- Thay bằng tên bảng của anh
