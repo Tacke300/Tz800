@@ -6,7 +6,6 @@
   <title>TZ800 - TRADE BOT OKX</title>
 
   <style>
-    /* CSS đẹp và mượt */
     body {
       margin: 0;
       padding: 0;
@@ -15,7 +14,6 @@
       color: white;
       text-align: center;
     }
-
     .marquee {
       background-color: #ff9800;
       padding: 15px;
@@ -23,18 +21,15 @@
       font-weight: bold;
       animation: marquee 10s linear infinite;
     }
-
     @keyframes marquee {
       0% { transform: translateX(100%); }
       100% { transform: translateX(-100%); }
     }
-
     .div1 {
       display: flex;
       justify-content: center;
       margin-top: 20px;
     }
-
     .box {
       width: 120px;
       height: 80px;
@@ -46,20 +41,12 @@
       font-size: 20px;
       font-weight: bold;
     }
-
-    .green {
-      background-color: #4caf50;
-    }
-
-    .red {
-      background-color: #f44336;
-    }
-
+    .green { background-color: #4caf50; }
+    .red { background-color: #f44336; }
     .all {
       margin-top: 20px;
       font-size: 18px;
     }
-
     .menu {
       margin-top: 30px;
       display: flex;
@@ -67,7 +54,6 @@
       gap: 20px;
       flex-wrap: wrap;
     }
-
     .left-button, .right-button {
       padding: 10px 20px;
       font-size: 18px;
@@ -78,11 +64,9 @@
       cursor: pointer;
       transition: background-color 0.3s;
     }
-
     .left-button:hover, .right-button:hover {
       background-color: #0b7dda;
     }
-
     .popup, .apikey {
       display: none;
       background-color: #333;
@@ -90,7 +74,6 @@
       border-radius: 10px;
       margin: 20px;
     }
-
     input[type="text"] {
       width: 80%;
       padding: 10px;
@@ -98,10 +81,7 @@
       border-radius: 5px;
       border: none;
     }
-
-    button {
-      margin: 10px;
-    }
+    button { margin: 10px; }
   </style>
 </head>
 
@@ -152,10 +132,9 @@
 
   <script>
     // Khởi tạo Supabase Client
-    const { createClient } = supabase;
     const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';    
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
-    const client = createClient(supabaseUrl, supabaseKey);
+    const client = supabase.createClient(supabaseUrl, supabaseKey);
 
     let userTelegramId = 'your-telegram-id'; // <-- Thay bằng ID thực tế
 
@@ -165,7 +144,13 @@
           .from('telegram_id')
           .select('id')
           .eq('telegram_id', userTelegramId)
-          .single();
+          .maybeSingle(); // Dùng maybeSingle cho tránh lỗi khi không có dữ liệu
+
+        if (error) {
+          console.error('Fetch Error:', error);
+          document.getElementById('userId').innerText = 'Lỗi tải ID';
+          return;
+        }
 
         if (data) {
           document.getElementById('userId').innerText = data.id;
@@ -176,11 +161,11 @@
             .select()
             .single();
 
-          if (newData) {
-            document.getElementById('userId').innerText = newData.id;
-          } else {
+          if (insertError) {
             console.error('Insert Error:', insertError);
             document.getElementById('userId').innerText = 'Lỗi ghi ID';
+          } else {
+            document.getElementById('userId').innerText = newData.id;
           }
         }
       } catch (err) {
@@ -200,7 +185,7 @@
       }
 
       try {
-        const { data, error } = await client
+        const { error } = await client
           .from('apikey')
           .insert([{ 
             telegram_id: userTelegramId,
@@ -239,7 +224,13 @@
           .from('apikey')
           .select('api_key, api_secret, passphrase')
           .eq('telegram_id', userTelegramId)
-          .single();
+          .maybeSingle();
+
+        if (error) {
+          console.error('Lỗi lấy dữ liệu BASE:', error);
+          alert("Lỗi khi lấy dữ liệu BASE.");
+          return;
+        }
 
         if (data) {
           document.getElementById('apikeyinput').value = data.api_key || '';
@@ -251,8 +242,8 @@
           alert("Không tìm thấy API để hiển thị.");
         }
       } catch (err) {
-        console.error('Lỗi lấy dữ liệu BASE:', err);
-        alert("Lỗi khi lấy dữ liệu BASE.");
+        console.error('Lỗi lấy BASE:', err);
+        alert("Đã xảy ra lỗi.");
       }
     }
 
