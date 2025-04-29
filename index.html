@@ -1,99 +1,36 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quản lý Telegram ID</title>
-  <script src="https://unpkg.com/@supabase/supabase-js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    input, button { padding: 8px; font-size: 16px; margin-right: 8px; }
-    table { width: 50%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-    th { background-color: #f2f2f2; }
-  </style>
+  <title>Telegram WebApp Input</title>
 </head>
 <body>
+  <h1>Nhập thông tin</h1>
+  
+  <input type="text" id="infoInput" placeholder="Nhập nội dung..." />
+  <button onclick="submitInfo()">Gửi</button>
+  
+  <div id="result"></div>
 
-<h1>Gửi Telegram ID lên Supabase</h1>
-<input type="text" id="telegram_id_input" placeholder="Nhập Telegram ID">
-<button onclick="sendTelegramID()">Gửi ID</button>
+  <script>
+    async function submitInfo() {
+      const input = document.getElementById('infoInput');
+      const info = input.value.trim();
+      if (!info) {
+        alert('Vui lòng nhập nội dung!');
+        return;
+      }
 
-<h2>Danh sách Telegram ID đã lưu</h2>
-<table id="telegram_ids_table">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Telegram ID</th>
-    </tr>
-  </thead>
-  <tbody>
-    <!-- Dữ liệu sẽ được thêm tự động vào đây -->
-  </tbody>
-</table>
-
-<script>
-  const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-  async function sendTelegramID() {
-    const telegram_id = document.getElementById('telegram_id_input').value.trim();
-    if (!telegram_id) {
-      alert('Vui lòng nhập Telegram ID');
-      return;
-    }
-
-    // Kiểm tra nếu telegram_id đã tồn tại
-    const { data: existing, error: fetchError } = await supabase
-      .from('tz800')
-      .select('telegram_id')
-      .eq('telegram_id', telegram_id)
-      .maybeSingle();
-
-    if (fetchError) {
-      alert('Lỗi kiểm tra ID: ' + fetchError.message);
-      return;
-    }
-
-    if (existing) {
-      alert('Telegram ID này đã tồn tại!');
-      return;
-    }
-
-    // Nếu chưa có, chèn mới
-    const { data, error } = await supabase
-      .from('tz800')
-      .insert([{ telegram_id: telegram_id }]);
-
-    if (error) {
-      alert('Lỗi khi gửi ID: ' + error.message);
-    } else {
-      alert('Đã gửi thành công!');
-      fetchTelegramIDs();
-      document.getElementById('telegram_id_input').value = '';
-    }
-  }
-
-  async function fetchTelegramIDs() {
-    const { data, error } = await supabase
-      .from('tz800')
-      .select('telegram_id');
-
-    if (error) {
-      alert('Lỗi khi lấy danh sách ID: ' + error.message);
-    } else {
-      const tbody = document.getElementById('telegram_ids_table').querySelector('tbody');
-      tbody.innerHTML = '';
-      data.forEach((item, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${index + 1}</td><td>${item.telegram_id}</td>`;
-        tbody.appendChild(tr);
+      const res = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ info })
       });
+
+      const data = await res.json();
+      document.getElementById('result').innerText = 'Đã lưu: ' + data.savedInfo;
+      input.value = ''; // Xoá ô nhập sau khi gửi
     }
-  }
-
-  fetchTelegramIDs();
-</script>
-
+  </script>
 </body>
 </html>
