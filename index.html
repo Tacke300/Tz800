@@ -42,28 +42,43 @@
 
   
 <!-- so du okx -->
-<div id="balance">Loading...</div>
 
-<script>
-  const user_id = 'user_abc123' // user_id thật của bạn
-  async function fetchBalance() {
-    try {
-      const res = await fetch(`/api/balance?user_id=${user_id}`);
-      const data = await res.json();
-      const usdt = data.data[0].details.find(x => x.ccy === 'USDT')
-      document.getElementById('balance').innerText = `USDT: ${usdt.cashBal}`;
-    } catch (err) {
-      document.getElementById('balance').innerText = 'Lỗi lấy số dư';
+<!DOCTYPE html>
+
+  <h1>Số dư OKX (Realtime)</h1>
+  <pre id="balance">Đang tải...</pre>
+
+  <script>
+    function getUserIdFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('user_id');
     }
-  }
 
-  fetchBalance();
-  setInterval(fetchBalance, 1000); // mỗi giây gọi lại
-</script>
+    const userId = getUserIdFromURL();
+
+    async function fetchBalance() {
+      if (!userId) {
+        document.getElementById('balance').textContent = 'Thiếu user_id trên URL';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/balance?user_id=${userId}`);
+        const data = await res.json();
+        document.getElementById('balance').textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById('balance').textContent = 'Lỗi: ' + err.message;
+      }
+    }
+
+    fetchBalance();
+    setInterval(fetchBalance, 1000); // cập nhật mỗi giây
+  </script>
+
 
 
   
-  
+  <!-- popup apikey -->
   <button onclick="showPopup()">SET API</button>
 
   <div id="popup">
