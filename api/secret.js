@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     // Insert vào Supabase
     const { data, error } = await supabase
       .from('users') // Tên table Supabase
-      .upsert([{ userId: userId,secret }]);
+      .upsert([{ user_id: userId,secret }]);
 
     if (error) {
       console.error('Lỗi insert Supabase:', error);
