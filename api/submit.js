@@ -25,3 +25,17 @@ export default async function handler(req, res) {
 
   return res.status(200).json({ savedInfo: data[0].info });
 }
+export default async function handler(req, res) {
+  const { info } = req.body;
+
+  const { data, error } = await supabase
+    .from('messages')
+    .insert([{ info }]);
+
+  if (error) {
+    console.error('Supabase error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+
+  return res.status(200).json({ data });
+}
