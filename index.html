@@ -53,7 +53,7 @@
         const userId = telegramUser.id;
         status.innerText = "ID của bạn: " + userId + " - Đang gửi lên server...";
 
-        const res = await fetch('/api/saveUser', {
+        const res = await fetch('/api/userId', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId })
