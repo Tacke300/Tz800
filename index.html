@@ -69,7 +69,86 @@
 
     init();
   </script>
+ <!-- get api okx -->
+  
+  <script>
+    const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    let currentUserId = null;
+
+    // Lấy user ID khi trang load
+    window.addEventListener('DOMContentLoaded', async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        alert("Không thể lấy user ID.");
+        return;
+      }
+      currentUserId = user.id;
+      console.log("User ID:", currentUserId);
+    });
+
+    function openPopup() {
+      document.getElementById('popup').classList.remove('translate-y-full');
+    }
+
+    function closePopup() {
+      document.getElementById('popup').classList.add('translate-y-full');
+    }
+
+    async function submitForm(e) {
+      e.preventDefault();
+      const apikey = document.getElementById('apikey').value;
+      const secret = document.getElementById('secret').value;
+      const passha = document.getElementById('passha').value;
+
+      if (!currentUserId) {
+        alert("Chưa có user ID.");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('users')
+        .update({ apikey, secret, pass: passha })
+        .eq('id', currentUserId);
+
+      if (error) {
+        alert('Lỗi: ' + error.message);
+      } else {
+        alert('Cập nhật thành công!');
+        closePopup();
+      }
+    }
+  </script>
+  <style>
+    #popup {
+      transition: transform 0.3s ease-in-out;
+      transform: translateY(100%);
+    }
+    #popup.show {
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+  <button onclick="openPopup()" class="px-4 py-2 bg-blue-600 text-white rounded">Set API</button>
+
+  <div id="popup" class="fixed top-0 left-0 w-full h-full bg-white z-50 flex items-start justify-center translate-y-full">
+    <div class="mt-10 w-full max-w-md p-6 bg-white shadow-lg rounded-lg">
+      <h2 class="text-xl font-bold mb-4">Nhập thông tin API</h2>
+      <form id="apiForm" onsubmit="submitForm(event)">
+        <input id="apikey" placeholder="API Key" class="w-full mb-3 p-2 border rounded" required />
+        <input id="secret" placeholder="Secret" class="w-full mb-3 p-2 border rounded" required />
+        <input id="passha" placeholder="Passphrase" class="w-full mb-3 p-2 border rounded" required />
+        <div class="flex justify-between">
+          <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Submit</button>
+          <button type="button" onclick="closePopup()" class="px-4 py-2 bg-gray-400 text-white rounded">Đóng</button>
+        </div>
+      </form>
+    </div>
+  </div>
   
   <!-- gui database to supabass -->
   
