@@ -1,202 +1,88 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Set API từ Telegram</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Telegram WebApp</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f2f2f2;
+      font-family: sans-serif;
       padding: 20px;
-      margin: 0;
+      background: orange;
     }
-
-    .btn-set {
-      padding: 12px 24px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 8px;
+    input, button {
       font-size: 18px;
-      cursor: pointer;
-    }
-
-    #popup {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      justify-content: center;
-      align-items: center;
-    }
-
-    .popup-content {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      width: 90%;
-      max-width: 400px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-      animation: slideUp 0.3s ease-out;
-    }
-
-    @keyframes slideUp {
-      from { transform: translateY(100px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-
-    .popup-content input {
-      width: 100%;
-      margin: 8px 0;
       padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-
-    .popup-buttons {
-      margin-top: 12px;
-      text-align: right;
-    }
-
-    .popup-buttons button {
-      padding: 8px 16px;
-      margin-left: 8px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .btn-submit {
-      background: #28a745;
-      color: white;
-    }
-
-    .btn-close {
-      background: #ccc;
-    }
-
-    .status {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #333;
-    }
-
-    .loading {
-      color: orange;
-    }
-
-    .error {
-      color: red;
-    }
-
-    .success {
-      color: green;
-    }
-
-    #userIdDisplay {
       margin-bottom: 10px;
-      font-size: 15px;
-      color: #555;
+      width: 100%;
+      box-sizing: border-box;
     }
   </style>
 </head>
 <body>
 
-  <div id="userIdDisplay">Đang lấy Telegram ID...</div>
-  <button class="btn-set" onclick="openPopup()">Set API</button>
+<h2 id="status">Đang xử lý...</h2>
 
-  <div id="popup">
-    <div class="popup-content">
-      <h2>Nhập API</h2>
-      <input type="text" id="apiKey" placeholder="API Key" required>
-      <input type="text" id="secret" placeholder="Secret" required>
-      <input type="text" id="pass" placeholder="Passphrase" required>
-      <div class="popup-buttons">
-        <button class="btn-submit" onclick="submitForm()">Gửi</button>
-        <button class="btn-close" onclick="closePopup()">Đóng</button>
-      </div>
-      <div class="status" id="statusText"></div>
-    </div>
-  </div>
+<p>API KEY</p>
+<input type="text" id="apikeyInput" placeholder="APIKEY" />
+<p>SECRET</p>
+<input type="text" id="secretInput" placeholder="SECRET" />
+<p>PASSHARE</p>
+<input type="text" id="passInput" placeholder="PASSSHARE" />
+<button onclick="submitInfo()">Gửi</button>
+<div id="loading" style="display:none;">Đang gửi...</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+  let userId = null;
 
-  <script>
-    const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    let userId = null;
-
-    window.onload = function() {
-      try {
-        const user = window.Telegram.WebApp.initDataUnsafe.user;
-        if (user && user.id) {
-          userId = user.id;
-          document.getElementById("userIdDisplay").innerText = "Telegram ID: " + userId;
-        } else {
-          document.getElementById("userIdDisplay").innerText = "Không lấy được Telegram ID.";
-        }
-      } catch (e) {
-        document.getElementById("userIdDisplay").innerText = "Lỗi khi lấy Telegram ID.";
-      }
-    };
-
-    function openPopup() {
-      document.getElementById('popup').style.display = 'flex';
-    }
-
-    function closePopup() {
-      document.getElementById('popup').style.display = 'none';
-      document.getElementById('statusText').innerText = '';
-    }
-
-    async function submitForm() {
-      const apiKey = document.getElementById('apiKey').value.trim();
-      const secret = document.getElementById('secret').value.trim();
-      const pass = document.getElementById('pass').value.trim();
-      const statusText = document.getElementById('statusText');
-
-      if (!userId) {
-        statusText.innerText = 'Không có Telegram userId!';
-        statusText.className = 'status error';
+  async function init() {
+    const status = document.getElementById('status');
+    try {
+      const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
+      if (!telegramUser || !telegramUser.id) {
+        status.innerText = "Không lấy được Telegram ID.";
         return;
       }
 
-      if (!apiKey || !secret || !pass) {
-        statusText.innerText = 'Vui lòng nhập đầy đủ thông tin!';
-        statusText.className = 'status error';
-        return;
-      }
-
-      statusText.innerText = 'Đang gửi dữ liệu...';
-      statusText.className = 'status loading';
-
-      const { error } = await supabase
-        .from('users')
-        .upsert([
-          {
-            user_id: userId,
-            apikey: apiKey,
-            secret: secret,
-            pass: pass
-          }
-        ], { onConflict: ['user_id'] });
-
-      if (error) {
-        statusText.innerText = 'Lỗi: ' + error.message;
-        statusText.className = 'status error';
-      } else {
-        statusText.innerText = 'Lưu thành công!';
-        statusText.className = 'status success';
-        setTimeout(() => {
-          closePopup();
-        }, 1000);
-      }
+      userId = telegramUser.id;
+      status.innerText = "ID: " + userId;
+    } catch (err) {
+      console.error(err);
+      status.innerText = "Có lỗi xảy ra.";
     }
-  </script>
+  }
+
+  async function submitInfo() {
+    const apikey = document.getElementById('apikeyInput').value.trim();
+    const secret = document.getElementById('secretInput').value.trim();
+    const pass = document.getElementById('passInput').value.trim();
+    const loading = document.getElementById('loading');
+
+    if (!userId) return alert("Không có userId Telegram.");
+    if (!apikey || !secret || !pass) return alert("Vui lòng nhập đầy đủ thông tin.");
+
+    loading.style.display = 'block';
+
+    try {
+      const res = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, apikey, secret, pass })
+      });
+
+      const data = await res.json();
+      alert("Đã gửi thành công!");
+    } catch (err) {
+      alert('Lỗi gửi dữ liệu!');
+      console.error(err);
+    } finally {
+      loading.style.display = 'none';
+    }
+  }
+
+  init();
+</script>
+
 </body>
 </html>
