@@ -50,3 +50,4 @@ export default async function handler(req, res) {
   const okxData = await okxRes.json()
   res.status(200).json(okxData)
 }
+console.log("Gửi yêu cầu với:", { apikey, secret, pass, signature, timestamp });
