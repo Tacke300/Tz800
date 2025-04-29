@@ -1,9 +1,14 @@
-// okx-balance.js
+// pages/api/balance.js
 
+import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
-import fetch from 'node-fetch'; // Nếu bạn dùng môi trường cần import fetch
 
-// Hàm ký OKX HMAC SHA256
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+
+// Hàm ký OKX
 function sign(timestamp, method, requestPath, body, secretKey) {
   const prehash = timestamp + method + requestPath + body;
   return crypto.createHmac('sha256', secretKey)
@@ -11,38 +16,39 @@ function sign(timestamp, method, requestPath, body, secretKey) {
                .digest('base64');
 }
 
-// Hàm lấy số dư tài khoản
-async function getBalance(apikey, secret, passphrase) {
+export default async function handler(req, res) {
+  const { user_id } = req.query;
+  if (!user_id) return res.status(400).json({ error: 'Missing user_id' });
+
+  const { data: user, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('user_id', user_id)
+    .single();
+
+  if (error || !user) return res.status(500).json({ error: 'User not found' });
+
+  const { apikey, secret, pass } = user;
+
   const timestamp = new Date().toISOString();
   const method = 'GET';
   const requestPath = '/api/v5/account/balance';
   const body = '';
-
   const signature = sign(timestamp, method, requestPath, body, secret);
 
   const headers = {
     'OK-ACCESS-KEY': apikey,
     'OK-ACCESS-SIGN': signature,
     'OK-ACCESS-TIMESTAMP': timestamp,
-    'OK-ACCESS-PASSPHRASE': passphrase,
+    'OK-ACCESS-PASSPHRASE': pass,
     'Content-Type': 'application/json'
   };
 
-  const response = await fetch(`https://www.okx.com${requestPath}`, {
+  const okxRes = await fetch(`https://www.okx.com${requestPath}`, {
     method,
     headers
   });
 
-  const data = await response.json();
-  return data;
+  const okxData = await okxRes.json();
+  res.status(200).json(okxData);
 }
-
-// THAY API KEY CỦA BẠN Ở ĐÂY
-const apikey = 'YOUR_API_KEY';
-const secret = 'YOUR_SECRET';
-const passphrase = 'YOUR_PASSPHRASE';
-
-// Gọi thử hàm
-getBalance(apikey, secret, passphrase)
-  .then(res => console.log('Số dư:', JSON.stringify(res, null, 2)))
-  .catch(err => console.error('Lỗi:', err));
