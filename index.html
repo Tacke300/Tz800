@@ -155,7 +155,7 @@
       }
 
       const { data, error } = await supabase
-        .from('your_table_name')
+        .from('users')
         .update({ apikey: apiKey, secret: secret, pass: pass })
         .eq('id', userId);
 
