@@ -1,36 +1,87 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Telegram WebApp Input</title>
+  <title>Telegram WebApp</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    input, button {
+      font-size: 18px;
+      padding: 10px;
+      margin-bottom: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    #loading {
+      display: none;
+      color: #888;
+      margin-top: 10px;
+    }
+    .message {
+      background: white;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+  </style>
 </head>
 <body>
-  <h1>Nhập thông tin</h1>
+  <h2>Nhập nội dung:</h2>
   
-  <input type="text" id="infoInput" placeholder="Nhập nội dung..." />
+  <input type="text" id="infoInput" placeholder="Gõ nội dung..." />
   <button onclick="submitInfo()">Gửi</button>
-  
-  <div id="result"></div>
+  <div id="loading">Đang gửi...</div>
+
+  <h3>Dữ liệu đã lưu:</h3>
+  <div id="messagesList"></div>
 
   <script>
     async function submitInfo() {
       const input = document.getElementById('infoInput');
+      const loading = document.getElementById('loading');
       const info = input.value.trim();
-      if (!info) {
-        alert('Vui lòng nhập nội dung!');
-        return;
+      if (!info) return alert('Vui lòng nhập nội dung.');
+
+      loading.style.display = 'block';
+
+      try {
+        const res = await fetch('/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ info })
+        });
+
+        const data = await res.json();
+        input.value = '';
+        await loadMessages(); // reload sau khi gửi
+      } catch (err) {
+        alert('Lỗi gửi dữ liệu!');
+      } finally {
+        loading.style.display = 'none';
       }
-
-      const res = await fetch('/api/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ info })
-      });
-
-      const data = await res.json();
-      document.getElementById('result').innerText = 'Đã lưu: ' + data.savedInfo;
-      input.value = ''; // Xoá ô nhập sau khi gửi
     }
+
+    async function loadMessages() {
+      const res = await fetch('/api/messages');
+      const { messages } = await res.json();
+
+      const container = document.getElementById('messagesList');
+      container.innerHTML = '';
+      messages.reverse().forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'message';
+        div.innerText = msg.info;
+        container.appendChild(div);
+      });
+    }
+
+    loadMessages(); // load khi mở trang
   </script>
 </body>
 </html>
