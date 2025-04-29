@@ -5,24 +5,31 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Chỉ hỗ trợ POST' });
   }
 
   const { info } = req.body;
 
   if (!info) {
-    return res.status(400).json({ error: 'Missing info' });
+    return res.status(400).json({ error: 'Thiếu nội dung gửi' });
   }
 
-  const { data, error } = await supabase
-    .from('messages')
-    .insert([{ info }]);
+  try {
+    const { data, error } = await supabase
+      .from('messages')
+      .insert([{ info }]);
 
-  if (error) {
-    return res.status(500).json({ error: error.message });
+    if (error) {
+      console.error('Supabase error:', error);
+      return res.status(500).json({ error: 'Supabase insert thất bại', details: error.message });
+    }
+
+    return res.status(200).json({ message: 'Gửi thành công', data });
+  } catch (err) {
+    console.error('Unknown error:', err);
+    return res.status(500).json({ error: 'Lỗi server', details: err.message });
   }
-
-  return res.status(201).json({ message: 'Data inserted successfully', data });
 }
