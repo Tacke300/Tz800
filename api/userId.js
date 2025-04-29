@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     // Nếu chưa có thì insert
     const { data, error } = await supabase
       .from('users')
-      .insert([{ user_id: userId }]);
+      .upsert([{ user_id: userId }]);
 
     if (error) {
       console.error('Lỗi insert Supabase:', error);
