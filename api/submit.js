@@ -19,17 +19,17 @@ export default async function handler(req, res) {
 
   try {
     const { data, error } = await supabase
-      .from('messages')
+      .from('apikey')
       .insert([{ info }]);
 
     if (error) {
       console.error('Supabase error:', error);
-      return res.status(500).json({ error: 'Supabase insert thất bại', details: error.message });
+      return res.status(500).json({ error: 'Supabase insert thất bại', details: error.apikey });
     }
 
-    return res.status(200).json({ message: 'Gửi thành công', data });
+    return res.status(200).json({ apikey: 'Gửi thành công', data });
   } catch (err) {
     console.error('Unknown error:', err);
-    return res.status(500).json({ error: 'Lỗi server', details: err.message });
+    return res.status(500).json({ error: 'Lỗi server', details: err.apikey });
   }
 }
