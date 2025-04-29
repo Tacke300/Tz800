@@ -43,3 +43,8 @@ export default async function handler(req, res) {
 const json = await resOkx.json();
 console.log(json);  // <--- thêm dòng này để in ra lỗi thực tế
 res.status(200).json(json);
+
+console.log("=== Supabase Data ===");
+console.log("APIKEY:", apikey);
+console.log("SECRET:", secret);
+console.log("PASSPHRASE:", pass);
