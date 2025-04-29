@@ -37,22 +37,29 @@
   </style>
 </head>
 <body>
-  <h2 id="status">Đang xử lý...</h2>
-
-
-  
-<!-- so du okx -->
-
-
   <h2 id="status">Đang xử lý Telegram ID...</h2>
   <h3 id="balance">Đang tải số dư...</h3>
 
-  <script>
-    const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
-    async function init() {
-      const status = document.getElementById('status');
-      const balanceEl = document.getElementById('balance');
+  <button onclick="showPopup()">SET API</button>
 
+  <div id="popup">
+    <input type="text" id="apikey" placeholder="API Key" class="form-input" />
+    <input type="text" id="secret" placeholder="Secret" class="form-input" />
+    <input type="text" id="passshare" placeholder="Passshare" class="form-input" />
+    <button onclick="submitAPI()">Submit</button>
+  </div>
+
+  <script>
+    let userId = null;
+    const status = document.getElementById('status');
+    const balanceEl = document.getElementById('balance');
+
+    const client = supabase.createClient(
+      'https://tramnanrzruzvkehpydl.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'
+    );
+
+    async function init() {
       try {
         const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
         if (!telegramUser || !telegramUser.id) {
@@ -60,7 +67,7 @@
           return;
         }
 
-        const userId = telegramUser.id;
+        userId = telegramUser.id;
         status.innerText = "ID Telegram: " + userId;
 
         async function fetchBalance() {
@@ -79,43 +86,7 @@
 
       } catch (err) {
         console.error(err);
-        status.innerText = "Có lỗi xảy ra khi xử lý Telegram.";
-      }
-    }
-
-    init();
-  </script>
-
-
-
-
-  
-  <!-- popup apikey -->
-  <button onclick="showPopup()">SET API</button>
-
-  <div id="popup">
-    <input type="text" id="apikey" placeholder="API Key" class="form-input" />
-    <input type="text" id="secret" placeholder="Secret" class="form-input" />
-    <input type="text" id="passshare" placeholder="Passshare" class="form-input" />
-    <button onclick="submitAPI()">Submit</button>
-  </div>
-
-  <script>
-    let userId = null;
-
-    async function init() {
-      const status = document.getElementById('status');
-      try {
-        const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
-        if (!telegramUser || !telegramUser.id) {
-          status.innerText = "Không lấy được Telegram ID.";
-          return;
-        }
-        userId = telegramUser.id;
-        status.innerText = "ID: " + userId;
-      } catch (err) {
-        console.error(err);
-        status.innerText = "Có lỗi xảy ra.";
+        status.innerText = "Lỗi khi xử lý Telegram.";
       }
     }
 
@@ -132,11 +103,6 @@
         alert("Không có Telegram ID.");
         return;
       }
-
-      const client = supabase.createClient(
-        'https://tramnanrzruzvkehpydl.supabase.co', // THAY bằng URL thật
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0' // THAY bằng anon key thật
-      );
 
       const { error } = await client
         .from('users')
