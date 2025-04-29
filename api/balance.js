@@ -1,9 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 
+// KHÔNG dùng NEXT_PUBLIC_ trong API route, hãy dùng biến thường (xem chú thích bên dưới)
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
 )
 
 export default async function handler(req, res) {
@@ -21,6 +22,12 @@ export default async function handler(req, res) {
   }
 
   const { apikey, secret, pass } = data;
+
+  console.log("=== Supabase Data ===");
+  console.log("APIKEY:", apikey);
+  console.log("SECRET:", secret);
+  console.log("PASSPHRASE:", pass);
+
   const timestamp = new Date().toISOString();
   const sign = crypto
     .createHmac('sha256', secret)
@@ -37,14 +44,14 @@ export default async function handler(req, res) {
     },
   });
 
-  const json = await resOkx.json();
-  res.status(200).json(json);
-}
-const json = await resOkx.json();
-console.log(json);  // <--- thêm dòng này để in ra lỗi thực tế
-res.status(200).json(json);
+  const raw = await resOkx.text();
+  console.log("=== OKX Raw Response ===");
+  console.log(raw);
 
-console.log("=== Supabase Data ===");
-console.log("APIKEY:", apikey);
-console.log("SECRET:", secret);
-console.log("PASSPHRASE:", pass);
+  try {
+    const json = JSON.parse(raw);
+    res.status(200).json(json);
+  } catch (e) {
+    res.status(500).json({ error: 'Không parse được JSON từ OKX', raw });
+  }
+}
