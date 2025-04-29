@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   try {
     // Insert vào Supabase
     const { data, error } = await supabase
-      .from('your_table_name') // Tên table Supabase
+      .from('users') // Tên table Supabase
       .insert([{ telegram_id: userId }]);
 
     if (error) {
