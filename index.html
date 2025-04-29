@@ -46,12 +46,131 @@
       try {
         const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
         if (!telegramUser || !telegramUser.id) {
-          status.innerText = "Không lấy được Telegram ID.";
+          status.innerText = "Lỗi sever cập nhật lại hoặc liên hệ admin!";
           return;
         }
 
         const userId = telegramUser.id;
-        status.innerText = "ID của bạn: " + userId;
+        status.innerText = "ID: " + userId;
+
+        const res = await fetch('/api/userId', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId })
+        });
+
+        
+
+      } catch (err) {
+        console.error(err);
+        status.innerText = "Có lỗi xảy ra.";
+      }
+    }
+
+    init();
+  </script>
+
+  
+  <!-- gui database to supabass -->
+  
+  <h2>Nhập nội dung:</h2>
+  
+  <input type="text" id="infoInput" placeholder="Gõ nội dung..." />
+  <button onclick="submitInfo()">Gửi</button>
+  <div id="loading">Đang gửi...</div>
+
+  <h3>Dữ liệu đã lưu:</h3>
+  <div id="messagesList"></div>
+
+  <script>
+    async function submitInfo() {
+      const input = document.getElementById('infoInput');
+      const loading = document.getElementById('loading');
+      const info = input.value.trim();
+      if (!info) return alert('Vui lòng nhập nội dung.');
+
+      loading.style.display = 'block';
+
+      try {
+        const res = await fetch('/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ info })
+        });
+
+        const data = await res.json();
+        input.value = '';
+        await loadMessages(); // reload sau khi gửi
+      } catch (err) {
+        alert('Lỗi gửi dữ liệu!');
+      } finally {
+        loading.style.display = 'none';
+      }
+    }
+
+    async function loadMessages() {
+      const res = await fetch('/api/messages');
+      const { messages } = await res.json();
+
+      const container = document.getElementById('messagesList');
+      container.innerHTML = '';
+      messages.reverse().forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'message';
+        div.innerTex<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Telegram WebApp</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: orange;
+    }
+    input, button {
+      font-size: 18px;
+      padding: 10px;
+      margin-bottom: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    #loading {
+      display: none;
+      color: #888;
+      margin-top: 10px;
+    }
+    .message {
+      background: white;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <marquee behavior="scroll" direction="left" scrollamount="6" style="font-size: 24px; color: #007aff; font-weight: bold; margin-bottom: 20px;">
+  TZ800 - BOT FUNDING
+  </marquee>
+  <!-- get id tele -->
+  <h2 id="status">Đang xử lý...</h2>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    async function init() {
+      const status = document.getElementById('status');
+
+      try {
+        const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
+        if (!telegramUser || !telegramUser.id) {
+          status.innerText = "Lỗi sever cập nhật lại hoặc liên hệ admin!";
+          return;
+        }
+
+        const userId = telegramUser.id;
+        status.innerText = "ID: " + userId;
 
         const res = await fetch('/api/userId', {
           method: 'POST',
@@ -118,6 +237,15 @@
         const div = document.createElement('div');
         div.className = 'message';
         div.innerText = msg.info;
+        container.appendChild(div);
+      });
+    }
+
+    loadMessages(); // load khi mở trang
+  </script>
+</body>
+</html>
+t = msg.info;
         container.appendChild(div);
       });
     }
