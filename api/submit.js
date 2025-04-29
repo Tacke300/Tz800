@@ -19,7 +19,7 @@ export default async function handler(req, res) {
 
   try {
     const { data, error } = await supabase
-      .from('apikey')
+      .from('apikey','secret','pass')
       .insert([{ info }]);
 
     if (error) {
