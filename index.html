@@ -14,22 +14,28 @@
   </form>
 
   <script>
-    const form = document.getElementById('infoForm');
-    form.addEventListener('submit', async (e) => {
+    document.getElementById('infoForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      const userId = document.getElementById('userId').value;
-      const apikey = document.getElementById('apikey').value;
-      const secret = document.getElementById('secret').value;
-      const pass = document.getElementById('pass').value;
 
-      const res = await fetch('/api/saveCredentials', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, apikey, secret, pass })
-      });
+      const data = {
+        userId: document.getElementById('userId').value.trim(),
+        apikey: document.getElementById('apikey').value.trim(),
+        secret: document.getElementById('secret').value.trim(),
+        pass: document.getElementById('pass').value.trim()
+      };
 
-      const result = await res.json();
-      alert(result.message || 'Có lỗi xảy ra');
+      try {
+        const response = await fetch('/api/saveCredentials', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        alert(result.message || result.error || 'Đã gửi!');
+      } catch (err) {
+        alert('Lỗi kết nối đến server');
+      }
     });
   </script>
 </body>
