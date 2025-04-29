@@ -9,7 +9,7 @@
     <input type="text" id="userId" placeholder="Telegram ID"><br>
     <input type="text" id="apikey" placeholder="API Key"><br>
     <input type="text" id="secret" placeholder="Secret"><br>
-    <input type="text" id="pass" placeholder="Passshare"><br>
+    <input type="text" id="pass" placeholder="Passphrase"><br>
     <button type="submit">Gửi</button>
   </form>
 
@@ -22,25 +22,14 @@
       const secret = document.getElementById('secret').value;
       const pass = document.getElementById('pass').value;
 
-      await fetch('/api/apikey', {
+      const res = await fetch('/api/saveCredentials', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, apikey })
+        body: JSON.stringify({ userId, apikey, secret, pass })
       });
 
-      await fetch('/api/secret', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, secret })
-      });
-
-      await fetch('/api/pass', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, pass })
-      });
-
-      alert('Đã gửi thông tin!');
+      const result = await res.json();
+      alert(result.message || 'Có lỗi xảy ra');
     });
   </script>
 </body>
