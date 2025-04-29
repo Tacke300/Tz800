@@ -4,8 +4,6 @@
   <meta charset="UTF-8">
   <title>Telegram WebApp</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
       font-family: sans-serif;
@@ -19,22 +17,10 @@
       width: 100%;
       box-sizing: border-box;
     }
-    #popup {
-      transition: transform 0.3s ease-in-out;
-      transform: translateY(100%);
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: white;
-      z-index: 50;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-    }
-    #popup.show {
-      transform: translateY(0);
+    #loading {
+      display: none;
+      color: #888;
+      margin-top: 10px;
     }
     .message {
       background: white;
@@ -48,90 +34,55 @@
 <body>
 
   <marquee behavior="scroll" direction="left" scrollamount="6" style="font-size: 24px; color: #007aff; font-weight: bold; margin-bottom: 20px;">
-    TZ800 - BOT FUNDING
+  TZ800 - BOT FUNDING
   </marquee>
-
+  <!-- get id tele -->
   <h2 id="status">Đang xử lý...</h2>
-
-  <button onclick="openPopup()" class="px-4 py-2 bg-blue-600 text-white rounded">Set API</button>
-
-  <div id="popup">
-    <div class="mt-10 w-full max-w-md p-6 bg-white shadow-lg rounded-lg">
-      <h2 class="text-xl font-bold mb-4">Nhập thông tin API</h2>
-      <form id="apiForm" onsubmit="submitForm(event)">
-        <input id="apikey" placeholder="API Key" class="w-full mb-3 p-2 border rounded" required />
-        <input id="secret" placeholder="Secret" class="w-full mb-3 p-2 border rounded" required />
-        <input id="passha" placeholder="Passphrase" class="w-full mb-3 p-2 border rounded" required />
-        <div class="flex justify-between">
-          <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Submit</button>
-          <button type="button" onclick="closePopup()" class="px-4 py-2 bg-gray-400 text-white rounded">Đóng</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <h2>Nhập nội dung:</h2>
-  <input type="text" id="infoInput" placeholder="Gõ nội dung..." />
-  <button onclick="submitInfo()">Gửi</button>
-  <div id="loading" style="display:none;color:#888;margin-top:10px;">Đang gửi...</div>
-
-  <h3>Dữ liệu đã lưu:</h3>
-  <div id="messagesList"></div>
-
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
-    const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    let currentUserId = null;
-
     async function init() {
       const status = document.getElementById('status');
+
       try {
         const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
         if (!telegramUser || !telegramUser.id) {
           status.innerText = "Không lấy được Telegram ID.";
           return;
         }
-        currentUserId = telegramUser.id;
-        status.innerText = "ID: " + currentUserId;
+
+        const userId = telegramUser.id;
+        status.innerText = "ID: " + userId;
+
+        const res = await fetch('/api/userId', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId })
+        });
+
+        
+
       } catch (err) {
         console.error(err);
         status.innerText = "Có lỗi xảy ra.";
       }
     }
 
-    function openPopup() {
-      document.getElementById('popup').classList.add('show');
-    }
+    init();
+  </script>
 
-    function closePopup() {
-      document.getElementById('popup').classList.remove('show');
-    }
+  
+  <!-- gui database to supabass -->
+  
+  <h2>Nhập nội dung:</h2>
+  
+  <input type="text" id="infoInput" placeholder="Gõ nội dung..." />
+  <button onclick="submitInfo()">Gửi</button>
+  <div id="loading">Đang gửi...</div>
 
-    async function submitForm(e) {
-      e.preventDefault();
-      const apikey = document.getElementById('apikey').value;
-      const secret = document.getElementById('secret').value;
-      const passha = document.getElementById('passha').value;
+  <h3>Dữ liệu đã lưu:</h3>
+  <div id="messagesList"></div>
 
-      if (!currentUserId) {
-        alert("Chưa có user ID.");
-        return;
-      }
-
-      const { error } = await supabase
-        .from('users')
-        .update({ apikey, secret, pass: passha })
-        .eq('id', currentUserId);
-
-      if (error) {
-        alert('Lỗi: ' + error.message);
-      } else {
-        alert('Cập nhật thành công!');
-        closePopup();
-      }
-    }
-
+  <script>
     async function submitInfo() {
       const input = document.getElementById('infoInput');
       const loading = document.getElementById('loading');
@@ -149,7 +100,7 @@
 
         const data = await res.json();
         input.value = '';
-        await loadMessages();
+        await loadMessages(); // reload sau khi gửi
       } catch (err) {
         alert('Lỗi gửi dữ liệu!');
       } finally {
@@ -171,10 +122,7 @@
       });
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      init();
-      loadMessages();
-    });
+    loadMessages(); // load khi mở trang
   </script>
 </body>
 </html>
