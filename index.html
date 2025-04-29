@@ -1,42 +1,115 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-  <title>Nhập thông tin API</title>
+  <meta charset="UTF-8">
+  <title>Set API</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 2rem; }
+
+    #popup {
+      position: fixed;
+      bottom: -100%;
+      left: 0;
+      width: 100%;
+      background: white;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+      padding: 1.5rem;
+      transition: bottom 0.3s ease;
+      z-index: 999;
+    }
+
+    #popup.show {
+      bottom: 0;
+    }
+
+    input {
+      display: block;
+      margin: 1rem 0;
+      padding: 0.5rem;
+      width: 100%;
+      font-size: 1rem;
+    }
+
+    button {
+      padding: 0.7rem 1.5rem;
+      font-size: 1rem;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    h2 { margin-bottom: 1rem; }
+  </style>
 </head>
 <body>
-  <h1>Nhập thông tin</h1>
-  <form id="infoForm">
-    <input type="text" id="userId" placeholder="Telegram ID"><br>
-    <input type="text" id="apikey" placeholder="API Key"><br>
-    <input type="text" id="secret" placeholder="Secret"><br>
-    <input type="text" id="pass" placeholder="Passphrase"><br>
-    <button type="submit">Gửi</button>
-  </form>
+  <h2 id="status">Đang xử lý...</h2>
+  <button onclick="showPopup()">SET API</button>
 
+  <div id="popup">
+    <h3>Nhập API</h3>
+    <input type="text" id="apikey" placeholder="API Key" />
+    <input type="text" id="secret" placeholder="Secret Key" />
+    <input type="text" id="passphrase" placeholder="Passphrase" />
+    <button onclick="submitAPI()">Gửi</button>
+  </div>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
-    document.getElementById('infoForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
+    let userId = null;
 
-      const data = {
-        userId: document.getElementById('userId').value.trim(),
-        apikey: document.getElementById('apikey').value.trim(),
-        secret: document.getElementById('secret').value.trim(),
-        pass: document.getElementById('pass').value.trim()
-      };
+    async function init() {
+      const status = document.getElementById('status');
 
       try {
-        const response = await fetch('/api/saveCredentials', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
+        const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
+        if (!telegramUser || !telegramUser.id) {
+          status.innerText = "Không lấy được Telegram ID.";
+          return;
+        }
 
-        const result = await response.json();
-        alert(result.message || result.error || 'Đã gửi!');
+        userId = telegramUser.id;
+        status.innerText = "ID Telegram: " + userId;
+
       } catch (err) {
-        alert('Lỗi kết nối đến server');
+        console.error(err);
+        status.innerText = "Có lỗi xảy ra khi lấy ID.";
       }
-    });
+    }
+
+    function showPopup() {
+      document.getElementById('popup').classList.add('show');
+    }
+
+    async function submitAPI() {
+      const apikey = document.getElementById('apikey').value;
+      const secret = document.getElementById('secret').value;
+      const passphrase = document.getElementById('passphrase').value;
+
+      if (!userId) {
+        alert("Chưa có Telegram ID.");
+        return;
+      }
+
+      const res = await fetch('/api/set-api', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, apikey, secret, pass: passphrase })
+      });
+
+      if (res.ok) {
+        alert("Gửi thành công!");
+        document.getElementById('popup').classList.remove('show');
+      } else {
+        alert("Lỗi gửi dữ liệu.");
+      }
+    }
+
+    init();
   </script>
 </body>
 </html>
