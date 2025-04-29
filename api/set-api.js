@@ -12,7 +12,9 @@ export default async function handler(req, res) {
 
   const { data, error } = await supabase
   .from('users')
-  .upsert([{ user_id, apikey, pass }], { onConflict: ['user_id'] });
+  .upsert([{ user_id, apikey, pass }], {
+    onConflict: ['user_id']
+  });
   if (error) return res.status(500).json({ error: error.message });
 
   res.status(200).json({ message: 'Thành công' });
