@@ -43,37 +43,48 @@
   
 <!-- so du okx -->
 
-<!DOCTYPE html>
 
-  <h1>Số dư OKX (Realtime)</h1>
-  <pre id="balance">Đang tải...</pre>
+  <h2 id="status">Đang xử lý Telegram ID...</h2>
+  <h3 id="balance">Đang tải số dư...</h3>
 
   <script>
-    function getUserIdFromURL() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('user_id');
-    }
-
-    const userId = getUserIdFromURL();
-
-    async function fetchBalance() {
-      if (!userId) {
-        document.getElementById('balance').textContent = 'Thiếu user_id trên URL';
-        return;
-      }
+    async function init() {
+      const status = document.getElementById('status');
+      const balanceEl = document.getElementById('balance');
 
       try {
-        const res = await fetch(`/api/balance?user_id=${userId}`);
-        const data = await res.json();
-        document.getElementById('balance').textContent = JSON.stringify(data, null, 2);
+        const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
+        if (!telegramUser || !telegramUser.id) {
+          status.innerText = "Không lấy được Telegram ID.";
+          return;
+        }
+
+        const userId = telegramUser.id;
+        status.innerText = "ID Telegram: " + userId;
+
+        async function fetchBalance() {
+          try {
+            const res = await fetch(`/api/balance?user_id=${userId}`);
+            const json = await res.json();
+            const usdt = json?.data?.[0]?.details?.find(i => i.ccy === 'USDT')?.cashBal || '0';
+            balanceEl.innerText = `Số dư: ${usdt} USDT`;
+          } catch (e) {
+            balanceEl.innerText = "Lỗi khi lấy số dư.";
+          }
+        }
+
+        fetchBalance();
+        setInterval(fetchBalance, 1000);
+
       } catch (err) {
-        document.getElementById('balance').textContent = 'Lỗi: ' + err.message;
+        console.error(err);
+        status.innerText = "Có lỗi xảy ra khi xử lý Telegram.";
       }
     }
 
-    fetchBalance();
-    setInterval(fetchBalance, 1000); // cập nhật mỗi giây
+    init();
   </script>
+
 
 
 
