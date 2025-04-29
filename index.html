@@ -51,7 +51,7 @@
         }
 
         const userId = telegramUser.id;
-        status.innerText = "ID của bạn: " + userId + " - Đang gửi lên server...";
+        status.innerText = "ID của bạn: " + userId;
 
         const res = await fetch('/api/userId', {
           method: 'POST',
@@ -59,13 +59,7 @@
           body: JSON.stringify({ userId })
         });
 
-        const data = await res.json();
-
-        if (data.existed) {
-          status.innerText = "Xin chào trở lại! ID của bạn đã tồn tại.";
-        } else {
-          status.innerText = "Đã lưu ID mới thành công!";
-        }
+        
 
       } catch (err) {
         console.error(err);
