@@ -36,6 +36,48 @@
   <marquee behavior="scroll" direction="left" scrollamount="6" style="font-size: 24px; color: #007aff; font-weight: bold; margin-bottom: 20px;">
   TZ800 - BOT FUNDING
   </marquee>
+  <!-- get id tele -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    async function init() {
+      const status = document.getElementById('status');
+
+      try {
+        const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
+        if (!telegramUser || !telegramUser.id) {
+          status.innerText = "Không lấy được Telegram ID.";
+          return;
+        }
+
+        const userId = telegramUser.id;
+        status.innerText = "ID của bạn: " + userId + " - Đang gửi lên server...";
+
+        const res = await fetch('/api/saveUser', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId })
+        });
+
+        const data = await res.json();
+
+        if (data.existed) {
+          status.innerText = "Xin chào trở lại! ID của bạn đã tồn tại.";
+        } else {
+          status.innerText = "Đã lưu ID mới thành công!";
+        }
+
+      } catch (err) {
+        console.error(err);
+        status.innerText = "Có lỗi xảy ra.";
+      }
+    }
+
+    init();
+  </script>
+
+  
+  <!-- gui database to supabass -->
+  
   <h2>Nhập nội dung:</h2>
   
   <input type="text" id="infoInput" placeholder="Gõ nội dung..." />
