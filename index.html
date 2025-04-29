@@ -38,6 +38,32 @@
 </head>
 <body>
   <h2 id="status">Đang xử lý...</h2>
+
+
+  
+<!-- so du okx -->
+<div id="balance">Loading...</div>
+
+<script>
+  const user_id = 'user_abc123' // user_id thật của bạn
+  async function fetchBalance() {
+    try {
+      const res = await fetch(`/api/balance?user_id=${user_id}`);
+      const data = await res.json();
+      const usdt = data.data[0].details.find(x => x.ccy === 'USDT')
+      document.getElementById('balance').innerText = `USDT: ${usdt.cashBal}`;
+    } catch (err) {
+      document.getElementById('balance').innerText = 'Lỗi lấy số dư';
+    }
+  }
+
+  fetchBalance();
+  setInterval(fetchBalance, 1000); // mỗi giây gọi lại
+</script>
+
+
+  
+  
   <button onclick="showPopup()">SET API</button>
 
   <div id="popup">
