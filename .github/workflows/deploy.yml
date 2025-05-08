@@ -1,20 +1,23 @@
-name: Auto Deploy to VPS
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy code to VPS via SSH
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: 34.145.69.100             # Địa chỉ IP VPS của bạn
-          username: tacke300              # Tên user trên VPS (nên là user có quyền SSH và git pull)
-          key: ${{ secrets.VPS_KEY }}     # Private key, đã thêm vào GitHub Secrets
-          script: |
-            cd ~/fundingbot              # Đường dẫn tới thư mục chứa project trên VPS
-            git pull origin main         # Kéo code mới nhất
-            # systemctl restart fundingbot.service  # (Nếu cần restart service sau khi deploy)
+- name: Deploy to VPS
+  uses: appleboy/ssh-action@v1.0.0
+  with:
+    host: your-vps-host
+    username: your-ssh-username
+    key: |
+      -----BEGIN OPENSSH PRIVATE KEY-----
+      b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAE
+      bm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+      QyNTUxOQAAACCcHFuaSsSdVaHnyn2edUBY1f
+      jkoSVjw0e3UdxWtrCr6AAAAJA1dd+6NXXf
+      ugAAAAtzc2gtZWQyNTUxOQAAACCcHFuaSsS
+      dVaHnyn2edUBY1fjkoSVjw0e3UdxWtrCr6A
+      AAAECnJyyYYEE3YLtSJhfeKLoB71MxOD/qLW
+      oWSS/OR/0mcpwcW5pKxJ1VoefKfZ51QFjV
+      +OShJWPDR7dR3Fa2sKvoAAAABmRlcGxveQEC
+      AwQFBgc=
+      -----END OPENSSH PRIVATE KEY-----
+    port: 22
+    script: |
+      cd ~/fundingbot
+      git pull origin main
+      systemctl restart fundingbot.service
