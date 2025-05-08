@@ -18,7 +18,7 @@ jobs:
         with:
           host: 34.145.69.100
           username: Tacke300
-          key: ${{ secrets.VPS_KEY }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
             cd ~/your-project-folder
