@@ -19,13 +19,7 @@ jobs:
           host: 34.145.69.100
           username: Tacke300
           key: |
-            -----BEGIN OPENSSH PRIVATE KEY-----
-            b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-            QyNTUxOQAAACCXfzOT9IKVNaz81KC3okSfYOw11SA8D93AYVZ4SfYU3AAAAJjYlcyp2JXM
-            qQAAAAtzc2gtZWQyNTUxOQAAACCXfzOT9IKVNaz81KC3okSfYOw11SA8D93AYVZ4SfYU3A
-            AAAECeMrRUDE0uPyxqKS0mVWMhYYHQ/ol8Ed2tbodk6BdHYZd/M5P0gpU1rPzUoLeiRJ9g
-            7DXVIDwP3cBhVnhJ9hTcAAAAFWRlcGxveUB5b3VyZG9tYWluLmNvbQ==
-            -----END OPENSSH PRIVATE KEY-----
+            ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJd/M5P0gpU1rPzUoLeiRJ9g7DXVIDwP3cBhVnhJ9hTc deploy@yourdomain.com
           port: 22
           script: |
             cd ~
