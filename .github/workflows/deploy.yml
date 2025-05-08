@@ -13,15 +13,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Deploy to VPS via SSH
-        uses: appleboy/ssh-action@v1.0.0
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.5.3
         with:
-          host: 34.145.69.100
-          username: Tacke300
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            cd ~/your-project-folder
-            git pull origin main
-            systemctl restart tz800.service
-          
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy to VPS via SSH
+        run: |
+          ssh -o StrictHostKeyChecking=no Tacke300@34.145.69.100 << 'EOF'
+            cd ~/ || exit 1
+            git pull origin main || exit 1
+            systemctl restart tz800.service || exit 1
+            echo "Deployment successful"
+          EOF
