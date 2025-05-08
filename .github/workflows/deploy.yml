@@ -13,16 +13,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Start SSH Agent and Add Key
+      - name: Deploy via SSH
         run: |
-         
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | ssh-add -
-
-      - name: Debug SSH Connection
-        run: |
-          ssh -v -o StrictHostKeyChecking=no Tacke300@34.145.69.100 << 'EOF'
-            cd ~/ || exit 1
-            git pull origin main || exit 1
-            systemctl restart tz800.service || exit 1
-            echo "Deployment successful"
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key
+          chmod 600 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key Tacke300@34.145.69.100 << 'EOF'
+            cd ~
+            git pull origin main
+            systemctl restart tz800.service
+            echo "Deployment done."
           EOF
