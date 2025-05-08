@@ -21,6 +21,6 @@ jobs:
           key: ${{ secrets.VPS_KEY }}
           port: 22
           script: |
-           cd ~/tz800
+           cd ~
            git pull origin main
            systemctl restart tz800.service
