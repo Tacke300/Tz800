@@ -1,21 +1,25 @@
-name: Auto Deploy to VPS
+name: Deploy to VPS
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main  # thay đổi nếu bạn dùng branch khác
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Deploy code to VPS via SSH
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: 34.145.69.100
-          username: tacke300
-          key: ${{ secrets.VPS_KEY }}
-          script: |
-            cd /home/tacke300/fundingbot
-            git pull origin main
-            # Nếu bạn cần restart service sau khi cập nhật, thêm lệnh ở đây, ví dụ:
-            # systemctl restart fundingbot
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          cd /home/tacke300/fundingbot  # thay đường dẫn nếu cần
+          git pull origin main
