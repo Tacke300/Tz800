@@ -18,9 +18,9 @@ jobs:
           eval $(ssh-agent -s)
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | ssh-add -
 
-      - name: Deploy to VPS via SSH
+      - name: Debug SSH Connection
         run: |
-          ssh -o StrictHostKeyChecking=no Tacke300@34.145.69.100 << 'EOF'
+          ssh -v -o StrictHostKeyChecking=no Tacke300@34.145.69.100 << 'EOF'
             cd ~/ || exit 1
             git pull origin main || exit 1
             systemctl restart tz800.service || exit 1
