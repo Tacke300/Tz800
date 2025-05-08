@@ -11,16 +11,20 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.VPS_KEY }}
+          host: 34.145.69.100
+          username: Tacke300
+          key: |
+            -----BEGIN OPENSSH PRIVATE KEY-----
+            b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAA
+            AABAAAAMwAAAAtzc2gtZWQyNTUxOQAAACCGsVdJvbZILLL2Z6Ki5j88EnpbbEHDfJ+Q1up/jZXMkwAAAJjbwlct28JXLQAAAAtzc2gtZWQyNTUxOQAAACCGsVdJvbZILLL2Z6Ki5j88EnpbbEHDfJ+Q1up/jZXMkwAAAEA1opfP1whnaVmERxTiiz/W5MBF4f2WX/QDfiSW32eBcYaxV0m9tkgssvZnoqLmPzwSeltsQcN8n5DW6n+NlcyTAAAAFWRlcGxveUB5b3VyZG9tYWluLmNvbQ==
+            -----END OPENSSH PRIVATE KEY-----
           port: 22
           script: |
-           cd ~
-           git pull origin main
-           systemctl restart tz800.service
+            cd ~
+            git pull origin main
+            systemctl restart tz800.service
