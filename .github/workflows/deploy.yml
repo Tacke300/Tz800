@@ -21,6 +21,6 @@ jobs:
           key: ${{ secrets.VPS_KEY }}
           port: 22
           script: |
-            cd ~/fundingbot
-            git pull origin main
-            systemctl restart fundingbot.service
+           cd ~/tz800
+           git pull origin main
+           systemctl restart tz800.service
