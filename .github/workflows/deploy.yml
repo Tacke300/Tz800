@@ -18,10 +18,10 @@ jobs:
         with:
           host: 34.145.69.100
           username: Tacke300
-          key: |
-            ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJd/M5P0gpU1rPzUoLeiRJ9g7DXVIDwP3cBhVnhJ9hTc deploy@yourdomain.com
+          key: ${{ secrets.VPS_KEY }}
           port: 22
           script: |
-            cd ~
+            cd ~/your-project-folder
             git pull origin main
             systemctl restart tz800.service
+          args: "-o StrictHostKeyChecking=no"
