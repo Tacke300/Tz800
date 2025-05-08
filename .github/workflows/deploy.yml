@@ -20,8 +20,11 @@ jobs:
           username: Tacke300
           key: |
             -----BEGIN OPENSSH PRIVATE KEY-----
-            b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAA
-            AABAAAAMwAAAAtzc2gtZWQyNTUxOQAAACCGsVdJvbZILLL2Z6Ki5j88EnpbbEHDfJ+Q1up/jZXMkwAAAJjbwlct28JXLQAAAAtzc2gtZWQyNTUxOQAAACCGsVdJvbZILLL2Z6Ki5j88EnpbbEHDfJ+Q1up/jZXMkwAAAEA1opfP1whnaVmERxTiiz/W5MBF4f2WX/QDfiSW32eBcYaxV0m9tkgssvZnoqLmPzwSeltsQcN8n5DW6n+NlcyTAAAAFWRlcGxveUB5b3VyZG9tYWluLmNvbQ==
+            b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+            QyNTUxOQAAACCXfzOT9IKVNaz81KC3okSfYOw11SA8D93AYVZ4SfYU3AAAAJjYlcyp2JXM
+            qQAAAAtzc2gtZWQyNTUxOQAAACCXfzOT9IKVNaz81KC3okSfYOw11SA8D93AYVZ4SfYU3A
+            AAAECeMrRUDE0uPyxqKS0mVWMhYYHQ/ol8Ed2tbodk6BdHYZd/M5P0gpU1rPzUoLeiRJ9g
+            7DXVIDwP3cBhVnhJ9hTcAAAAFWRlcGxveUB5b3VyZG9tYWluLmNvbQ==
             -----END OPENSSH PRIVATE KEY-----
           port: 22
           script: |
