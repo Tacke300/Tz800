@@ -1,23 +1,26 @@
-- name: Deploy to VPS
-  uses: appleboy/ssh-action@v1.0.0
-  with:
-    host: your-vps-host
-    username: your-ssh-username
-    key: |
-      -----BEGIN OPENSSH PRIVATE KEY-----
-      b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAE
-      bm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-      QyNTUxOQAAACCcHFuaSsSdVaHnyn2edUBY1f
-      jkoSVjw0e3UdxWtrCr6AAAAJA1dd+6NXXf
-      ugAAAAtzc2gtZWQyNTUxOQAAACCcHFuaSsS
-      dVaHnyn2edUBY1fjkoSVjw0e3UdxWtrCr6A
-      AAAECnJyyYYEE3YLtSJhfeKLoB71MxOD/qLW
-      oWSS/OR/0mcpwcW5pKxJ1VoefKfZ51QFjV
-      +OShJWPDR7dR3Fa2sKvoAAAABmRlcGxveQEC
-      AwQFBgc=
-      -----END OPENSSH PRIVATE KEY-----
-    port: 22
-    script: |
-      cd ~/fundingbot
-      git pull origin main
-      systemctl restart fundingbot.service
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          port: 22
+          script: |
+            cd ~/fundingbot
+            git pull origin main
+            systemctl restart fundingbot.service
