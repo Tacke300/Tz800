@@ -1,10 +1,13 @@
 name: Deploy to VPS
 
+
 on:
   push:
     branches:
-      - master  # Tự động deploy khi đẩy lên nhánh main
-
+      - main
+  pull_request:
+    branches:
+      - main
 jobs:
   deploy:
     runs-on: ubuntu-latest
