@@ -22,4 +22,4 @@ jobs:
 
       - name: Deploy to VPS
         run: |
-          ssh tacke300@34.145.69.100 'bash -s' < ./deploy.sh
+          ssh tacke300@34.145.69.100 'bash -s' < ./auto_pull.sh
