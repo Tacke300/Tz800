@@ -28,5 +28,5 @@ jobs:
 
       - name: Deploy to VPS
         run: |
-          scp -i ~/.ssh/id_ed25519 ./auto_pull.sh tacke300@34.145.69.100:/home/tacke300/auto_pull.sh
-          ssh -i ~/.ssh/id_ed25519 tacke300@34.145.69.100 'bash /home/tacke300/auto_pull.sh'
+          scp -i ~/.ssh/id_ed25519 ./auto_pull.sh tacke300@34.145.69.100:/home/tacke300/tz800/auto_pull.sh
+          ssh -i ~/.ssh/id_ed25519 tacke300@34.145.69.100 'bash /home/tacke300/tz800/auto_pull.sh'
