@@ -20,10 +20,11 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H 34.145.69.100 >> ~/.ssh/known_hosts
 
+          - name: List files in workspace
+            run: ls -la
+
       - name: Deploy to VPS
         run: |
           ssh tacke300@34.145.69.100 'bash -s' < ./auto_pull.sh
           
-      - name: Deploy to VPS
-        run: |
-          ssh tacke300@34.145.69.100 'bash -s' < ./scripts/auto_pull.sh
+      
