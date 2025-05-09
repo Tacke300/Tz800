@@ -3,7 +3,7 @@ name: Deploy to VPS
 on:
   push:
     branches:
-      - main  # hoặc nhánh bạn muốn trigger deploy
+      - main  # hoặc branch bạn muốn deploy
 
 jobs:
   deploy:
@@ -11,17 +11,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup SSH key
         run: |
-          echo "${{ secrets.SSH.PRIVATE_KEY }}" > private_key
-          chmod 600 private_key
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H 34.145.69.100 >> ~/.ssh/known_hosts
 
-      - name: Deploy to VPS via SSH
+      - name: Deploy to VPS
         run: |
-          ssh -i private_key -o StrictHostKeyChecking=no tacke300@34.145.69.100 << 'EOF'
-            cd /home/tacke300/app-folder
-            git pull origin main
-            pm2 restart app-name  # hoặc lệnh khác để restart app
-          EOF
+          ssh tacke300@34.145.69.100 'bash -s' < ./deploy.sh
