@@ -27,7 +27,7 @@ echo "[B3] Pull thành công."
 
 # B4: (Tuỳ chọn) Restart bot nếu cần
 # echo "[B4] Đang restart bot với PM2..."
-# pm2 restart bot_name || {
+# pm2 restart tz800 || {
 #     echo "[B4] Lỗi khi restart bot!"
 #     exit 1
 # }
