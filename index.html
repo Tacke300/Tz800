@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Set API okx</title>
+  <title>HELLO</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
@@ -38,8 +38,8 @@
 </head>
 <body>
   <h1> Hello Pasta </h1>
-  <h2 id="status">Đang xử lý Telegram ID...</h2>
-  <h3 id="balance">Đang tải số dư...</h3>
+  <h2 id="status">Connect ID...</h2>
+  <h3 id="balance">Connect Balance...</h3>
 
   <button onclick="showPopup()">SET API</button>
 
@@ -64,21 +64,21 @@
       try {
         const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
         if (!telegramUser || !telegramUser.id) {
-          status.innerText = "Không lấy được Telegram ID.";
+          status.innerText = "ERROR ID.";
           return;
         }
 
         userId = telegramUser.id;
-        status.innerText = "ID Telegram: " + userId;
+        status.innerText = "ID: " + userId;
 
         async function fetchBalance() {
           try {
             const res = await fetch(`/api/balance?user_id=${userId}`);
             const json = await res.json();
             const usdt = json?.data?.[0]?.details?.find(i => i.ccy === 'USDT')?.cashBal || '0';
-            balanceEl.innerText = `Số dư: ${usdt} USDT`;
+            balanceEl.innerText = `BALANCE: ${usdt} USDT`;
           } catch (e) {
-            balanceEl.innerText = "Lỗi khi lấy số dư.";
+            balanceEl.innerText = "ERROR";
           }
         }
 
@@ -87,7 +87,7 @@
 
       } catch (err) {
         console.error(err);
-        status.innerText = "Lỗi khi xử lý Telegram.";
+        status.innerText = "ERROR";
       }
     }
 
@@ -111,9 +111,9 @@
 
       if (error) {
         console.error(error);
-        alert("Lỗi khi gửi dữ liệu: " + error.message);
+        alert("ERROR" + error.message);
       } else {
-        alert("Đã gửi thành công!");
+        alert("DONE");
         document.getElementById('popup').classList.remove('show');
       }
     }
