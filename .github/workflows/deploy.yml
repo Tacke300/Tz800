@@ -3,7 +3,7 @@ name: Deploy to VPS
 on:
   push:
     branches:
-      - main
+      - main  # hoặc nhánh bạn muốn trigger deploy
 
 jobs:
   deploy:
@@ -13,13 +13,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Deploy via SSH
+      - name: Setup SSH key
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key
+          echo "${{ secrets.SSH.PRIVATE_KEY }}" > private_key
           chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key Tacke300@34.145.69.100 << 'EOF'
-            cd ~
+
+      - name: Deploy to VPS via SSH
+        run: |
+          ssh -i private_key -o StrictHostKeyChecking=no tacke300@34.145.69.100 << 'EOF'
+            cd /home/tacke300/app-folder
             git pull origin main
-            systemctl restart tz800.service
-            echo "Deployment done."
+            pm2 restart app-name  # hoặc lệnh khác để restart app
           EOF
