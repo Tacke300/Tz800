@@ -3,8 +3,8 @@
 echo "===== BẮT ĐẦU DEPLOY ====="
 
 # B1: Di chuyển đến thư mục dự án
-cd /home/tacke300/tz800 || {
-    echo "[B1] Không tìm thấy thư mục /home/tacke300/tz800"
+cd /home/tacke300 || {
+    echo "[B1] Không tìm thấy thư mục /home/tacke300"
     exit 1
 }
 echo "[B1] Đã vào thư mục dự án."
