@@ -22,11 +22,14 @@ jobs:
 
       - name: List files in workspace
         run: ls -la
-      - name: Make script executable
-        run: chmod +x home/tacke300/auto_pull.sh
+
+      - name: Make scripts executable
+        run: |
+          chmod +x ./auto_pull.sh   # Đảm bảo file auto_pull.sh có sẵn trong thư mục gốc của repo
+          chmod +x ./auto_pull      # Đảm bảo file auto_pull cũng có sẵn trong thư mục gốc của repo
 
       - name: Deploy to VPS
         run: |
-          ssh tacke300@34.145.69.100 'bash -s' < home/tacke300/auto_pull.sh
-          
-      
+          scp ./auto_pull.sh tacke300@34.145.69.100:/home/tacke300/auto_pull.sh  # Đưa file auto_pull.sh lên VPS
+          scp ./auto_pull tacke300@34.145.69.100:/home/tacke300/auto_pull        # Đưa file auto_pull lên VPS
+          ssh tacke300@34.145.69.100 'bash /home/tacke300/auto_pull.sh'           # Thực thi script auto_pull.sh trên VPS
