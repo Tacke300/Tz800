@@ -27,4 +27,8 @@ git pull --rebase origin main && echo "[B3] Pull thành công." || {
   exit 1
 }
 
+# Copy souce code vào folder nginx
+cp -r . /var/www/html/tz800
+ls -al /var/www/html/tz800
+
 echo "===== DEPLOY THÀNH CÔNG ====="
