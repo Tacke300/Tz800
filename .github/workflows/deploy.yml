@@ -3,7 +3,7 @@ name: Deploy to VPS
 on:
   push:
     branches:
-      - main
+      - main  # Tự động deploy khi đẩy lên nhánh main
 
 jobs:
   deploy:
@@ -13,26 +13,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup SSH key and config
+      - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H 34.145.69.100 >> ~/.ssh/known_hosts
-          echo "Host 34.145.69.100" >> ~/.ssh/config
-          echo "  IdentityFile ~/.ssh/id_ed25519" >> ~/.ssh/config
-          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
 
-      - name: List files in workspace
-        run: ls -la
-
-      - name: Make scripts executable
-        run: |
-          chmod +x ./auto_pull.sh
-          chmod +x ./auto_pull
+      - name: Make script executable
+        run: chmod +x ./auto_pull.sh
 
       - name: Deploy to VPS
         run: |
           scp -i ~/.ssh/id_ed25519 ./auto_pull.sh tacke300@34.145.69.100:/home/tacke300/auto_pull.sh
-          scp -i ~/.ssh/id_ed25519 ./auto_pull     tacke300@34.145.69.100:/home/tacke300/auto_pull
           ssh -i ~/.ssh/id_ed25519 tacke300@34.145.69.100 'bash /home/tacke300/auto_pull.sh'
