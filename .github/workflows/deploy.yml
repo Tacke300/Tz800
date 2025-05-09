@@ -3,7 +3,7 @@ name: Deploy to VPS
 on:
   push:
     branches:
-      - main  # Tự động deploy khi đẩy lên nhánh main
+      - master  # Tự động deploy khi đẩy lên nhánh main
 
 jobs:
   deploy:
