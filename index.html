@@ -1,114 +1,68 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Set API</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <title>Funding Carry Bot</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f7f7f7;
+      font-family: sans-serif;
+      background: #111;
+      color: white;
       padding: 20px;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
       text-align: center;
     }
     h1 {
-      font-size: 2.5rem;
-      color: #3f51b5;
-      margin-bottom: 20px;
+      margin-bottom: 0;
     }
     h2 {
-      font-size: 1.5rem;
-      color: #555;
-      margin-bottom: 10px;
+      margin-top: 5px;
+      color: #0f0;
     }
-    h3 {
-      font-size: 1.2rem;
-      color: #888;
-      margin-bottom: 20px;
-    }
-    button {
-      padding: 12px 24px;
-      font-size: 1.1rem;
-      background-color: #3f51b5;
+    .btn {
+      background: #444;
       color: white;
+      padding: 10px 20px;
       border: none;
-      border-radius: 8px;
+      margin: 10px;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      transition: background-color 0.3s ease, transform 0.2s ease;
+      border-radius: 5px;
     }
-    button:hover {
-      background-color: #303f9f;
-      transform: translateY(-2px);
-    }
-    button:active {
-      background-color: #1a237e;
-      transform: translateY(1px);
-    }
-    #popup {
+    .popup {
+      display: none;
       position: fixed;
-      bottom: -100%;
-      left: 0;
-      right: 0;
-      background: #ffffff;
+      background: #222;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       padding: 20px;
-      border-radius: 12px 12px 0 0;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
-      transition: bottom 0.4s ease;
-      z-index: 9999;
+      border: 1px solid white;
+      border-radius: 10px;
+      z-index: 1000;
     }
-    #popup.show {
-      bottom: 0;
+    .popup input {
+      display: block;
+      margin: 10px auto;
+      padding: 10px;
+      width: 90%;
     }
-    .form-input {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      font-size: 1rem;
-      outline: none;
-      transition: border-color 0.3s ease;
-    }
-    .form-input:focus {
-      border-color: #3f51b5;
-    }
-    .form-input:disabled {
-      background-color: #f0f0f0;
-    }
-    .popup-buttons {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 10px;
+    .popup.show {
+      display: block;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
+  <h1>Funding Carry Bot</h1>
+  <h2 id="status">Đang kết nối...</h2>
+  <p id="balance">Đang tải số dư...</p>
+  <button class="btn" onclick="showPopup()">Cập nhật API Key</button>
 
-  <p id="status">Đang lấy ID Telegram...</p>
-  <p id="balance">...</p>
-
-  <button onclick="showPopup()">SET API</button>
-
-  <div id="popup">
-    <h1>SET API OKX</h1>
-    <input type="text" id="apikey" placeholder="API Key" class="form-input" />
-    <input type="text" id="secret" placeholder="Secret" class="form-input" />
-    <input type="text" id="passshare" placeholder="Passshare" class="form-input" />
-    <div class="popup-buttons">
-      <button onclick="submitAPI()">Submit</button>
-      <button onclick="closePopup()">Close</button>
-    </div>
+  <div id="popup" class="popup">
+    <input type="text" id="apikey" placeholder="API Key" />
+    <input type="text" id="secret" placeholder="API Secret" />
+    <input type="text" id="passshare" placeholder="Passphrase (OKX)" />
+    <button class="btn" onclick="submitAPI()">Gửi</button>
   </div>
 
   <script>
@@ -136,21 +90,29 @@
           try {
             const res = await fetch(`/api/balance?user_id=${userId}`);
             const json = await res.json();
-            const usdt = json?.data?.[0]?.details?.find(i => i.ccy === 'USDT')?.cashBal;
+
+            if (!res.ok) {
+              balanceEl.innerText = `Lỗi server: ${json.message || res.status}`;
+              return;
+            }
+
+            const usdt = json?.data?.details?.find(i => i.ccy === 'USDT')?.cashBal;
 
             if (usdt !== undefined) {
               balanceEl.innerText = `Số dư: ${parseFloat(usdt).toFixed(2)} USDT`;
             } else {
-              balanceEl.innerText = "Không tìm thấy USDT";
+              balanceEl.innerText = "Không tìm thấy USDT trong dữ liệu trả về";
+              console.log("Phản hồi từ API:", json);
             }
           } catch (e) {
-            console.error(e);
-            balanceEl.innerText = "Lỗi khi lấy số dư";
+            balanceEl.innerText = `Lỗi khi fetch: ${e.message}`;
+            console.error("Chi tiết lỗi:", e);
           }
         }
 
         fetchBalance();
-        setInterval(fetchBalance, 3000);
+        setInterval(fetchBalance, 1000);
+
       } catch (err) {
         console.error(err);
         status.innerText = "ERROR CONNECT ID";
@@ -159,10 +121,6 @@
 
     function showPopup() {
       document.getElementById('popup').classList.add('show');
-    }
-
-    function closePopup() {
-      document.getElementById('popup').classList.remove('show');
     }
 
     async function submitAPI() {
@@ -184,7 +142,7 @@
         alert("Lỗi khi gửi dữ liệu: " + error.message);
       } else {
         alert("Đã gửi thành công!");
-        closePopup();
+        document.getElementById('popup').classList.remove('show');
       }
     }
 
