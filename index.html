@@ -3,80 +3,125 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>HELLO</title>
+  <title>Set API</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      padding: 20px;
-      background-color: #f9f9f9;
+    /* Reset some default styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    #popup {
-      position: fixed;
-      left: 0;
-      right: 0;
-      height: 100vh;
-      bottom: -100vh; /* Ẩn hoàn toàn popup */
-      background: linear-gradient(to top right, #ffffff, #f0f0ff);
-      padding: 40px 20px;
-      border-radius: 20px 20px 0 0;
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-      transition: bottom 0.4s ease;
-      z-index: 9999;
+    /* General body styles */
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f7f7f7;
+      padding: 20px;
+      color: #333;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      visibility: hidden;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
     }
 
-    #popup.show {
-      bottom: 0;
-      visibility: visible;
+    h1 {
+      font-size: 2.5rem;
+      color: #3f51b5;
+      margin-bottom: 20px;
     }
 
-    .form-input {
-      margin-bottom: 15px;
-      padding: 12px 15px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      width: 100%;
-      max-width: 400px;
-      font-size: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    h2 {
+      font-size: 1.5rem;
+      color: #555;
+      margin-bottom: 20px;
     }
 
+    h3 {
+      font-size: 1.2rem;
+      color: #888;
+    }
+
+    /* Button styles */
     button {
-      padding: 12px 20px;
-      font-size: 16px;
-      background-color: #4e6ef2;
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      background-color: #3f51b5;
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-      transition: background-color 0.3s ease;
-      margin-top: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: background-color 0.3s ease, transform 0.2s ease;
     }
 
     button:hover {
-      background-color: #3a54d1;
+      background-color: #303f9f;
+      transform: translateY(-2px);
     }
 
-    h1, h2, h3 {
-      margin: 10px 0;
+    button:active {
+      background-color: #1a237e;
+      transform: translateY(1px);
+    }
+
+    /* Popup form styles */
+    #popup {
+      position: fixed;
+      bottom: -100%;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px 12px 0 0;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+      transition: bottom 0.4s ease;
+      z-index: 9999;
+    }
+
+    #popup.show {
+      bottom: 0;
+    }
+
+    /* Input field styles */
+    .form-input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-input:focus {
+      border-color: #3f51b5;
+    }
+
+    /* Custom animation for the popup */
+    @keyframes popup-slide-in {
+      from {
+        bottom: -100%;
+      }
+      to {
+        bottom: 0;
+      }
+    }
+
+    /* Submitting styles */
+    .form-input:disabled {
+      background-color: #f0f0f0;
     }
   </style>
 </head>
 <body>
-  <p>github ne</p>
-  <p>part 2</p>
-  <p>part 3</p>
-  <h1>Hello Pasta</h1>
-  <h2 id="status">Connect ID...</h2>
-  <h3 id="balance">Connect Balance...</h3>
+  <h1> Hello Pasta </h1>
+  <h2 id="status">Đang xử lý Telegram ID...</h2>
+  <h3 id="balance">Đang tải số dư...</h3>
 
   <button onclick="showPopup()">SET API</button>
 
@@ -85,7 +130,6 @@
     <input type="text" id="secret" placeholder="Secret" class="form-input" />
     <input type="text" id="passshare" placeholder="Passshare" class="form-input" />
     <button onclick="submitAPI()">Submit</button>
-    <button onclick="closePopup()">Đóng</button>
   </div>
 
   <script>
@@ -102,21 +146,21 @@
       try {
         const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
         if (!telegramUser || !telegramUser.id) {
-          status.innerText = "ERROR ID.";
+          status.innerText = "Không lấy được Telegram ID.";
           return;
         }
 
         userId = telegramUser.id;
-        status.innerText = "ID: " + userId;
+        status.innerText = "ID Telegram: " + userId;
 
         async function fetchBalance() {
           try {
             const res = await fetch(`/api/balance?user_id=${userId}`);
             const json = await res.json();
             const usdt = json?.data?.[0]?.details?.find(i => i.ccy === 'USDT')?.cashBal || '0';
-            balanceEl.innerText = `BALANCE: ${usdt} USDT`;
+            balanceEl.innerText = `Số dư: ${usdt} USDT`;
           } catch (e) {
-            balanceEl.innerText = "ERROR";
+            balanceEl.innerText = "Lỗi khi lấy số dư.";
           }
         }
 
@@ -125,16 +169,12 @@
 
       } catch (err) {
         console.error(err);
-        status.innerText = "ERROR";
+        status.innerText = "Lỗi khi xử lý Telegram.";
       }
     }
 
     function showPopup() {
       document.getElementById('popup').classList.add('show');
-    }
-
-    function closePopup() {
-      document.getElementById('popup').classList.remove('show');
     }
 
     async function submitAPI() {
@@ -153,10 +193,10 @@
 
       if (error) {
         console.error(error);
-        alert("ERROR: " + error.message);
+        alert("Lỗi khi gửi dữ liệu: " + error.message);
       } else {
-        alert("DONE");
-        closePopup();
+        alert("Đã gửi thành công!");
+        document.getElementById('popup').classList.remove('show');
       }
     }
 
