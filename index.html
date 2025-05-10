@@ -15,10 +15,10 @@
 
     #popup {
       position: fixed;
-      bottom: -100%;
       left: 0;
       right: 0;
       height: 100vh;
+      bottom: -100vh; /* Ẩn hoàn toàn popup */
       background: linear-gradient(to top right, #ffffff, #f0f0ff);
       padding: 40px 20px;
       border-radius: 20px 20px 0 0;
@@ -29,10 +29,12 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      visibility: hidden;
     }
 
     #popup.show {
       bottom: 0;
+      visibility: visible;
     }
 
     .form-input {
