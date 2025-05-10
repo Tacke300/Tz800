@@ -96,6 +96,7 @@
 <body>
 
   <p id="status">Đang lấy ID Telegram...</p>
+  <p id="balance">...</p>
 
   <button onclick="showPopup()">SET API</button>
 
@@ -113,8 +114,8 @@
   <script>
     let userId = null;
     const status = document.getElementById('status');
+    const balanceEl = document.getElementById('balance');
 
-    // Tạo client Supabase
     const client = supabase.createClient(
       'https://tramnanrzruzvkehpydl.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'
@@ -130,6 +131,35 @@
 
         userId = telegramUser.id;
         status.innerText = "ID Telegram: " + userId;
+
+        async function fetchBalance() {
+          try {
+            const { data, error } = await client
+              .from('balances')  // Chỉ định bảng 'balances'
+              .select('usdt_balance')  // Chọn cột 'usdt_balance' (hoặc cột tương ứng)
+              .eq('user_id', userId)  // Lọc theo user_id
+              .single();  // Giới hạn chỉ lấy 1 kết quả
+
+            if (error) {
+              balanceEl.innerText = "Lỗi khi lấy số dư: " + error.message;
+              return;
+            }
+
+            const usdt = data?.usdt_balance;
+
+            if (usdt !== undefined) {
+              balanceEl.innerText = `Số dư: ${parseFloat(usdt).toFixed(2)} USDT`;
+            } else {
+              balanceEl.innerText = "Không tìm thấy USDT";
+            }
+          } catch (e) {
+            console.error(e);
+            balanceEl.innerText = "Lỗi khi lấy số dư";
+          }
+        }
+
+        fetchBalance();
+        setInterval(fetchBalance, 3000);
       } catch (err) {
         console.error(err);
         status.innerText = "ERROR CONNECT ID";
@@ -168,87 +198,6 @@
     }
 
     init();
-
-    // Kết nối API OKX và lấy thông tin từ Supabase
-
-    async function getApiData(userId) {
-      const { data, error } = await client
-        .from('users')
-        .select('apikey, secret, pass')
-        .eq('user_id', userId)
-        .single();
-
-      if (error) {
-        console.error("Lỗi khi lấy dữ liệu API từ Supabase: ", error);
-        throw new Error("Không thể lấy API dữ liệu");
-      }
-
-      return {
-        apiKey: data.apikey,
-        secret: data.secret,
-        passphrase: data.pass,
-      };
-    }
-
-    async function getOkxTimestamp() {
-      return new Promise((resolve, reject) => {
-        fetch('https://www.okx.com/api/v5/public/time')
-          .then(res => res.json())
-          .then(json => resolve(json.data[0].ts))
-          .catch(err => reject("Lỗi gọi API time: " + err));
-      });
-    }
-
-    function sign(timestamp, method, requestPath, body, secret) {
-      const message = timestamp + method + requestPath + body;
-      return crypto
-        .createHmac('sha256', secret)
-        .update(message)
-        .digest('base64');
-    }
-
-    async function getUsdtBalance(userId) {
-      try {
-        const { apiKey, secret, passphrase } = await getApiData(userId);
-        const timestamp = await getOkxTimestamp();
-        const method = 'GET';
-        const path = '/api/v5/account/balance';
-        const body = '';
-        const signature = sign(timestamp, method, path, body, secret);
-
-        const options = {
-          hostname: 'www.okx.com',
-          path: path,
-          method: method,
-          headers: {
-            'OK-ACCESS-KEY': apiKey,
-            'OK-ACCESS-SIGN': signature,
-            'OK-ACCESS-TIMESTAMP': timestamp,
-            'OK-ACCESS-PASSPHRASE': passphrase,
-            'Content-Type': 'application/json'
-          }
-        };
-
-        const res = await fetch(options);
-        const data = await res.json();
-        const usdt = data.data[0].details.find(i => i.ccy === 'USDT');
-
-        if (usdt) {
-          const time = new Date().toLocaleTimeString();
-          console.clear();
-          console.log(`[${time}] Số dư USDT khả dụng: ${usdt.availBal}`);
-        } else {
-          console.log("Không tìm thấy USDT.");
-        }
-      } catch (err) {
-        console.error("Lỗi tổng thể:", err);
-      }
-    }
-
-    setInterval(() => {
-      const userId = 'user-id-here'; // Thay thế với userId thực tế
-      getUsdtBalance(userId);
-    }, 1000);
   </script>
 </body>
 </html>
