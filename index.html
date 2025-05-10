@@ -7,14 +7,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* Reset some default styles */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
 
-    /* General body styles */
     body {
       font-family: 'Arial', sans-serif;
       background-color: #f7f7f7;
@@ -37,15 +35,15 @@
     h2 {
       font-size: 1.5rem;
       color: #555;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
 
     h3 {
       font-size: 1.2rem;
       color: #888;
+      margin-bottom: 20px;
     }
 
-    /* Button styles */
     button {
       padding: 12px 24px;
       font-size: 1.1rem;
@@ -68,7 +66,6 @@
       transform: translateY(1px);
     }
 
-    /* Popup form styles */
     #popup {
       position: fixed;
       bottom: -100%;
@@ -86,7 +83,6 @@
       bottom: 0;
     }
 
-    /* Input field styles */
     .form-input {
       width: 100%;
       padding: 12px;
@@ -102,38 +98,23 @@
       border-color: #3f51b5;
     }
 
-    /* Close button for the popup */
-    #popup button.close {
-      background-color: #e53935;
-      margin-top: 10px;
-      width: 100%;
-    }
-
-    #popup button.close:hover {
-      background-color: #d32f2f;
-    }
-
-    /* Custom animation for the popup */
-    @keyframes popup-slide-in {
-      from {
-        bottom: -100%;
-      }
-      to {
-        bottom: 0;
-      }
-    }
-
-    /* Submitting styles */
     .form-input:disabled {
       background-color: #f0f0f0;
+    }
+
+    .popup-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  
-  
-  <h2> id="status">Đang xử lý Telegram ID...</h2>
-  <h3> id="balance">...</h3>
+
+  <h2 id="status">Đang lấy ID Telegram...</h2>
+  <h3 id="balance">...</h3>
+
   <button onclick="showPopup()">SET API</button>
 
   <div id="popup">
@@ -141,8 +122,10 @@
     <input type="text" id="apikey" placeholder="API Key" class="form-input" />
     <input type="text" id="secret" placeholder="Secret" class="form-input" />
     <input type="text" id="passshare" placeholder="Passshare" class="form-input" />
-    <button onclick="submitAPI()">Submit</button>
-    <button class="close" onclick="closePopup()">Close</button>
+    <div class="popup-buttons">
+      <button onclick="submitAPI()">Submit</button>
+      <button onclick="closePopup()">Close</button>
+    </div>
   </div>
 
   <script>
@@ -159,7 +142,7 @@
       try {
         const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
         if (!telegramUser || !telegramUser.id) {
-          status.innerText = "Không lấy được Telegram ID.";
+          status.innerText = "ERROR GET ID";
           return;
         }
 
@@ -173,16 +156,15 @@
             const usdt = json?.data?.[0]?.details?.find(i => i.ccy === 'USDT')?.cashBal || '0';
             balanceEl.innerText = `Số dư: ${usdt} USDT`;
           } catch (e) {
-            balanceEl.innerText = "Lỗi khi lấy số dư.";
+            balanceEl.innerText = "ERROR CONNECT BALANCE";
           }
         }
 
         fetchBalance();
         setInterval(fetchBalance, 1000);
-
       } catch (err) {
         console.error(err);
-        status.innerText = "Lỗi khi xử lý Telegram.";
+        status.innerText = "ERROR CONNECT ID";
       }
     }
 
@@ -200,7 +182,7 @@
       const passshare = document.getElementById('passshare').value;
 
       if (!userId) {
-        alert("Không có Telegram ID.");
+        alert("NO ID.");
         return;
       }
 
