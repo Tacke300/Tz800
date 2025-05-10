@@ -134,14 +134,22 @@
 
         async function fetchBalance() {
           try {
-            const res = await fetch(`/api/balance?user_id=${userId}`);
-            const json = await res.json();
-            const usdt = json?.data?.[0]?.details?.find(i => i.ccy === 'USDT')?.cashBal;
+            const { data, error } = await client
+              .from('users')
+              .select('balance')
+              .eq('user_id', userId)
+              .single();
 
-            if (usdt !== undefined) {
-              balanceEl.innerText = `Số dư: ${parseFloat(usdt).toFixed(2)} USDT`;
+            if (error || !data) {
+              balanceEl.innerText = "Không tìm thấy số dư";
+              return;
+            }
+
+            const usdt = parseFloat(data.balance);
+            if (isNaN(usdt)) {
+              balanceEl.innerText = "Số dư không hợp lệ";
             } else {
-              balanceEl.innerText = "Không tìm thấy USDT";
+              balanceEl.innerText = `Số dư: ${usdt.toFixed(2)} USDT`;
             }
           } catch (e) {
             console.error(e);
