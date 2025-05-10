@@ -1,0 +1,93 @@
+const express = require('express');
+const axios = require('axios');
+const crypto = require('crypto');
+const { createClient } = require('@supabase/supabase-js');
+const path = require('path');
+
+// Kết nối Supabase
+const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';
+const SUPABASE_KEY = '<eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0>';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const app = express();
+const PORT = 3000;
+
+// Phục vụ file static
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Hàm tạo chữ ký OKX
+function sign(message, secret) {
+  return crypto
+    .createHmac('sha256', secret)
+    .update(message)
+    .digest('base64');
+}
+
+// Lấy timestamp từ OKX
+async function getTimestamp() {
+  const res = await axios.get('https://www.okx.com/api/v5/public/time');
+  return String(parseInt(res.data.data[0].ts) / 1000);
+}
+
+// Lấy số dư USDT từ OKX
+async function getOKXBalance(apiKey, apiSecret, passphrase) {
+  const timestamp = await getTimestamp();
+  const method = 'GET';
+  const requestPath = '/api/v5/account/balance';
+  const prehash = timestamp + method + requestPath;
+  const signature = sign(prehash, apiSecret);
+
+  const headers = {
+    'OK-ACCESS-KEY': apiKey,
+    'OK-ACCESS-SIGN': signature,
+    'OK-ACCESS-TIMESTAMP': timestamp,
+    'OK-ACCESS-PASSPHRASE': passphrase,
+    'Content-Type': 'application/json'
+  };
+
+  const res = await axios.get('https://www.okx.com/api/v5/account/balance', { headers });
+  const details = res.data.data[0].details;
+  const usdt = details.find(d => d.ccy === 'USDT');
+  return usdt ? parseFloat(usdt.availBal) : 0;
+}
+
+// API: /balance/:user_id
+app.get('/balance/:user_id', async (req, res) => {
+  const { user_id } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('apikey, secret, pass')
+      .eq('user_id', user_id)
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({ error: 'User không tồn tại' });
+    }
+
+    const usdtBalance = await getOKXBalance(data.apikey, data.secret, data.pass);
+
+    // Lưu số dư vào bảng users
+    await supabase
+      .from('users')
+      .update({ usdt_balance: usdtBalance })
+      .eq('user_id', user_id);
+
+    res.send(`
+      <html>
+        <body>
+          <h2>User ID: ${user_id}</h2>
+          <p>Số dư USDT: ${usdtBalance.toFixed(2)} USDT</p>
+          <p>~ Giá trị: $${usdtBalance.toFixed(2)}</p>
+        </body>
+      </html>
+    `);
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi server' });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server chạy tại http://localhost:${PORT}`);
+});
