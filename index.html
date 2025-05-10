@@ -1,113 +1,67 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Set API</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <meta charset="UTF-8">
+  <title>Funding Carry Bot</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f7f7f7;
-      padding: 20px;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: #ffffff;
       text-align: center;
+      padding: 20px;
     }
-    h1 {
-      font-size: 2.5rem;
-      color: #3f51b5;
-      margin-bottom: 20px;
-    }
-    h2 {
-      font-size: 1.5rem;
-      color: #555;
-      margin-bottom: 10px;
-    }
-    h3 {
-      font-size: 1.2rem;
-      color: #888;
-      margin-bottom: 20px;
-    }
-    button {
-      padding: 12px 24px;
-      font-size: 1.1rem;
-      background-color: #3f51b5;
-      color: white;
+    .button {
+      padding: 10px 20px;
+      margin-top: 20px;
+      background-color: #1e88e5;
       border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      transition: background-color 0.3s ease, transform 0.2s ease;
-    }
-    button:hover {
-      background-color: #303f9f;
-      transform: translateY(-2px);
-    }
-    button:active {
-      background-color: #1a237e;
-      transform: translateY(1px);
+      border-radius: 5px;
+      color: white;
+      font-size: 16px;
     }
     #popup {
+      display: none;
       position: fixed;
-      bottom: -100%;
-      left: 0;
-      right: 0;
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 12px 12px 0 0;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
-      transition: bottom 0.4s ease;
-      z-index: 9999;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
     }
     #popup.show {
-      bottom: 0;
-    }
-    .form-input {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      font-size: 1rem;
-      outline: none;
-      transition: border-color 0.3s ease;
-    }
-    .form-input:focus {
-      border-color: #3f51b5;
-    }
-    .form-input:disabled {
-      background-color: #f0f0f0;
-    }
-    .popup-buttons {
       display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 10px;
+    }
+    .popup-content {
+      background: #222;
+      padding: 20px;
+      border-radius: 8px;
+      width: 300px;
+      text-align: left;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin: 6px 0;
+      border: none;
+      border-radius: 4px;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
-
-  <p id="status">Đang lấy ID Telegram...</p>
-  <p id="balance">...</p>
-
-  <button onclick="showPopup()">SET API</button>
+  <h2 id="status">Đang lấy ID Telegram...</h2>
+  <h3 id="balance">Đang lấy số dư...</h3>
+  <button class="button" onclick="showPopup()">Nhập API Key</button>
 
   <div id="popup">
-    <h1>SET API OKX</h1>
-    <input type="text" id="apikey" placeholder="API Key" class="form-input" />
-    <input type="text" id="secret" placeholder="Secret" class="form-input" />
-    <input type="text" id="passshare" placeholder="Passshare" class="form-input" />
-    <div class="popup-buttons">
-      <button onclick="submitAPI()">Submit</button>
-      <button onclick="closePopup()">Close</button>
+    <div class="popup-content">
+      <h3>Nhập API Key</h3>
+      <input type="text" id="apikey" placeholder="API Key">
+      <input type="text" id="secret" placeholder="Secret Key">
+      <input type="text" id="passshare" placeholder="Mật khẩu chia sẻ">
+      <button class="button" onclick="submitAPI()">Gửi</button>
+      <button class="button" onclick="closePopup()">Đóng</button>
     </div>
   </div>
 
@@ -135,10 +89,10 @@
         async function fetchBalance() {
           try {
             const { data, error } = await client
-              .from('balances')  // Chỉ định bảng 'balances'
-              .select('usdt_balance')  // Chọn cột 'usdt_balance' (hoặc cột tương ứng)
-              .eq('user_id', userId)  // Lọc theo user_id
-              .single();  // Giới hạn chỉ lấy 1 kết quả
+              .from('users')
+              .select('usdt_balance')
+              .eq('user_id', userId)
+              .single();
 
             if (error) {
               balanceEl.innerText = "Lỗi khi lấy số dư: " + error.message;
@@ -147,10 +101,10 @@
 
             const usdt = data?.usdt_balance;
 
-            if (usdt !== undefined) {
+            if (usdt !== undefined && usdt !== null) {
               balanceEl.innerText = `Số dư: ${parseFloat(usdt).toFixed(2)} USDT`;
             } else {
-              balanceEl.innerText = "Không tìm thấy USDT";
+              balanceEl.innerText = "Không tìm thấy số dư";
             }
           } catch (e) {
             console.error(e);
