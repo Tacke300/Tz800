@@ -126,19 +126,41 @@
         const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
         if (!telegramUser || !telegramUser.id) {
           status.innerText = "ERROR GET ID";
-          console.error("ERROR: Telegram ID not found");
           return;
         }
 
         userId = telegramUser.id;
         status.innerText = "ID Telegram: " + userId;
 
-        
+        async function fetchBalance() {
+          try {
+            const { data, error } = await client
+              .from('users')
+              .select('balance')
+              .eq('user_id', userId)
+              .single();
+
+            if (error || !data) {
+              balanceEl.innerText = "Không tìm thấy số dư";
+              return;
+            }
+
+            const usdt = parseFloat(data.balance);
+            if (isNaN(usdt)) {
+              balanceEl.innerText = "Số dư không hợp lệ";
+            } else {
+              balanceEl.innerText = `Số dư: ${usdt.toFixed(2)} USDT`;
+            }
+          } catch (e) {
+            console.error(e);
+            balanceEl.innerText = "Lỗi khi lấy số dư";
+          }
+        }
 
         fetchBalance();
         setInterval(fetchBalance, 3000);
       } catch (err) {
-        console.error("ERROR connecting to Telegram WebApp: ", err.message);  // In lỗi kết nối Telegram WebApp
+        console.error(err);
         status.innerText = "ERROR CONNECT ID";
       }
     }
@@ -166,7 +188,7 @@
         .upsert({ user_id: userId, apikey, secret, pass: passshare });
 
       if (error) {
-        console.error("ERROR submitting API: ", error.message);  // In lỗi khi gửi API
+        console.error(error);
         alert("Lỗi khi gửi dữ liệu: " + error.message);
       } else {
         alert("Đã gửi thành công!");
