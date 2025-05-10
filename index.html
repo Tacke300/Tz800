@@ -102,6 +102,17 @@
       border-color: #3f51b5;
     }
 
+    /* Close button for the popup */
+    #popup button.close {
+      background-color: #e53935;
+      margin-top: 10px;
+      width: 100%;
+    }
+
+    #popup button.close:hover {
+      background-color: #d32f2f;
+    }
+
     /* Custom animation for the popup */
     @keyframes popup-slide-in {
       from {
@@ -120,8 +131,9 @@
 </head>
 <body>
   
-  <h3 id="balance">...</h3>
-
+  
+  <h2> id="status">Đang xử lý Telegram ID...</h2>
+  <h3> id="balance">...</h3>
   <button onclick="showPopup()">SET API</button>
 
   <div id="popup">
@@ -130,6 +142,7 @@
     <input type="text" id="secret" placeholder="Secret" class="form-input" />
     <input type="text" id="passshare" placeholder="Passshare" class="form-input" />
     <button onclick="submitAPI()">Submit</button>
+    <button class="close" onclick="closePopup()">Close</button>
   </div>
 
   <script>
@@ -146,7 +159,7 @@
       try {
         const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
         if (!telegramUser || !telegramUser.id) {
-          status.innerText = "ERROR GET ID";
+          status.innerText = "Không lấy được Telegram ID.";
           return;
         }
 
@@ -160,7 +173,7 @@
             const usdt = json?.data?.[0]?.details?.find(i => i.ccy === 'USDT')?.cashBal || '0';
             balanceEl.innerText = `Số dư: ${usdt} USDT`;
           } catch (e) {
-            balanceEl.innerText = "ERROR CONNECT BALANCE";
+            balanceEl.innerText = "Lỗi khi lấy số dư.";
           }
         }
 
@@ -169,12 +182,16 @@
 
       } catch (err) {
         console.error(err);
-        status.innerText = "ERROR CONNECT ID";
+        status.innerText = "Lỗi khi xử lý Telegram.";
       }
     }
 
     function showPopup() {
       document.getElementById('popup').classList.add('show');
+    }
+
+    function closePopup() {
+      document.getElementById('popup').classList.remove('show');
     }
 
     async function submitAPI() {
@@ -183,7 +200,7 @@
       const passshare = document.getElementById('passshare').value;
 
       if (!userId) {
-        alert("NO ID.");
+        alert("Không có Telegram ID.");
         return;
       }
 
@@ -196,7 +213,7 @@
         alert("Lỗi khi gửi dữ liệu: " + error.message);
       } else {
         alert("Đã gửi thành công!");
-        document.getElementById('popup').classList.remove('show');
+        closePopup();
       }
     }
 
