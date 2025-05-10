@@ -119,13 +119,13 @@
   </style>
 </head>
 <body>
-  <h1> Hello Pasta </h1>
-  <h2 id="status">Đang xử lý Telegram ID...</h2>
-  <h3 id="balance">Đang tải số dư...</h3>
+  
+  <h3 id="balance">...</h3>
 
   <button onclick="showPopup()">SET API</button>
 
   <div id="popup">
+    <h1>SET API OKX</h1>
     <input type="text" id="apikey" placeholder="API Key" class="form-input" />
     <input type="text" id="secret" placeholder="Secret" class="form-input" />
     <input type="text" id="passshare" placeholder="Passshare" class="form-input" />
@@ -146,7 +146,7 @@
       try {
         const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
         if (!telegramUser || !telegramUser.id) {
-          status.innerText = "Không lấy được Telegram ID.";
+          status.innerText = "ERROR GET ID";
           return;
         }
 
@@ -160,7 +160,7 @@
             const usdt = json?.data?.[0]?.details?.find(i => i.ccy === 'USDT')?.cashBal || '0';
             balanceEl.innerText = `Số dư: ${usdt} USDT`;
           } catch (e) {
-            balanceEl.innerText = "Lỗi khi lấy số dư.";
+            balanceEl.innerText = "ERROR CONNECT BALANCE";
           }
         }
 
@@ -169,7 +169,7 @@
 
       } catch (err) {
         console.error(err);
-        status.innerText = "Lỗi khi xử lý Telegram.";
+        status.innerText = "ERROR CONNECT ID";
       }
     }
 
@@ -183,7 +183,7 @@
       const passshare = document.getElementById('passshare').value;
 
       if (!userId) {
-        alert("Không có Telegram ID.");
+        alert("NO ID.");
         return;
       }
 
