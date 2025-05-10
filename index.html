@@ -8,39 +8,71 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: 'Segoe UI', sans-serif;
       padding: 20px;
+      background-color: #f9f9f9;
     }
+
     #popup {
       position: fixed;
       bottom: -100%;
       left: 0;
       right: 0;
-      background: white;
-      padding: 20px;
-      border-radius: 12px 12px 0 0;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+      height: 100vh;
+      background: linear-gradient(to top right, #ffffff, #f0f0ff);
+      padding: 40px 20px;
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
       transition: bottom 0.4s ease;
       z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
     }
+
     #popup.show {
       bottom: 0;
     }
+
     .form-input {
-      margin-bottom: 10px;
+      margin-bottom: 15px;
+      padding: 12px 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
       width: 100%;
-    }
-    button {
-      padding: 10px 15px;
+      max-width: 400px;
       font-size: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      background-color: #4e6ef2;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.3s ease;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #3a54d1;
+    }
+
+    h1, h2, h3 {
+      margin: 10px 0;
     }
   </style>
 </head>
 <body>
-  <p> github ne</p>
-  <p> part 2</p>
-  <p> part 3</p>
-  <h1> Hello Pasta </h1>
+  <p>github ne</p>
+  <p>part 2</p>
+  <p>part 3</p>
+  <h1>Hello Pasta</h1>
   <h2 id="status">Connect ID...</h2>
   <h3 id="balance">Connect Balance...</h3>
 
@@ -51,6 +83,7 @@
     <input type="text" id="secret" placeholder="Secret" class="form-input" />
     <input type="text" id="passshare" placeholder="Passshare" class="form-input" />
     <button onclick="submitAPI()">Submit</button>
+    <button onclick="closePopup()">Đóng</button>
   </div>
 
   <script>
@@ -98,6 +131,10 @@
       document.getElementById('popup').classList.add('show');
     }
 
+    function closePopup() {
+      document.getElementById('popup').classList.remove('show');
+    }
+
     async function submitAPI() {
       const apikey = document.getElementById('apikey').value;
       const secret = document.getElementById('secret').value;
@@ -114,10 +151,10 @@
 
       if (error) {
         console.error(error);
-        alert("ERROR" + error.message);
+        alert("ERROR: " + error.message);
       } else {
         alert("DONE");
-        document.getElementById('popup').classList.remove('show');
+        closePopup();
       }
     }
 
