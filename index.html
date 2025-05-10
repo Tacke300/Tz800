@@ -21,5 +21,202 @@
 
     getBalance();
   </script>
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f7f7f7;
+      padding: 20px;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #3f51b5;
+      margin-bottom: 20px;
+    }
+    h2 {
+      font-size: 1.5rem;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    h3 {
+      font-size: 1.2rem;
+      color: #888;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      background-color: #3f51b5;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    button:hover {
+      background-color: #303f9f;
+      transform: translateY(-2px);
+    }
+    button:active {
+      background-color: #1a237e;
+      transform: translateY(1px);
+    }
+    #popup {
+      position: fixed;
+      bottom: -100%;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px 12px 0 0;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+      transition: bottom 0.4s ease;
+      z-index: 9999;
+    }
+    #popup.show {
+      bottom: 0;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+    .form-input:focus {
+      border-color: #3f51b5;
+    }
+    .form-input:disabled {
+      background-color: #f0f0f0;
+    }
+    .popup-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <p id="status">Đang lấy ID Telegram...</p>
+  <p id="balance">...</p>
+
+  <button onclick="showPopup()">SET API</button>
+
+  <div id="popup">
+    <h1>SET API OKX</h1>
+    <input type="text" id="apikey" placeholder="API Key" class="form-input" />
+    <input type="text" id="secret" placeholder="Secret" class="form-input" />
+    <input type="text" id="passshare" placeholder="Passshare" class="form-input" />
+    <div class="popup-buttons">
+      <button onclick="submitAPI()">Submit</button>
+      <button onclick="closePopup()">Close</button>
+    </div>
+  </div>
+
+  <script>
+    let userId = null;
+    const status = document.getElementById('status');
+    const balanceEl = document.getElementById('balance');
+
+    const client = supabase.createClient(
+      'https://tramnanrzruzvkehpydl.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'
+    );
+
+    async function init() {
+      try {
+        const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
+        if (!telegramUser || !telegramUser.id) {
+          status.innerText = "ERROR GET ID";
+          return;
+        }
+
+        userId = telegramUser.id;
+        status.innerText = "ID Telegram: " + userId;
+
+        async function fetchBalance() {
+          try {
+            const { data, error } = await client
+              .from('users')
+              .select('balance')
+              .eq('user_id', userId)
+              .single();
+
+            if (error || !data) {
+              balanceEl.innerText = "Không tìm thấy số dư";
+              return;
+            }
+
+            const usdt = parseFloat(data.balance);
+            if (isNaN(usdt)) {
+              balanceEl.innerText = "Số dư không hợp lệ";
+            } else {
+              balanceEl.innerText = `Số dư: ${usdt.toFixed(2)} USDT`;
+            }
+          } catch (e) {
+            console.error(e);
+            balanceEl.innerText = "Lỗi khi lấy số dư";
+          }
+        }
+
+        fetchBalance();
+        setInterval(fetchBalance, 3000);
+      } catch (err) {
+        console.error(err);
+        status.innerText = "ERROR CONNECT ID";
+      }
+    }
+
+    function showPopup() {
+      document.getElementById('popup').classList.add('show');
+    }
+
+    function closePopup() {
+      document.getElementById('popup').classList.remove('show');
+    }
+
+    async function submitAPI() {
+      const apikey = document.getElementById('apikey').value;
+      const secret = document.getElementById('secret').value;
+      const passshare = document.getElementById('passshare').value;
+
+      if (!userId) {
+        alert("NO ID.");
+        return;
+      }
+
+      const { error } = await client
+        .from('users')
+        .upsert({ user_id: userId, apikey, secret, pass: passshare });
+
+      if (error) {
+        console.error(error);
+        alert("Lỗi khi gửi dữ liệu: " + error.message);
+      } else {
+        alert("Đã gửi thành công!");
+        closePopup();
+      }
+    }
+
+    init();
+  </script>
 </body>
 </html>
