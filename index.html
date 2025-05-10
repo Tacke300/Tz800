@@ -96,7 +96,7 @@
 <body>
 
   <p id="status">Đang lấy ID Telegram...</p>
-  <p id="balance">Đang tải số dư...</p>
+  <p id="balance">...</p>
 
   <button onclick="showPopup()">SET API</button>
 
@@ -134,27 +134,7 @@
 
         async function fetchBalance() {
           try {
-            const { data, error } = await client
-              .from('users')
-              .select('apikey, secret, pass')
-              .eq('user_id', userId)
-              .single();
-
-            if (error || !data) {
-              balanceEl.innerText = "Không tìm thấy API";
-              return;
-            }
-
-            const res = await fetch('/api/balance', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                apikey: data.apikey,
-                secret: data.secret,
-                passphrase: data.pass
-              })
-            });
-
+            const res = await fetch(`/api/balance?user_id=${userId}`);
             const json = await res.json();
             const usdt = json?.data?.[0]?.details?.find(i => i.ccy === 'USDT');
 
@@ -164,9 +144,13 @@
             }
 
             const raw = parseFloat(usdt.cashBal || 0);
-            let display = raw >= 1000
-              ? `Số dư: ${(raw / 1000).toFixed(2)}K USDT`
-              : `Số dư: ${raw.toFixed(2)} USDT`;
+            let display = '';
+
+            if (raw >= 1000) {
+              display = `Số dư: ${(raw / 1000).toFixed(2)}K USDT`;
+            } else {
+              display = `Số dư: ${raw.toFixed(2)} USDT`;
+            }
 
             balanceEl.innerText = display;
           } catch (e) {
