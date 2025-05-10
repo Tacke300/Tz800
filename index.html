@@ -133,29 +133,29 @@
         status.innerText = "ID Telegram: " + userId;
 
         async function fetchBalance() {
-          try {
-            const { data, error } = await client
-              .from('users')
-              .select('balance')
-              .eq('user_id', userId)
-              .single();
+      try {
+        const { data, error } = await client
+          .from('users')
+          .select('balance')
+          .eq('user_id', userId)
+          .single();
 
-            if (error || !data) {
-              balanceEl.innerText = "Không tìm thấy số dư";
-              return;
-            }
-
-            const usdt = parseFloat(data.balance);
-            if (isNaN(usdt)) {
-              balanceEl.innerText = "Số dư không hợp lệ";
-            } else {
-              balanceEl.innerText = `Số dư: ${usdt.toFixed(2)} USDT`;
-            }
-          } catch (e) {
-            console.error(e);
-            balanceEl.innerText = "Lỗi khi lấy số dư";
-          }
+        if (error || !data) {
+          balanceEl.innerText = "Không tìm thấy số dư";
+          return;
         }
+
+        const usdt = parseFloat(data.balance);
+        if (isNaN(usdt)) {
+          balanceEl.innerText = "Số dư không hợp lệ";
+        } else {
+          balanceEl.innerText = `Số dư: ${usdt.toFixed(2)} USDT`;
+        }
+      } catch (e) {
+        console.error(e);
+        balanceEl.innerText = "Lỗi khi lấy số dư";
+      }
+    }
 
         fetchBalance();
         setInterval(fetchBalance, 3000);
