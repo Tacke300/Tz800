@@ -96,7 +96,6 @@
 <body>
 
   <p id="status">Đang lấy ID Telegram...</p>
-  <p id="balance">...</p>
 
   <button onclick="showPopup()">SET API</button>
 
@@ -114,7 +113,6 @@
   <script>
     let userId = null;
     const status = document.getElementById('status');
-    const balanceEl = document.getElementById('balance');
 
     // Tạo client Supabase
     const client = supabase.createClient(
@@ -132,26 +130,6 @@
 
         userId = telegramUser.id;
         status.innerText = "ID Telegram: " + userId;
-
-        async function fetchBalance() {
-          try {
-            const res = await fetch(`/api/balance?user_id=${userId}`);
-            const json = await res.json();
-            const usdt = json?.data?.[0]?.details?.find(i => i.ccy === 'USDT')?.cashBal;
-
-            if (usdt !== undefined) {
-              balanceEl.innerText = `Số dư: ${parseFloat(usdt).toFixed(2)} USDT`;
-            } else {
-              balanceEl.innerText = "Không tìm thấy USDT";
-            }
-          } catch (e) {
-            console.error(e);
-            balanceEl.innerText = "Lỗi khi lấy số dư";
-          }
-        }
-
-        fetchBalance();
-        setInterval(fetchBalance, 3000);
       } catch (err) {
         console.error(err);
         status.innerText = "ERROR CONNECT ID";
