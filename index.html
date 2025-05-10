@@ -1,29 +1,9 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hiển thị USDT</title>
-</head>
-<body>
-  <h2>Số dư USDT của User: <span id="balance">Đang tải...</span></h2>
-  <p>~ Giá trị: <span id="value">Đang tải...</span></p>
-
-  <script>
-    async function getBalance() {
-      const userId = 123;  // Ví dụ ID người dùng
-      const res = await fetch(`/balance/${userId}`);
-      const data = await res.text();
-
-      // Hiển thị dữ liệu trên trang
-      document.body.innerHTML = data;
-    }
-
-    getBalance();
-  </script>
-
-
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Set API</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
