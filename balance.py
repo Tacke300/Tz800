@@ -16,10 +16,11 @@ supabase = create_client(url, key)
 telegram_token = '7648930428:AAFDIISTuWwa-aNmyWgItakI_tMwuTEXNkw'  # Thay bằng token bot Telegram của bạn
 bot = telebot.TeleBot(telegram_token)
 
+
 # ==== Hàm lấy thông tin API từ Supabase ====
 def get_api_keys_from_supabase(user_id):
     try:
-        response = supabase.table("users").select("apikey_okx", "secret_okx", "pass_okx", "apikey_binance", "secret_binance", "pass_binance", "usdt_okx", "usdt_binance").eq("user_id", user_id).execute()
+        response = supabase.table("users").select("apikey_okx", "secret_okx", "pass_okx", "apikey_binance", "secret_binance", "pass_binance").eq("user_id", user_id).execute()
         if response.data:
             return response.data[0]
         else:
@@ -29,7 +30,7 @@ def get_api_keys_from_supabase(user_id):
         print(f"Đã xảy ra lỗi khi lấy thông tin từ Supabase: {e}")
         return None
 
-# ==== Hàm tạo chữ ký HMAC SHA256 ====
+# ==== Hàm tạo chữ ký HMAC SHA256 (dùng cho OKX) ====
 def sign(message, secret):
     return base64.b64encode(
         hmac.new(secret.encode(), message.encode(), hashlib.sha256).digest()
@@ -52,7 +53,7 @@ def get_okx_balance(user_id):
     # Lấy API Key, Secret từ Supabase
     user_data = get_api_keys_from_supabase(user_id)
     if not user_data:
-        return
+        return None
 
     api_key = user_data['apikey_okx']
     api_secret = user_data['secret_okx']
@@ -61,7 +62,7 @@ def get_okx_balance(user_id):
     timestamp = get_timestamp()
     if not timestamp:
         print("Không thể lấy thời gian từ server OKX.")
-        return
+        return None
 
     method = "GET"
     request_path = "/api/v5/account/balance"
@@ -75,8 +76,7 @@ def get_okx_balance(user_id):
         'OK-ACCESS-PASSPHRASE': passphrase,
         'Content-Type': 'application/json'
     }
-    print("Đang gửi yêu cầu đến OKX API...")
-
+    
     response = requests.get("https://www.okx.com/api/v5/account/balance", headers=headers)
     if response.status_code == 200:
         data = response.json()
@@ -86,33 +86,73 @@ def get_okx_balance(user_id):
             if b['ccy'] == 'USDT':
                 usdt_balance = b['availBal']
                 break
-
-        # Cập nhật số dư vào Supabase
-        if usdt_balance:
-            update_data = {'usdt_okx': usdt_balance}
-            supabase.table('users').update(update_data).eq('user_id', user_id).execute()
-            print("Cập nhật số dư OKX thành công.")
-        else:
-            print("Không tìm thấy số dư USDT từ OKX.")
+        return usdt_balance
     else:
         print("Lỗi khi lấy thông tin số dư từ OKX:", response.json())
+        return None
 
-# Hàm xử lý khi người dùng gửi tin nhắn đến bot
+# ==== Hàm lấy số dư Binance ====
+def get_binance_balance(user_id):
+    print("Bắt đầu lấy số dư từ Binance...")
+
+    # Lấy API Key, Secret từ Supabase
+    user_data = get_api_keys_from_supabase(user_id)
+    if not user_data:
+        return None
+
+    api_key = user_data['apikey_binance']
+    api_secret = user_data['secret_binance']
+
+    # Khởi tạo client Binance
+    client = Client(api_key, api_secret)
+
+    try:
+        # Lấy số dư tài khoản
+        account_info = client.get_account()
+        balances = account_info['balances']
+        
+        # Tìm USDT trong danh sách số dư
+        usdt_balance = None
+        for balance in balances:
+            if balance['asset'] == 'USDT':
+                usdt_balance = balance['free']
+                break
+        return usdt_balance
+    except Exception as e:
+        print(f"Đã xảy ra lỗi khi lấy số dư từ Binance: {e}")
+        return None
+
+# ==== Hàm lấy số dư cho cả OKX và Binance ====
+def get_balance_for_user(user_id):
+    print(f"Đang lấy số dư cho người dùng {user_id}...")
+
+    # Lấy số dư từ OKX và Binance
+    okx_balance = get_okx_balance(user_id)
+    binance_balance = get_binance_balance(user_id)
+
+    if okx_balance is not None and binance_balance is not None:
+        # Gửi thông tin số dư qua Telegram
+        message = f"Số dư của bạn:\n- OKX USDT: {okx_balance}\n- Binance USDT: {binance_balance}"
+        bot.send_message(user_id, message)
+    else:
+        bot.send_message(user_id, "Không thể lấy số dư từ các sàn giao dịch.")
+
+# ==== Lệnh Telegram xử lý khởi tạo cho người dùng ====
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     user_id = message.chat.id  # Lấy user_id từ Telegram
     print(f"Đã nhận user_id: {user_id} từ Telegram")
 
-    # Gọi hàm lấy số dư của người dùng
-    get_okx_balance(user_id)
+    # Gọi hàm lấy số dư từ cả OKX và Binance
+    get_balance_for_user(user_id)
 
     # Trả lời tin nhắn chào mừng
-    bot.reply_to(message, "Chào bạn! Đang lấy số dư tài khoản của bạn...")
+    bot.reply_to(message, "Chào bạn! Đang lấy số dư tài khoản của bạn từ OKX và Binance...")
 
-# Cài đặt lịch để cập nhật mỗi 30 giây
-schedule.every(30).seconds.do(lambda: get_okx_balance(user_id))
+# ==== Cài đặt lịch để cập nhật mỗi 30 giây ====
+schedule.every(30).seconds.do(lambda: get_balance_for_user('user_abc'))  # Thay 'user_abc' bằng user_id thực tế
 
-# Chạy vòng lặp để kiểm tra và thực hiện các tác vụ đã lên lịch
+# ==== Chạy vòng lặp để kiểm tra và thực hiện các tác vụ đã lên lịch ====
 while True:
     schedule.run_pending()
     time.sleep(1)
