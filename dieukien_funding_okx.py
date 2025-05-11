@@ -84,9 +84,8 @@ async def funding_check():
         except Exception as e:
             log(f"Lỗi socket: {e} — reconnect sau 10s")
             await asyncio.sleep(10)
-
-# Nếu bạn đang dùng Google Colab, chạy bằng:
-try:
-    await funding_check()
-except Exception as e:
-    log(f"Lỗi main: {e}")
+if __name__ == "__main__":
+    try:
+        asyncio.run(funding_check())
+    except Exception as e:
+        log(f"Lỗi main: {e}")
