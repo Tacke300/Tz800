@@ -95,6 +95,23 @@
 </head>
 <body>
  <p> hello git </p>
+  <div>
+      <h1>Số dư USDT của người dùng: {{ user_id }}</h1>
+
+    <h2>OKX:</h2>
+    {% if okx_balance is not none %}
+        <p>{{ okx_balance }} USDT</p>
+    {% else %}
+        <p>Không thể lấy số dư OKX</p>
+    {% endif %}
+
+    <h2>Binance:</h2>
+    {% if binance_balance is not none %}
+        <p>{{ binance_balance }} USDT</p>
+    {% else %}
+        <p>Không thể lấy số dư Binance</p>
+    {% endif %}
+  </div>
   <p id="status">Đang lấy ID Telegram...</p>
   <p id="balance">...</p>
 
