@@ -1,15 +1,15 @@
-
+import os
 import requests
 import time
 import hmac
 import base64
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 
-# ----------- OKX API CREDENTIALS -------------
-API_KEY = "YOUR_API_KEY"
-API_SECRET = "YOUR_SECRET_KEY"
-API_PASSPHRASE = "YOUR_PASSPHRASE"
+# ----------- OKX API CREDENTIALS (dùng biến môi trường để bảo mật) -------------
+API_KEY = os.getenv("OKX_API_KEY")
+API_SECRET = os.getenv("OKX_API_SECRET")
+API_PASSPHRASE = os.getenv("OKX_API_PASSPHRASE")
 
 HEADERS = {
     "Content-Type": "application/json",
@@ -20,8 +20,15 @@ HEADERS = {
 BASE_URL = "https://www.okx.com"
 
 # ----------- CẤU HÌNH -----------------------
-INVEST_AMOUNT = 100  # Số tiền đầu vào
-REAL_INVEST = INVEST_AMOUNT * 0.99  # Số tiền đầu tư thực tế, dùng 99% số tiền đã nhập
+INVEST_AMOUNT = 100
+REAL_INVEST = INVEST_AMOUNT * 0.98
+
+# ----------- GHI LOG -------------------------
+def log(msg):
+    timestamp = datetime.utcnow().strftime("[%Y-%m-%d %H:%M:%S] ")
+    print(timestamp + msg, flush=True)
+    with open("funding_bot.log", "a") as f:
+        f.write(timestamp + msg + "\n")
 
 # ----------- HÀM TẠO CHỮ KÝ ----------------
 def signature(timestamp, method, request_path, body=""):
@@ -54,49 +61,54 @@ def get_max_leverage(instId):
 
 # ----------- MỞ LỆNH LONG ----------------------
 def place_long_order(instId, invest_amount, max_leverage):
-    # Tính số tiền sẽ mở lệnh (thực tế là đầu tư 99% số tiền nhập vào)
     order_amount = invest_amount * max_leverage
     order_data = {
         "instId": instId,
-        "tdMode": "cross",  # Margin trading (cross-margin)
-        "side": "buy",      # Mua vào (long)
-        "ordType": "market",  # Lệnh market
-        "sz": order_amount,
-        "px": "0",  # Đặt giá là market
+        "tdMode": "cross",
+        "side": "buy",
+        "ordType": "market",
+        "sz": str(order_amount),
+        "px": "0",
     }
-
-    # Đặt lệnh thị trường
     path = "/api/v5/trade/order"
     response = send_request("POST", path, body=order_data)
     if response.get("code") == "0":
-        print(f"Đã mở lệnh long: {instId} với {order_amount} USDT")
+        log(f"Đã mở lệnh long: {instId} với {order_amount} USDT")
         return response["data"][0]["ordId"]
     else:
-        print("Lỗi khi mở lệnh: ", response)
+        log(f"Lỗi khi mở lệnh {instId}: {response}")
         return None
 
-# ----------- CẬP NHẬT TP/SL 50% PnL ----------------
-def set_take_profit_stop_loss(instId, order_id, entry_price, pnl_target=0.5):
-    # Tính toán TP/SL dựa trên PnL target
-    tp_price = entry_price * (1 + pnl_target)
-    sl_price = entry_price * (1 - pnl_target)
+# ----------- LẤY GIÁ KHỚP LỆNH ----------------
+def get_latest_fill_price(instId, orderId):
+    path = f"/api/v5/trade/fills?ordId={orderId}&instId={instId}"
+    fills = send_request("GET", path)
+    if fills.get("code") == "0" and fills["data"]:
+        return float(fills["data"][0]["fillPx"])
+    return None
 
-    # Cập nhật TP và SL
+# ----------- ĐẶT TP/SL 50% ----------------
+def set_take_profit_stop_loss(instId, order_id, entry_price, pnl_target=0.5):
+    tp_price = round(entry_price * (1 + pnl_target), 4)
+    sl_price = round(entry_price * (1 - pnl_target), 4)
+
     order_data = {
         "instId": instId,
         "ordId": order_id,
-        "tp": tp_price,
-        "sl": sl_price,
+        "tpTriggerPx": str(tp_price),
+        "tpOrdPx": "-1",
+        "slTriggerPx": str(sl_price),
+        "slOrdPx": "-1",
     }
 
-    path = "/api/v5/trade/order"
+    path = "/api/v5/trade/order-algo"
     response = send_request("POST", path, body=order_data)
     if response.get("code") == "0":
-        print(f"Đặt TP/SL thành công: TP={tp_price} SL={sl_price}")
+        log(f"Đặt TP/SL thành công: TP={tp_price} SL={sl_price}")
     else:
-        print("Lỗi khi cập nhật TP/SL: ", response)
+        log(f"Lỗi khi đặt TP/SL: {response}")
 
-# ----------- KIỂM TRA FUNDING RATE VÀ MỞ LỆNH ----------------
+# ----------- KIỂM TRA FUNDING & VÀO LỆNH ----------
 def check_funding_and_place_order():
     swap_list = get_swap_list()
 
@@ -104,36 +116,37 @@ def check_funding_and_place_order():
         instId = inst["instId"]
         max_leverage = get_max_leverage(instId)
 
-        # Lấy dữ liệu funding rate
+        # Lấy funding rate
         funding_url = f"/api/v5/public/funding-rate?instId={instId}"
         funding_data = send_request("GET", funding_url)
 
         if not funding_data or funding_data.get("code") != "0":
-            print(f"Lỗi khi lấy funding rate cho {instId}")
+            log(f"Lỗi khi lấy funding rate cho {instId}")
             continue
 
         rate = float(funding_data["data"][0]["fundingRate"])
 
-        # Kiểm tra nếu funding rate âm và đủ điều kiện
+        # Điều kiện vào lệnh
         if rate < 0 and abs(rate * max_leverage) > 1.3:
-            print(f"{instId}: Funding rate = {rate}, Max Leverage = {max_leverage}")
-            # Mở lệnh Long
+            log(f"{instId}: Funding rate = {rate}, Leverage = {max_leverage}")
             order_id = place_long_order(instId, REAL_INVEST, max_leverage)
 
             if order_id:
-                # Lấy giá entry price của lệnh để tính TP/SL
-                entry_price = float(funding_data["data"][0]["fundingRate"])  # Cần cập nhật lại với giá chính xác khi mở lệnh
-                set_take_profit_stop_loss(instId, order_id, entry_price)
-
+                entry_price = get_latest_fill_price(instId, order_id)
+                if entry_price:
+                    set_take_profit_stop_loss(instId, order_id, entry_price)
+                else:
+                    log(f"Không lấy được entry price cho {instId}")
         else:
-            print(f"{instId}: Funding rate không đủ điều kiện.")
+            log(f"{instId}: Funding rate không đủ điều kiện.")
 
-# ----------- LẮP ĐẶT VÒNG LẶP KIỂM TRA ----------------
-while True:
-    try:
-        check_funding_and_place_order()
-        print("Chờ 5 phút trước khi kiểm tra lại...")
-        time.sleep(300)  # Chờ 5 phút (300 giây)
-    except Exception as e:
-        print(f"Lỗi khi chạy vòng lặp chính: {e}", flush=True)
-        time.sleep(300)
+# ----------- VÒNG LẶP CHÍNH ----------------
+if __name__ == "__main__":
+    while True:
+        try:
+            check_funding_and_place_order()
+            log("Chờ 5 phút trước khi kiểm tra lại...")
+            time.sleep(300)
+        except Exception as e:
+            log(f"Lỗi vòng lặp chính: {e}")
+            time.sleep(300)
