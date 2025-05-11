@@ -27,3 +27,4 @@ jobs:
         run: |
           scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ./auto_pull.sh tacke300@34.145.69.100:/home/tacke300/tz800/auto_pull.sh
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no tacke300@34.145.69.100 'chmod +x /home/tacke300/tz800/auto_pull.sh && bash /home/tacke300/tz800/auto_pull.sh'
+     
