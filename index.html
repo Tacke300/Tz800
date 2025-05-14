@@ -96,35 +96,8 @@
 <body>
  <p> hello git </p>
 <!--- test after funding --->
-  <div>
-  <h2>After Funding - OKX</h2>
-  <form id="botForm">
-    <label>Nhập số USDT đầu tư:</label>
-    <input type="number" name="usdt" id="usdt" required>
-    <button type="submit" id="startBtn">Start Bot</button>
-  </form>
-  <script>
-    const form = document.getElementById('botForm');
-    const btn = document.getElementById('startBtn');
-    let running = false;
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const usdt = document.getElementById('usdt').value;
-      const url = running ? '/stop' : '/start';
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `usdt=${usdt}`
-      });
-      const msg = await res.text();
-      alert(msg);
-      running = !running;
-      btn.textContent = running ? 'Stop Bot' : 'Start Bot';
-    });
-  </script>
-</div>
-  <!--- số dư --->
+  
   <div>
     <p> test after funding okx </p>
       <form id="botForm">
