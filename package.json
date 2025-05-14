@@ -18,3 +18,17 @@
     "react-dom": "18.2.0"
   }
 }
+{
+  "name": "okx-funding-bot",
+  "version": "1.0.0",
+  "main": "after_funding_okx.js",
+  "scripts": {
+    "start": "node after_funding_okx.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "body-parser": "^1.20.2",
+    "express": "^4.18.2",
+    "node-schedule": "^2.1.1"
+  }
+}
