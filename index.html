@@ -191,8 +191,9 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new URLSearchParams(new FormData(form)).toString();
-      const url = running ? 'https://your-server.com/stop' : 'https://your-server.com/start';  // <-- sửa đường dẫn phù hợp server thật
-
+      const url = running
+  ? 'https://tz800.duckdns.org/stop'
+  : 'https://tz800.duckdns.org/start';
       try {
         const res = await fetch(url, {
           method: 'POST',
