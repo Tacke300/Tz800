@@ -20,21 +20,9 @@
       height: 100vh;
       text-align: center;
     }
-    h1 {
-      font-size: 2.5rem;
-      color: #3f51b5;
-      margin-bottom: 20px;
-    }
-    h2 {
-      font-size: 1.5rem;
-      color: #555;
-      margin-bottom: 10px;
-    }
-    h3 {
-      font-size: 1.2rem;
-      color: #888;
-      margin-bottom: 20px;
-    }
+    h1 { font-size: 2.5rem; color: #3f51b5; margin-bottom: 20px; }
+    h2 { font-size: 1.5rem; color: #555; margin-bottom: 10px; }
+    h3 { font-size: 1.2rem; color: #888; margin-bottom: 20px; }
     button {
       padding: 12px 24px;
       font-size: 1.1rem;
@@ -66,9 +54,7 @@
       transition: bottom 0.4s ease;
       z-index: 9999;
     }
-    #popup.show {
-      bottom: 0;
-    }
+    #popup.show { bottom: 0; }
     .form-input {
       width: 100%;
       padding: 12px;
@@ -79,12 +65,8 @@
       outline: none;
       transition: border-color 0.3s ease;
     }
-    .form-input:focus {
-      border-color: #3f51b5;
-    }
-    .form-input:disabled {
-      background-color: #f0f0f0;
-    }
+    .form-input:focus { border-color: #3f51b5; }
+    .form-input:disabled { background-color: #f0f0f0; }
     .popup-buttons {
       display: flex;
       justify-content: space-between;
@@ -94,43 +76,16 @@
   </style>
 </head>
 <body>
- <p> hello git </p>
-<!--- test after funding --->
+  <h1>Quản lý Bot Funding</h1>
+  <p>test after funding okx</p>
 
-  
-  <div>
-    <p> test after funding okx </p>
-      <form id="botForm">
-  <input type="hidden" name="user_id" id="user_id" value="">
-  <label>USDT đầu tư:</label>
-  <input type="number" name="usdt" id="usdt" required>
-  <button type="submit" id="startBtn">Start Bot</button>
-</form>
+  <form id="botForm">
+    <input type="hidden" name="user_id" id="user_id" value="">
+    <label>USDT đầu tư:</label>
+    <input type="number" name="usdt" id="usdt" required class="form-input">
+    <button type="submit" id="startBtn">Start Bot</button>
+  </form>
 
-<script>
-  const userId = new URLSearchParams(window.location.search).get('user_id');
-  document.getElementById('user_id').value = userId;
-
-  const form = document.getElementById('botForm');
-  const btn = document.getElementById('startBtn');
-  let running = false;
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new URLSearchParams(new FormData(form)).toString();
-    const url = running ? '/stop' : '/start';
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: formData
-    });
-    const msg = await res.text();
-    alert(msg);
-    running = !running;
-    btn.textContent = running ? 'Stop Bot' : 'Start Bot';
-  });
-</script>
-  </div>
   <p id="status">Đang lấy ID Telegram...</p>
   <p id="balance">...</p>
 
@@ -166,6 +121,7 @@
         }
 
         userId = telegramUser.id;
+        document.getElementById('user_id').value = userId;
         status.innerText = "ID Telegram: " + userId;
 
         async function fetchBalance() {
@@ -182,11 +138,7 @@
             }
 
             const usdt = parseFloat(data.balance);
-            if (isNaN(usdt)) {
-              balanceEl.innerText = "Số dư không hợp lệ";
-            } else {
-              balanceEl.innerText = `Số dư: ${usdt.toFixed(2)} USDT`;
-            }
+            balanceEl.innerText = isNaN(usdt) ? "Số dư không hợp lệ" : `Số dư: ${usdt.toFixed(2)} USDT`;
           } catch (e) {
             console.error(e);
             balanceEl.innerText = "Lỗi khi lấy số dư";
@@ -231,6 +183,30 @@
         closePopup();
       }
     }
+
+    const form = document.getElementById('botForm');
+    const btn = document.getElementById('startBtn');
+    let running = false;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new URLSearchParams(new FormData(form)).toString();
+      const url = running ? 'https://your-server.com/stop' : 'https://your-server.com/start';  // <-- sửa đường dẫn phù hợp server thật
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: formData
+        });
+        const msg = await res.text();
+        alert(msg);
+        running = !running;
+        btn.textContent = running ? 'Stop Bot' : 'Start Bot';
+      } catch (err) {
+        alert("Lỗi kết nối server: " + err.message);
+      }
+    });
 
     init();
   </script>
