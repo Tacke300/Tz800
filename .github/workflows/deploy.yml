@@ -23,18 +23,30 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H 34.145.69.100 >> ~/.ssh/known_hosts
 
+      - name: Check SSH connection
+        run: |
+          echo ">>> Kiểm tra SSH kết nối tới VPS..."
+          ssh -vvv -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no tacke300@34.145.69.100 "echo 'SSH kết nối thành công'"
+
       - name: Ensure authorized_keys on VPS
         env:
           PUB_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
         run: |
-          echo ">>> Adding public key to authorized_keys on VPS"
-          ssh -vvv -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no tacke300@34.145.69.100 "\
-            mkdir -p ~/.ssh && \
-            echo \"$PUB_KEY\" >> ~/.ssh/authorized_keys && \
-            sort -u ~/.ssh/authorized_keys -o ~/.ssh/authorized_keys && \
-            chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
+          echo ">>> Đảm bảo public key có trong authorized_keys trên VPS"
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no tacke300@34.145.69.100 <<EOF
+            mkdir -p ~/.ssh
+            echo "$PUB_KEY" >> ~/.ssh/authorized_keys
+            sort -u ~/.ssh/authorized_keys -o ~/.ssh/authorized_keys
+            chmod 700 ~/.ssh
+            chmod 600 ~/.ssh/authorized_keys
+          EOF
 
-      - name: Deploy to VPS
+      - name: Upload and run auto_pull.sh on VPS
         run: |
+          echo ">>> Upload file auto_pull.sh"
           scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ./auto_pull.sh tacke300@34.145.69.100:/home/tacke300/tz800/auto_pull.sh
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no tacke300@34.145.69.100 'chmod +x /home/tacke300/tz800/auto_pull.sh && bash /home/tacke300/tz800/auto_pull.sh'
+          
+          echo ">>> Run auto_pull.sh trên VPS"
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no tacke300@34.145.69.100 "\
+            chmod +x /home/tacke300/tz800/auto_pull.sh && \
+            bash /home/tacke300/tz800/auto_pull.sh"
