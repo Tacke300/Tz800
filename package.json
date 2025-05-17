@@ -1,27 +1,26 @@
 {
-<<<<<<< HEAD
- "name": "tz800-monorepo",
- "version": "1.0.0",
- "description": "Telegram WebApp with Supabase  + OKX Funding Bot",
- "main": "after_funding_okx.js",
- "scripts": {
-  "dev": "next dev",
-  "build": "next build",
-  "start": "node after_funding_okx.js",
-  "start:web": "next start"
- },
- "keywords": [],
- "author": "",
- "license": "ISC",
- "dependencies": {
-  "@supabase/supabase-js": "^2.39.5",
-  "axios": "^1.9.0",
-  "body-parser": "^1.20.3",
-  "cors": "^2.8.5",
-  "express": "^4.21.2",
-  "next": "13.5.6",
-  "node-schedule": "^2.1.1",
-  "react": "18.2.0",
-  "react-dom": "18.2.0"
- }
+  "name": "tz800-monorepo",
+  "version": "1.0.0",
+  "description": "Telegram WebApp with Supabase + OKX Funding Bot",
+  "main": "after_funding_okx.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "node after_funding_okx.js",
+    "start:web": "next start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.5",
+    "axios": "^1.9.0",
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "next": "13.5.6",
+    "node-schedule": "^2.1.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  }
 }
