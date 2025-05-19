@@ -8,39 +8,61 @@ const bot = new Telegraf('7648930428:AAFDIISTuWwa-aNmyWgItakI_tMwuTEXNkw');
 
 const userIds = new Set();
 
-
 // ==== Lấy API Key từ Supabase ====
 async function getApiKeys(userId) {
-  const res = await fetch(`${supabaseUrl}/rest/v1/users?user_id=eq.${userId}`, {
-    headers: {
-      apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation',
-    },
-  });
-  const data = await res.json();
-  return data[0];
+  console.log(`[getApiKeys] Bắt đầu lấy API keys cho userId: ${userId}`);
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/users?user_id=eq.${userId}`, {
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+      },
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`[getApiKeys] Lỗi HTTP khi gọi Supabase: Status ${res.status}, Body: ${text}`);
+      return null;
+    }
+    const data = await res.json();
+    if (!data || data.length === 0) {
+      console.warn(`[getApiKeys] Không tìm thấy dữ liệu API keys cho userId: ${userId}`);
+      return null;
+    }
+    console.log(`[getApiKeys] Lấy API keys thành công cho userId: ${userId}`);
+    return data[0];
+  } catch (error) {
+    console.error(`[getApiKeys] Lỗi exception khi gọi Supabase: ${error}`);
+    return null;
+  }
 }
 
 // ==== Cập nhật số dư vào Supabase ====
 async function updateBalancesInSupabase(userId, okxBalance, binanceBalance) {
-  const res = await fetch(`${supabaseUrl}/rest/v1/users?user_id=eq.${userId}`, {
-    method: 'PATCH',
-    headers: {
-      apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation',
-    },
-    body: JSON.stringify({
-      usdt_okx: okxBalance,
-      usdt_binance: binanceBalance,
-    }),
-  });
-
-  if (!res.ok) {
-    console.error('Lỗi cập nhật Supabase:', await res.text());
+  console.log(`[updateBalancesInSupabase] Cập nhật số dư cho userId: ${userId}, OKX: ${okxBalance}, Binance: ${binanceBalance}`);
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/users?user_id=eq.${userId}`, {
+      method: 'PATCH',
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify({
+        usdt_okx: okxBalance,
+        usdt_binance: binanceBalance,
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`[updateBalancesInSupabase] Lỗi cập nhật Supabase: Status ${res.status}, Body: ${text}`);
+    } else {
+      console.log(`[updateBalancesInSupabase] Cập nhật Supabase thành công cho userId: ${userId}`);
+    }
+  } catch (error) {
+    console.error(`[updateBalancesInSupabase] Lỗi exception khi cập nhật Supabase: ${error}`);
   }
 }
 
@@ -48,12 +70,15 @@ async function updateBalancesInSupabase(userId, okxBalance, binanceBalance) {
 async function getOkxBalance(userData) {
   try {
     const timestamp = new Date().toISOString();
+    console.log(`[getOkxBalance] Tạo signature OKX, timestamp: ${timestamp}`);
 
     const prehash = timestamp + 'GET' + '/api/v5/account/balance';
     const signature = crypto
       .createHmac('sha256', userData.secret_okx)
       .update(prehash)
       .digest('base64');
+
+    console.log('[getOkxBalance] Signature OKX được tạo thành công');
 
     const res = await fetch('https://www.okx.com/api/v5/account/balance', {
       method: 'GET',
@@ -66,17 +91,25 @@ async function getOkxBalance(userData) {
       },
     });
 
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`[getOkxBalance] Lỗi HTTP OKX: Status ${res.status}, Body: ${text}`);
+      return null;
+    }
+
     const json = await res.json();
+
     if (json.code !== '0') {
-      console.error('OKX API error:', json.msg);
+      console.error(`[getOkxBalance] OKX API error: code=${json.code}, msg=${json.msg}`);
       return null;
     }
 
     const balances = json.data[0].details;
     const usdt = balances.find((b) => b.ccy === 'USDT');
+    console.log(`[getOkxBalance] Số dư USDT OKX: ${usdt?.availBal || 'Không tìm thấy'}`);
     return usdt?.availBal || null;
   } catch (e) {
-    console.error('OKX Error:', e);
+    console.error(`[getOkxBalance] Lỗi exception: ${e}`);
     return null;
   }
 }
@@ -84,10 +117,17 @@ async function getOkxBalance(userData) {
 // ==== Lấy số dư từ Binance ====
 async function getBinanceBalance(userData) {
   try {
-    // Lấy thời gian server Binance để đồng bộ timestamp
+    console.log('[getBinanceBalance] Bắt đầu lấy thời gian server Binance');
+
     const timeRes = await fetch('https://api.binance.com/api/v3/time');
+    if (!timeRes.ok) {
+      const text = await timeRes.text();
+      console.error(`[getBinanceBalance] Lỗi lấy thời gian Binance: Status ${timeRes.status}, Body: ${text}`);
+      return null;
+    }
     const timeData = await timeRes.json();
     const timestamp = timeData.serverTime;
+    console.log(`[getBinanceBalance] Thời gian server Binance: ${timestamp}`);
 
     const query = `timestamp=${timestamp}`;
     const signature = crypto
@@ -95,32 +135,42 @@ async function getBinanceBalance(userData) {
       .update(query)
       .digest('hex');
 
+    console.log('[getBinanceBalance] Tạo chữ ký Binance thành công');
+
     const res = await fetch(`https://api.binance.com/api/v3/account?${query}&signature=${signature}`, {
       headers: {
         'X-MBX-APIKEY': userData.apikey_binance,
       },
     });
 
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`[getBinanceBalance] Lỗi HTTP Binance: Status ${res.status}, Body: ${text}`);
+      return null;
+    }
+
     const json = await res.json();
 
     if (json.code) {
-      console.error('Binance API error:', json.msg || json);
+      console.error(`[getBinanceBalance] Binance API error: code=${json.code}, msg=${json.msg || JSON.stringify(json)}`);
       return null;
     }
 
     const usdt = json.balances.find((b) => b.asset === 'USDT');
+    console.log(`[getBinanceBalance] Số dư USDT Binance: ${usdt?.free || 'Không tìm thấy'}`);
     return usdt?.free || null;
   } catch (e) {
-    console.error('Binance Error:', e);
+    console.error(`[getBinanceBalance] Lỗi exception: ${e}`);
     return null;
   }
 }
 
 // ==== Lấy số dư cho user và cập nhật Supabase ====
 async function getBalanceForUser(userId) {
+  console.log(`[getBalanceForUser] Bắt đầu lấy số dư cho userId: ${userId}`);
   const userData = await getApiKeys(userId);
   if (!userData) {
-    console.log(`Không tìm thấy user ${userId}`);
+    console.log(`[getBalanceForUser] Không tìm thấy user data cho userId: ${userId}`);
     return;
   }
 
@@ -128,6 +178,8 @@ async function getBalanceForUser(userId) {
     getOkxBalance(userData),
     getBinanceBalance(userData),
   ]);
+
+  console.log(`[getBalanceForUser] Lấy số dư OKX: ${okx}, Binance: ${binance}`);
 
   // Cập nhật Supabase
   await updateBalancesInSupabase(userId, okx, binance);
@@ -141,12 +193,18 @@ async function getBalanceForUser(userId) {
     message = `Số dư của bạn:\n- Binance USDT: ${binance}\n- Không lấy được số dư OKX`;
   }
 
-  await bot.telegram.sendMessage(userId, message);
+  try {
+    await bot.telegram.sendMessage(userId, message);
+    console.log(`[getBalanceForUser] Đã gửi tin nhắn Telegram cho userId: ${userId}`);
+  } catch (e) {
+    console.error(`[getBalanceForUser] Lỗi gửi tin nhắn Telegram: ${e}`);
+  }
 }
 
 // ==== Xử lý /start từ Telegram ====
 bot.start((ctx) => {
   const userId = ctx.message.chat.id;
+  console.log(`[bot.start] User bắt đầu tương tác: ${userId}`);
   userIds.add(userId);
   ctx.reply('Chào bạn! Đang lấy số dư từ OKX và Binance...');
   getBalanceForUser(userId);
@@ -154,33 +212,15 @@ bot.start((ctx) => {
 
 // ==== Chạy định kỳ mỗi 30 giây ====
 setInterval(() => {
+  console.log('[Interval] Lấy số dư định kỳ cho tất cả userIds');
   for (const userId of userIds) {
     getBalanceForUser(userId);
   }
 }, 30000);
 
 // ==== Khởi động bot ====
-bot.launch();
-    message = `Số dư của bạn:\n- OKX USDT: ${okx}\n- Binance USDT: ${binance}`;
-  }
-
-  await bot.telegram.sendMessage(userId, message);
-}
-
-// ==== Xử lý /start từ Telegram ====
-bot.start((ctx) => {
-  const userId = ctx.message.chat.id;
-  userIds.add(userId);
-  ctx.reply('Chào bạn! Đang lấy số dư từ OKX và Binance...');
-  getBalanceForUser(userId);
+bot.launch().then(() => {
+  console.log('[bot.launch] Bot đã khởi động thành công');
+}).catch((e) => {
+  console.error('[bot.launch] Lỗi khi khởi động bot:', e);
 });
-
-// ==== Chạy định kỳ mỗi 30 giây ====
-setInterval(() => {
-  for (const userId of userIds) {
-    getBalanceForUser(userId);
-  }
-}, 30000);
-
-// ==== Khởi động bot ====
-bot.launch();
