@@ -1,6 +1,6 @@
-// index.js
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 const axios = require('axios');
 const schedule = require('node-schedule');
 const path = require('path');
@@ -8,25 +8,28 @@ const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
-app.use(bodyParser.urlencoded({ extended: false }));
+const PORT = 3000;
+
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+// Supabase config (thay bằng của bạn)
+const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 let botRunning = false;
 let investment = 0;
 let intervalJob1 = null;
 let intervalJob2 = null;
 
-// Supabase config
-const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co'; // Thay URL thật
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'; // Thay key thật
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// OKX API keys
 let OKX_API_KEY = '';
 let OKX_SECRET_KEY = '';
 let OKX_PASSPHRASE = '';
 let CURRENT_USER_ID = '';
 
-// Load API keys từ Supabase
+// Hàm load API keys từ Supabase
 async function loadUserKeys(userId) {
   const { data, error } = await supabase
     .from('users')
@@ -48,7 +51,7 @@ async function loadUserKeys(userId) {
   return true;
 }
 
-// Hàm tạo chữ ký OKX
+// Tạo chữ ký OKX
 function getOKXSignature(timestamp, method, requestPath, body = '') {
   const prehash = timestamp + method.toUpperCase() + requestPath + body;
   return crypto.createHmac('sha256', OKX_SECRET_KEY).update(prehash).digest('base64');
@@ -59,7 +62,6 @@ async function sendOKXOrder(order) {
   const timestamp = new Date().toISOString();
   const method = 'POST';
   const requestPath = '/api/v5/trade/order';
-
   const body = JSON.stringify(order);
   const sign = getOKXSignature(timestamp, method, requestPath, body);
 
@@ -88,13 +90,13 @@ async function sendOKXOrder(order) {
   }
 }
 
-// Lấy funding rates từ OKX
+// Lấy funding rates OKX
 async function getFundingRates() {
   const res = await axios.get('https://www.okx.com/api/v5/public/funding-rate?instType=SWAP');
   return res.data.data;
 }
 
-// Lấy leverage tối đa của 1 symbol
+// Lấy leverage tối đa 1 symbol
 async function getMaxLeverage(instId) {
   try {
     const res = await axios.get(`https://www.okx.com/api/v5/account/leverage-info?instId=${instId}`);
@@ -109,18 +111,18 @@ async function getMaxLeverage(instId) {
 async function placeRealOrder(symbol, leverage, usdt) {
   console.log(`User ${CURRENT_USER_ID} vào lệnh ${symbol} với ${usdt}$, leverage ${leverage}`);
 
-  // Lấy giá entry market hiện tại
+  // Lấy giá thị trường hiện tại
   const ticker = await axios.get(`https://www.okx.com/api/v5/market/ticker?instId=${symbol}`);
   const entryPrice = parseFloat(ticker.data.data[0].last);
 
-  // Tính khối lượng dựa trên vốn và đòn bẩy
+  // Tính size
   const size = ((usdt * leverage) / entryPrice).toFixed(4);
 
-  // Lợi nhuận và lỗ kỳ vọng (30% vốn thật)
+  // Lợi nhuận kỳ vọng 30% vốn thật
   const profitTarget = usdt * 0.3;
   const priceChange = profitTarget / size;
 
-  // Giá TP và SL (cho lệnh LONG)
+  // Giá TP và SL (cho LONG)
   const tpPrice = (entryPrice + priceChange).toFixed(2);
   const slPrice = (entryPrice - priceChange).toFixed(2);
 
@@ -134,7 +136,7 @@ async function placeRealOrder(symbol, leverage, usdt) {
     lever: leverage.toString()
   });
 
-  // Đặt TP bằng limit sell giảm dần (reduceOnly)
+  // Đặt TP limit sell (reduceOnly)
   await sendOKXOrder({
     instId: symbol,
     tdMode: 'isolated',
@@ -161,7 +163,7 @@ async function placeRealOrder(symbol, leverage, usdt) {
   console.log(`Đã đặt TP ở ${tpPrice}$ và SL ở ${slPrice}$ cho lệnh ${symbol}`);
 }
 
-// Logic chạy bot chính
+// Logic bot chính
 async function runBotLogic() {
   const now = new Date();
   const hour = (now.getUTCHours() + 7) % 24;
@@ -182,7 +184,7 @@ async function runBotLogic() {
   }, 3000);
 }
 
-// Start bot, lịch chạy 2 lần mỗi giờ (phút 55 và 58)
+// Start bot (2 lần mỗi giờ: phút 55 và 58)
 function startBot() {
   intervalJob1 = schedule.scheduleJob('55 * * * *', runBotLogic);
   intervalJob2 = schedule.scheduleJob('58 * * * *', runBotLogic);
@@ -196,10 +198,12 @@ function stopBot() {
   console.log('Bot đã dừng');
 }
 
+// Route homepage (nếu có file index.html)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Route start bot
 app.post('/start', async (req, res) => {
   const userId = req.body.user_id;
   investment = parseFloat(req.body.usdt);
@@ -210,18 +214,25 @@ app.post('/start', async (req, res) => {
   if (!ok) return res.send('Không tìm thấy user trong Supabase');
 
   if (botRunning) return res.send('Bot đã chạy rồi');
+
   botRunning = true;
   startBot();
-  res.send('Bot đã khởi động cho user_id ' + userId);
+
+  console.log(`>> START BOT cho user: ${userId}, vốn: ${investment} USDT`);
+  res.send(`Bot đã khởi động cho user_id ${userId}`);
 });
 
+// Route stop bot
 app.post('/stop', (req, res) => {
   if (!botRunning) return res.send('Bot chưa chạy');
+
   botRunning = false;
   stopBot();
+
+  console.log(`>> STOP BOT`);
   res.send('Bot đã dừng');
 });
 
-app.listen(3000, () => {
-  console.log('Bot OKX chạy ở http://localhost:3000');
+app.listen(PORT, () => {
+  console.log(`Server chạy tại http://localhost:${PORT}`);
 });
