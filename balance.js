@@ -110,6 +110,7 @@ async function getOkxBalance(userData) {
     return usdt?.availBal || null;
   } catch (e) {
     console.error(`[getOkxBalance] Lỗi exception: ${e}`);
+    console.log('[getOkxBalance] Response OKX:', JSON.stringify(json, null, 2));
     return null;
   }
 }
@@ -136,6 +137,7 @@ async function getBinanceBalance(userData) {
       .digest('hex');
 
     console.log('[getBinanceBalance] Tạo chữ ký Binance thành công');
+    
 
     const res = await fetch(`https://api.binance.com/api/v3/account?${query}&signature=${signature}`, {
       headers: {
@@ -217,6 +219,44 @@ setInterval(() => {
     getBalanceForUser(userId);
   }
 }, 30000);
+
+//test
+const fetch = require('node-fetch');
+const crypto = require('crypto');
+
+async function getOkxBalanceSimple(apikey, secret, passphrase) {
+  const timestamp = new Date().toISOString();
+  const method = 'GET';
+  const requestPath = '/api/v5/account/balance';
+
+  const prehash = timestamp + method + requestPath;
+  const signature = crypto.createHmac('sha256', secret).update(prehash).digest('base64');
+
+  const res = await fetch('https://www.okx.com' + requestPath, {
+    method,
+    headers: {
+      'OK-ACCESS-KEY': apikey,
+      'OK-ACCESS-SIGN': signature,
+      'OK-ACCESS-TIMESTAMP': timestamp,
+      'OK-ACCESS-PASSPHRASE': passphrase,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const json = await res.json();
+  console.log(json);
+  if (json.code === '0') {
+    const usdt = json.data[0].details.find(b => b.ccy === 'USDT');
+    console.log('USDT balance:', usdt?.availBal);
+    return usdt?.availBal || null;
+  } else {
+    console.error('OKX API error:', json);
+    return null;
+  }
+}
+
+// Thay apikey, secret, passphrase đúng rồi chạy thử
+getOkxBalanceSimple('94a1c2ac-e934-4d84-be7c-71b3351972e1', '94a1c2ac-e934-4d84-be7c-71b3351972e1', 'Altf4enter$');
 
 // ==== Khởi động bot ====
 bot.launch().then(() => {
