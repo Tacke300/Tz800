@@ -54,11 +54,12 @@ async function loadApiFromSupabase(userId) {
 }
 
 app.post('/start', async (req, res) => {
-  console.log('req.body:', req.body);
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
   const userId = req.body.user_id;
   investment = parseFloat(req.body.usdt);
 
-  if (!userId) return res.send('Thiếu user_id');
+  if (!userId) return res.status(400).send('Thiếu user_id');
 
   const ok = await loadApiFromSupabase(userId);
   if (!ok) return res.send('Lỗi khi lấy API từ Supabase');
@@ -66,7 +67,6 @@ app.post('/start', async (req, res) => {
   if (botRunning) return res.send('Bot đã chạy rồi');
 
   botRunning = true;
-  // Gọi hàm startBot gốc của bạn ở đây
   res.send('Bot đã khởi động');
 });
 // Cuối file:
