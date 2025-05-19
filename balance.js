@@ -1,8 +1,9 @@
 const fetch = require('node-fetch');
+const crypto = require('crypto');
 const { Telegraf } = require('telegraf');
 
 const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...'; // Rút gọn vì bảo mật
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...'; // để nguyên key gốc của bạn
 const bot = new Telegraf('7648930428:AAFDIISTuWwa-aNmyWgItakI_tMwuTEXNkw');
 
 const userIds = new Set();
@@ -20,12 +21,31 @@ async function getApiKeys(userId) {
   return data[0];
 }
 
+// ==== Cập nhật số dư USDT vào Supabase ====
+async function updateBalancesInSupabase(userId, usdtOkx, usdtBinance) {
+  try {
+    await fetch(`${supabaseUrl}/rest/v1/users?user_id=eq.${userId}`, {
+      method: 'PATCH',
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify({
+        usdt_okx: usdtOkx,
+        usdt_binance: usdtBinance,
+      }),
+    });
+  } catch (e) {
+    console.error('Lỗi cập nhật Supabase:', e);
+  }
+}
+
 // ==== Lấy số dư từ OKX ====
 async function getOkxBalance(userData) {
   try {
-    const tsRes = await fetch('https://www.okx.com/api/v5/public/time');
-    const tsJson = await tsRes.json();
-    const timestamp = tsJson.data[0].ts;
+    const timestamp = new Date().toISOString();
 
     const prehash = timestamp + 'GET' + '/api/v5/account/balance';
     const signature = crypto
@@ -34,6 +54,7 @@ async function getOkxBalance(userData) {
       .digest('base64');
 
     const res = await fetch('https://www.okx.com/api/v5/account/balance', {
+      method: 'GET',
       headers: {
         'OK-ACCESS-KEY': userData.apikey_okx,
         'OK-ACCESS-SIGN': signature,
@@ -44,6 +65,11 @@ async function getOkxBalance(userData) {
     });
 
     const json = await res.json();
+    if (json.code !== '0') {
+      console.error('OKX API error:', json.msg);
+      return null;
+    }
+
     const balances = json.data[0].details;
     const usdt = balances.find((b) => b.ccy === 'USDT');
     return usdt?.availBal || null;
@@ -56,9 +82,12 @@ async function getOkxBalance(userData) {
 // ==== Lấy số dư từ Binance ====
 async function getBinanceBalance(userData) {
   try {
-    const timestamp = Date.now();
+    const timeRes = await fetch('https://api.binance.com/api/v3/time');
+    const timeData = await timeRes.json();
+    const timestamp = timeData.serverTime;
+
     const query = `timestamp=${timestamp}`;
-    const signature = require('crypto')
+    const signature = crypto
       .createHmac('sha256', userData.secret_binance)
       .update(query)
       .digest('hex');
@@ -70,6 +99,12 @@ async function getBinanceBalance(userData) {
     });
 
     const json = await res.json();
+
+    if (json.code) {
+      console.error('Binance API error:', json.msg || json);
+      return null;
+    }
+
     const usdt = json.balances.find((b) => b.asset === 'USDT');
     return usdt?.free || null;
   } catch (e) {
@@ -78,7 +113,7 @@ async function getBinanceBalance(userData) {
   }
 }
 
-// ==== Lấy số dư cho user ====
+// ==== Lấy số dư cho user và cập nhật Supabase ====
 async function getBalanceForUser(userId) {
   const userData = await getApiKeys(userId);
   if (!userData) {
@@ -90,6 +125,9 @@ async function getBalanceForUser(userId) {
     getOkxBalance(userData),
     getBinanceBalance(userData),
   ]);
+
+  // Cập nhật số dư vào Supabase
+  await updateBalancesInSupabase(userId, okx, binance);
 
   let message = 'Không thể lấy số dư từ các sàn.';
   if (okx && binance) {
