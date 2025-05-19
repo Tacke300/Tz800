@@ -55,7 +55,8 @@ async function loadApiFromSupabase(userId) {
 }
 
 app.post('/start', async (req, res) => {
-  console.log('req.body:', req.body);
+  console.log('req.body:', req.body); // kiểm tra xem JSON có vào không
+
   const userId = req.body.user_id;
   const usdt = req.body.usdt;
 
@@ -71,7 +72,7 @@ app.post('/start', async (req, res) => {
   investment = parseFloat(usdt);
   botRunning = true;
 
-  // Ở đây bạn có thể setup job hay mở bot...
+  // Có thể cài đặt job chạy bot tại đây nếu cần
 
   res.send('Bot đã khởi động');
 });
