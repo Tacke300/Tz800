@@ -8,7 +8,7 @@ const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
-const PORT = 3000;
+const PORT = 3001;
 
 app.use(cors());
 app.use(express.json());
