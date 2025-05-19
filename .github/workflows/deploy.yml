@@ -20,8 +20,8 @@ jobs:
         with:
           host: ${{ secrets.GL_SSH_HOST }}
           username: ${{ secrets.GL_SSH_USERNAME }}
-          # password: ${{ secrets.GL_SSH_PASSWORD }}
-          key: ${{ secrets.GL_SSH_SECRET }}
+          password: ${{ secrets.GL_SSH_PASSWORD }}
+          # key: ${{ secrets.GL_SSH_SECRET }}
           script: |
             chmod +x /home/tacke300/tz800/auto_pull.sh
             /home/tacke300/tz800/auto_pull.sh
