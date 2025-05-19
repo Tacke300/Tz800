@@ -192,7 +192,7 @@
 
       const { error } = await client
         .from('users')
-        .upsert({ user_id: userId, apikey, secret, pass: passshare });
+        .upsert({ user_id: user_id, apikey_okx, secret_okx, pass_okx: passshare });
 
       if (error) {
         console.error(error);
