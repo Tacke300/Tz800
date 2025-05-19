@@ -190,26 +190,38 @@
     let running = false;
 
     form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new URLSearchParams(new FormData(form)).toString();
-      const url = running
-  ? 'https://tz800.duckdns.org/stop'
-  : 'https://tz800.duckdns.org/start';
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: formData
-        });
-        const msg = await res.text();
-        alert(msg);
-        running = !running;
-        btn.textContent = running ? 'Stop Bot' : 'Start Bot';
-      } catch (err) {
-        alert("Lỗi kết nối server: " + err.message);
-      }
+  e.preventDefault();
+
+  const formData = new URLSearchParams(new FormData(form)).toString();
+  const url = running
+    ? 'https://tz800.duckdns.org/stop'
+    : 'https://tz800.duckdns.org/start';
+
+  try {
+    console.log("Sending POST to:", url);
+    console.log("Payload:", formData);
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData
     });
 
+    // Nếu server trả về JSON, dùng res.json()
+    // const data = await res.json();
+    // alert(JSON.stringify(data));
+
+    const msg = await res.text(); // lấy text server trả về
+    alert("Phản hồi server: " + msg);
+
+    running = !running;
+    btn.textContent = running ? 'Stop Bot' : 'Start Bot';
+
+  } catch (err) {
+    alert("Lỗi kết nối server: " + err.message);
+    console.error(err);
+  }
+});
     init();
   </script>
 </body>
