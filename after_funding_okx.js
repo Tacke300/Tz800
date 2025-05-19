@@ -195,7 +195,7 @@ app.post('/start', async (req, res) => {
   const ok = await loadApiFromSupabase(user_id);
   if (!ok) return res.status(500).send('Lỗi load API');
 
-  CAPITAL = parseFloat(usdt);
+  CAPITAL = parseFloat(usdt_okx);
   botRunning = true;
 
   if (!botInterval) {
