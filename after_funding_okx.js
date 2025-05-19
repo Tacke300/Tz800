@@ -6,7 +6,8 @@ const app = express(); const PORT = 3001;
 
 app.use(cors()); app.use(express.json()); app.use(bodyParser.urlencoded({ extended: true }));
 
- Supabase config const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co'; const supabaseKey = 'motconvithaiconvit'; const supabase = createClient(supabaseUrl, supabaseKey);
+// Supabase config 
+const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co'; const supabaseKey = 'motconvithaiconvit'; const supabase = createClient(supabaseUrl, supabaseKey);
 
 let botRunning = false; let botInterval = null; let APIKEY = ''; let APISECRET = ''; let APIPASSPHRASE = ''; let CAPITAL = 0; const BASE_URL = 'https://www.okx.com';
 
