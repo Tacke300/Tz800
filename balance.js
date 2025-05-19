@@ -256,7 +256,7 @@ async function getOkxBalanceSimple(apikey, secret, passphrase) {
 }
 
 // Thay apikey, secret, passphrase đúng rồi chạy thử
-getOkxBalanceSimple('94a1c2ac-e934-4d84-be7c-71b3351972e1', '94a1c2ac-e934-4d84-be7c-71b3351972e1', 'Altf4enter$');
+getOkxBalanceSimple('6e61ebd4-be68-4914-a9f2-cb7de8ac189f', '4E8831FB62BA99735CD14F6BDAC0CBEF', 'Altf4enter$');
 
 // ==== Khởi động bot ====
 bot.launch().then(() => {
