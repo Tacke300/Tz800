@@ -220,43 +220,6 @@ setInterval(() => {
   }
 }, 30000);
 
-//test
-
-
-
-async function getOkxBalanceSimple(apikey, secret, passphrase) {
-  const timestamp = new Date().toISOString();
-  const method = 'GET';
-  const requestPath = '/api/v5/account/balance';
-
-  const prehash = timestamp + method + requestPath;
-  const signature = crypto.createHmac('sha256', secret).update(prehash).digest('base64');
-
-  const res = await fetch('https://www.okx.com' + requestPath, {
-    method,
-    headers: {
-      'OK-ACCESS-KEY': apikey,
-      'OK-ACCESS-SIGN': signature,
-      'OK-ACCESS-TIMESTAMP': timestamp,
-      'OK-ACCESS-PASSPHRASE': passphrase,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  const json = await res.json();
-  console.log(json);
-  if (json.code === '0') {
-    const usdt = json.data[0].details.find(b => b.ccy === 'USDT');
-    console.log('USDT balance:', usdt?.availBal);
-    return usdt?.availBal || null;
-  } else {
-    console.error('OKX API error:', json);
-    return null;
-  }
-}
-
-// Thay apikey, secret, passphrase đúng rồi chạy thử
-getOkxBalanceSimple('6e61ebd4-be68-4914-a9f2-cb7de8ac189f', '4E8831FB62BA99735CD14F6BDAC0CBEF', 'Altf4enter$');
 
 // ==== Khởi động bot ====
 bot.launch().then(() => {
