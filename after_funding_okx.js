@@ -27,7 +27,7 @@ let APIKEY = '';
 let APISECRET = '';
 let APIPASSPHRASE = '';
 
-// Hàm load API từ Supabase
+// Load API từ Supabase
 async function loadApiFromSupabase(userId) {
   try {
     const { data, error } = await supabase
@@ -53,4 +53,27 @@ async function loadApiFromSupabase(userId) {
   }
 }
 
-// (Phần còn lại là code gốc của bạn không đổi)
+// Route khởi động bot
+app.post('/start', async (req, res) => {
+  const userId = req.body.user_id;
+  investment = parseFloat(req.body.usdt);
+
+  if (!userId) return res.send('Thiếu user_id');
+
+  const ok = await loadApiFromSupabase(userId);
+  if (!ok) return res.send('Lỗi khi lấy API từ Supabase');
+
+  if (botRunning) return res.send('Bot đã chạy rồi');
+
+  botRunning = true;
+  // Gọi hàm startBot gốc của bạn ở đây
+  res.send('Bot đã khởi động');
+});
+
+// Các route và logic gốc KHÔNG BỊ ĐỤNG VÀO
+// (Phần này bạn có thể dán tiếp các hàm gốc như startBot, stopBot, logic OKX, lệnh funding...)
+
+// Cuối file:
+app.listen(PORT, () => {
+  console.log(`Server đang chạy ở http://localhost:${PORT}`);
+});
