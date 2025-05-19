@@ -54,8 +54,8 @@ async function loadApiFromSupabase(userId) {
   }
 }
 
-// Route khởi động bot
 app.post('/start', async (req, res) => {
+  console.log('Nhận request /start', req.body);  // thêm log này
   const userId = req.body.user_id;
   investment = parseFloat(req.body.usdt);
 
@@ -70,7 +70,6 @@ app.post('/start', async (req, res) => {
   // Gọi hàm startBot gốc của bạn ở đây
   res.send('Bot đã khởi động');
 });
-
 // Các route và logic gốc KHÔNG BỊ ĐỤNG VÀO
 // (Phần này bạn có thể dán tiếp các hàm gốc như startBot, stopBot, logic OKX, lệnh funding...)
 
