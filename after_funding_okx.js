@@ -55,13 +55,16 @@ async function loadApiFromSupabase(userId) {
 }
 
 app.post('/start', async (req, res) => {
-  console.log('Headers:', req.headers);
-  console.log('Body:', req.body);
+  console.log('req.body:', req.body); // kiểm tra xem JSON có vào không
+
   const userId = req.body.user_id;
-  investment = parseFloat(req.body.usdt);
+  const usdt = req.body.usdt;
 
-  if (!userId) return res.status(400).send('Thiếu user_id');
+  console.log('userId:', userId, 'usdt:', usdt);
 
+  if (!userId) return res.send('Thiếu user_id');
+  ...
+});
   const ok = await loadApiFromSupabase(userId);
   if (!ok) return res.send('Lỗi khi lấy API từ Supabase');
 
