@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const { Telegraf } = require('telegraf');
 
 const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...'; // để nguyên key gốc của bạn
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'; // để nguyên key gốc của bạn
 const bot = new Telegraf('7648930428:AAFDIISTuWwa-aNmyWgItakI_tMwuTEXNkw');
 
 const userIds = new Set();
