@@ -8,6 +8,7 @@ const bot = new Telegraf('7648930428:AAFDIISTuWwa-aNmyWgItakI_tMwuTEXNkw');
 
 const userIds = new Set();
 
+
 // ==== Lấy API Key từ Supabase ====
 async function getApiKeys(userId) {
   const res = await fetch(`${supabaseUrl}/rest/v1/users?user_id=eq.${userId}`, {
@@ -15,30 +16,31 @@ async function getApiKeys(userId) {
       apikey: supabaseKey,
       Authorization: `Bearer ${supabaseKey}`,
       'Content-Type': 'application/json',
+      Prefer: 'return=representation',
     },
   });
   const data = await res.json();
   return data[0];
 }
 
-// ==== Cập nhật số dư USDT vào Supabase ====
-async function updateBalancesInSupabase(userId, usdtOkx, usdtBinance) {
-  try {
-    await fetch(`${supabaseUrl}/rest/v1/users?user_id=eq.${userId}`, {
-      method: 'PATCH',
-      headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=representation',
-      },
-      body: JSON.stringify({
-        usdt_okx: usdtOkx,
-        usdt_binance: usdtBinance,
-      }),
-    });
-  } catch (e) {
-    console.error('Lỗi cập nhật Supabase:', e);
+// ==== Cập nhật số dư vào Supabase ====
+async function updateBalancesInSupabase(userId, okxBalance, binanceBalance) {
+  const res = await fetch(`${supabaseUrl}/rest/v1/users?user_id=eq.${userId}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${supabaseKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify({
+      usdt_okx: okxBalance,
+      usdt_binance: binanceBalance,
+    }),
+  });
+
+  if (!res.ok) {
+    console.error('Lỗi cập nhật Supabase:', await res.text());
   }
 }
 
@@ -82,6 +84,7 @@ async function getOkxBalance(userData) {
 // ==== Lấy số dư từ Binance ====
 async function getBinanceBalance(userData) {
   try {
+    // Lấy thời gian server Binance để đồng bộ timestamp
     const timeRes = await fetch('https://api.binance.com/api/v3/time');
     const timeData = await timeRes.json();
     const timestamp = timeData.serverTime;
@@ -126,11 +129,38 @@ async function getBalanceForUser(userId) {
     getBinanceBalance(userData),
   ]);
 
-  // Cập nhật số dư vào Supabase
+  // Cập nhật Supabase
   await updateBalancesInSupabase(userId, okx, binance);
 
   let message = 'Không thể lấy số dư từ các sàn.';
   if (okx && binance) {
+    message = `Số dư của bạn:\n- OKX USDT: ${okx}\n- Binance USDT: ${binance}`;
+  } else if (okx) {
+    message = `Số dư của bạn:\n- OKX USDT: ${okx}\n- Không lấy được số dư Binance`;
+  } else if (binance) {
+    message = `Số dư của bạn:\n- Binance USDT: ${binance}\n- Không lấy được số dư OKX`;
+  }
+
+  await bot.telegram.sendMessage(userId, message);
+}
+
+// ==== Xử lý /start từ Telegram ====
+bot.start((ctx) => {
+  const userId = ctx.message.chat.id;
+  userIds.add(userId);
+  ctx.reply('Chào bạn! Đang lấy số dư từ OKX và Binance...');
+  getBalanceForUser(userId);
+});
+
+// ==== Chạy định kỳ mỗi 30 giây ====
+setInterval(() => {
+  for (const userId of userIds) {
+    getBalanceForUser(userId);
+  }
+}, 30000);
+
+// ==== Khởi động bot ====
+bot.launch();
     message = `Số dư của bạn:\n- OKX USDT: ${okx}\n- Binance USDT: ${binance}`;
   }
 
