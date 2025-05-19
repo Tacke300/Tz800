@@ -80,6 +80,6 @@ app.post('/start', async (req, res) => {
   res.send('Bot đã khởi động');
 });
 // Cuối file:
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server đang chạy ở http://0.0.0.0:${PORT}`);
+app.listen(3001, '0.0.0.0', () => {
+  console.log('Server đang chạy ở http://0.0.0.0:3001');
 });
