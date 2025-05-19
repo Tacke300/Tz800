@@ -11,8 +11,9 @@ const app = express();
 const PORT = 3000;
 
 app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
 
 // Supabase config
 const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';
