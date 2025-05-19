@@ -13,10 +13,10 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
 app.get('/', (req, res) => {
   res.send('OK');
 });
-
 
 // Supabase config
 const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';
@@ -31,7 +31,7 @@ let APIKEY = '';
 let APISECRET = '';
 let APIPASSPHRASE = '';
 
-// Load API từ Supabase
+// Hàm lấy API từ Supabase
 async function loadApiFromSupabase(userId) {
   try {
     const { data, error } = await supabase
@@ -57,29 +57,51 @@ async function loadApiFromSupabase(userId) {
   }
 }
 
+// API khởi động bot
 app.post('/start', async (req, res) => {
-  console.log('req.body:', req.body); // kiểm tra xem JSON có vào không
+  console.log('req.body:', req.body);
 
   const userId = req.body.user_id;
   const usdt = req.body.usdt;
 
-  console.log('userId:', userId, 'usdt:', usdt);
-
-  if (!userId) return res.send('Thiếu user_id');
+  if (!userId) return res.status(400).send('Thiếu user_id');
 
   const ok = await loadApiFromSupabase(userId);
-  if (!ok) return res.send('Lỗi khi lấy API từ Supabase');
+  if (!ok) return res.status(500).send('Lỗi khi lấy API từ Supabase');
 
-  if (botRunning) return res.send('Bot đã chạy rồi');
+  if (botRunning) return res.status(400).send('Bot đã chạy rồi');
 
   investment = parseFloat(usdt);
   botRunning = true;
 
   // Có thể cài đặt job chạy bot tại đây nếu cần
+  console.log(`Bot đã khởi động với ${investment} USDT`);
 
-  res.send('Bot đã khởi động');
+  res.status(200).send('Bot đã khởi động');
 });
-// Cuối file:
-app.listen(3001, '0.0.0.0', () => {
-  console.log('Server đang chạy ở http://0.0.0.0:3001');
+
+// API dừng bot
+app.post('/stop', (req, res) => {
+  if (!botRunning) {
+    return res.status(400).send('Bot chưa chạy');
+  }
+
+  botRunning = false;
+  investment = 0;
+  APIKEY = '';
+  APISECRET = '';
+  APIPASSPHRASE = '';
+
+  if (intervalJob) {
+    intervalJob.cancel();
+    intervalJob = null;
+  }
+
+  console.log('Bot đã dừng');
+  res.status(200).send('Bot đã dừng');
+});
+
+// Khởi động server
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server đang chạy ở http://0.0.0.0:${PORT}`);
 });
