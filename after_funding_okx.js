@@ -55,22 +55,24 @@ async function loadApiFromSupabase(userId) {
 }
 
 app.post('/start', async (req, res) => {
-  console.log('req.body:', req.body); // kiểm tra xem JSON có vào không
-
+  console.log('req.body:', req.body);
   const userId = req.body.user_id;
   const usdt = req.body.usdt;
 
   console.log('userId:', userId, 'usdt:', usdt);
 
   if (!userId) return res.send('Thiếu user_id');
-  ...
-});
+
   const ok = await loadApiFromSupabase(userId);
   if (!ok) return res.send('Lỗi khi lấy API từ Supabase');
 
   if (botRunning) return res.send('Bot đã chạy rồi');
 
+  investment = parseFloat(usdt);
   botRunning = true;
+
+  // Ở đây bạn có thể setup job hay mở bot...
+
   res.send('Bot đã khởi động');
 });
 // Cuối file:
