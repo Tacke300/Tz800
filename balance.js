@@ -1,4 +1,4 @@
-
+const fetch = require('node-fetch');
 const crypto = require('crypto');
 const { Telegraf } = require('telegraf');
 
@@ -221,8 +221,8 @@ setInterval(() => {
 }, 30000);
 
 //test
-const fetch = require('node-fetch');
-const crypto = require('crypto');
+
+
 
 async function getOkxBalanceSimple(apikey, secret, passphrase) {
   const timestamp = new Date().toISOString();
