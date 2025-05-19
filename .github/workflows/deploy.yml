@@ -15,37 +15,48 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Deploy Stack
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.GL_SSH_SECRET }}
+          port: 22
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            /home/tacke300/tz800/auto_pull.sh
 
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H 34.145.69.100 >> ~/.ssh/known_hosts
+      # - name: Setup SSH key
+      #   run: |
+      #     mkdir -p ~/.ssh
+      #     echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+      #     chmod 600 ~/.ssh/id_ed25519
+      #     ssh-keyscan -H 34.145.69.100 >> ~/.ssh/known_hosts
 
-      - name: Check SSH connection
-        run: |
-          echo ">>> Kiểm tra SSH kết nối tới VPS..."
-          ssh -i ~/.ssh/id_ed25519 \
-              -o StrictHostKeyChecking=no \
-              -o ConnectTimeout=10 \
-              tacke300@34.145.69.100 "echo '>>> SSH kết nối thành công'" || (echo '>>> SSH thất bại!' && exit 1)
+      # - name: Check SSH connection
+      #   run: |
+      #     echo ">>> Kiểm tra SSH kết nối tới VPS..."
+      #     ssh -i ~/.ssh/id_ed25519 \
+      #         -o StrictHostKeyChecking=no \
+      #         -o ConnectTimeout=10 \
+      #         tacke300@34.145.69.100 "echo '>>> SSH kết nối thành công'" || (echo '>>> SSH thất bại!' && exit 1)
 
-      - name: Ensure authorized_keys on VPS
-        env:
-          PUB_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
-        run: |
-          echo ">>> Thêm SSH public key vào authorized_keys trên VPS..."
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no tacke300@34.145.69.100 "\
-            mkdir -p ~/.ssh && \
-            echo \"$PUB_KEY\" >> ~/.ssh/authorized_keys && \
-            sort -u ~/.ssh/authorized_keys -o ~/.ssh/authorized_keys && \
-            chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
+      # - name: Ensure authorized_keys on VPS
+      #   env:
+      #     PUB_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+      #   run: |
+      #     echo ">>> Thêm SSH public key vào authorized_keys trên VPS..."
+      #     ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no tacke300@34.145.69.100 "\
+      #       mkdir -p ~/.ssh && \
+      #       echo \"$PUB_KEY\" >> ~/.ssh/authorized_keys && \
+      #       sort -u ~/.ssh/authorized_keys -o ~/.ssh/authorized_keys && \
+      #       chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
 
-      - name: Deploy to VPS
-        run: |
-          echo ">>> Gửi auto_pull.sh và chạy trên VPS..."
-          scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ./auto_pull.sh tacke300@34.145.69.100:/home/tacke300/tz800/auto_pull.sh
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no tacke300@34.145.69.100 "\
-            chmod +x /home/tacke300/tz800/auto_pull.sh && \
-            bash /home/tacke300/tz800/auto_pull.sh"
+      # - name: Deploy to VPS
+      #   run: |
+      #     echo ">>> Gửi auto_pull.sh và chạy trên VPS..."
+      #     scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ./auto_pull.sh tacke300@34.145.69.100:/home/tacke300/tz800/auto_pull.sh
+      #     ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no tacke300@34.145.69.100 "\
+      #       chmod +x /home/tacke300/tz800/auto_pull.sh && \
+      #       bash /home/tacke300/tz800/auto_pull.sh"
+      
