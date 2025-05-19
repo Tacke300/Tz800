@@ -23,7 +23,7 @@ jobs:
           # password: ${{ secrets.GL_SSH_PASSWORD }}
           key: ${{ secrets.GL_SSH_SECRET }}
           script: |
-            whoami
+            /home/tacke300/tz800/auto_pull.sh
 
       # - name: Setup SSH key
       #   run: |
