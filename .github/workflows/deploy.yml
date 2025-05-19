@@ -20,7 +20,8 @@ jobs:
         with:
           host: ${{ secrets.GL_SSH_HOST }}
           username: ${{ secrets.GL_SSH_USERNAME }}
-          password: ${{ secrets.GL_SSH_PASSWORD }}
+          # password: ${{ secrets.GL_SSH_PASSWORD }}
+          key: ${{ secrets.GL_SSH_SECRET }}
           script: |
             whoami
 
