@@ -12,7 +12,6 @@ const PORT = 3000;
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
 app.use(express.json());
 
 // Supabase config
@@ -55,7 +54,11 @@ async function loadApiFromSupabase(userId) {
 }
 
 app.post('/start', async (req, res) => {
-  console.log('Nhận request /start', req.body);  // thêm log này
+  console.log('req.body:', req.body);
+  const userId = req.body.user_id;
+  if (!userId) return res.send('Thiếu user_id');
+  //...
+});
   const userId = req.body.user_id;
   investment = parseFloat(req.body.usdt);
 
