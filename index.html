@@ -179,29 +179,41 @@
     function closePopup() {
       document.getElementById('popup').classList.remove('show');
     }
+async function submitAPI() {
+  const apikey = document.getElementById('apikey').value.trim();
+  const secret = document.getElementById('secret').value.trim();
+  const passshare = document.getElementById('passshare').value.trim();
 
-    async function submitAPI() {
-      const apikey = document.getElementById('apikey').value;
-      const secret = document.getElementById('secret').value;
-      const passshare = document.getElementById('passshare').value;
+  if (!userId) {
+    alert("NO ID.");
+    return;
+  }
 
-      if (!userId) {
-        alert("NO ID.");
-        return;
-      }
+  if (!apikey || !secret || !passshare) {
+    alert("Vui lòng nhập đầy đủ API Key, Secret và Passshare.");
+    return;
+  }
 
-      const { error } = await client
-        .from('users')
-        .upsert({ user_id: user_id, apikey_okx, secret_okx, pass_okx: passshare });
+  const { data, error } = await client
+    .from('users')
+    .upsert(
+      { 
+        user_id: userId, 
+        apikey_okx: apikey, 
+        secret_okx: secret, 
+        pass_okx: passshare 
+      }, 
+      { onConflict: 'user_id' }
+    );
 
-      if (error) {
-        console.error(error);
-        alert("Lỗi khi gửi dữ liệu: " + error.message);
-      } else {
-        alert("Đã gửi thành công!");
-        closePopup();
-      }
-    }
+  if (error) {
+    console.error('Supabase upsert error:', error);
+    alert("Lỗi khi gửi dữ liệu: " + error.message);
+  } else {
+    alert("Đã gửi thành công!");
+    closePopup();
+  }
+}
 
     const form = document.getElementById('botForm');
     const btn = document.getElementById('startBtn');
