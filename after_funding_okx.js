@@ -189,8 +189,8 @@ app.get('/', (req, res) => {
 });
 
 app.post('/start', async (req, res) => {
-  const { user_id, usdt } = req.body;
-  if (!user_id || !usdt) return res.status(400).send('Thiếu user_id hoặc usdt');
+  const { user_id, usdt_okx } = req.body;
+  if (!user_id || !usdt_okx) return res.status(400).send('Thiếu user_id hoặc usdt_okx');
 
   const ok = await loadApiFromSupabase(user_id);
   if (!ok) return res.status(500).send('Lỗi load API');
