@@ -2,71 +2,128 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Bot Funding Login</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    /* ... giữ nguyên toàn bộ style cũ ... */
-
-    /* Thêm style cho log console */
-    #console-log {
-      background: #222;
-      color: #0f0;
-      font-family: monospace;
-      font-size: 13px;
-      padding: 10px;
-      height: 150px;
-      overflow-y: auto;
-      margin-top: 20px;
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #121212;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      width: 90%;
+      max-width: 400px;
+      background-color: #1f1f1f;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #e0e0e0;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 16px;
       border-radius: 8px;
-      white-space: pre-wrap;
-      word-break: break-word;
+      border: 1px solid #333;
+      background-color: #2c2c2c;
+      color: #fff;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #4caf50;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .link {
+      text-align: center;
+      margin-top: 12px;
+      color: #aaa;
+      font-size: 14px;
+    }
+    .link a {
+      color: #4caf50;
+      text-decoration: none;
+    }
+    .popup {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+    .popup-content {
+      background-color: #1f1f1f;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .popup-content p {
+      margin-bottom: 20px;
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
 
-  <!-- giữ nguyên HTML login/register như cũ -->
+  <div class="container" id="login-box">
+    <h2>Đăng nhập Bot</h2>
+    <input type="text" id="login-user" placeholder="Username">
+    <input type="password" id="login-pass" placeholder="Password">
+    <button onclick="login()">Đăng nhập</button>
+    <div class="link">Chưa có tài khoản? <a href="#" onclick="showRegister()">Đăng ký</a></div>
+  </div>
 
-  <!-- Thêm khung log -->
-  <div class="container" style="max-width: 400px; margin-top: 10px;">
-    <h3>Console Log</h3>
-    <div id="console-log"></div>
+  <div class="container" id="register-box" style="display: none;">
+    <h2>Đăng ký</h2>
+    <input type="text" id="reg-user" placeholder="Username">
+    <input type="password" id="reg-pass" placeholder="Mật khẩu">
+    <input type="password" id="reg-pass-confirm" placeholder="Nhập lại mật khẩu">
+    <button onclick="register()">Tạo tài khoản</button>
+    <div class="link"><a href="#" onclick="showLogin()">Quay lại đăng nhập</a></div>
+  </div>
+
+  <div class="popup" id="success-popup">
+    <div class="popup-content">
+      <p>Đăng ký tài khoản thành công! </p>
+      <button onclick="closePopup()">OK</button>
+    </div>
+  </div>
+
+  <div class="popup" id="home">
+    <div class="popup-content">
+      <h2>Chào mừng!</h2>
+      <p>Bạn đã đăng nhập thành công.</p>
+    </div>
   </div>
 
   <script>
-    const supabase = supabase.createClient(
-      'https://tramnanrzruzvkehpydl.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'
-    );
+    const SUPABASE_URL = 'https://YOUR_PROJECT_URL.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Override console.log / error / warn để hiển thị trên web
-    (function(){
-      const logDiv = document.getElementById('console-log');
-      ['log', 'error', 'warn'].forEach(level => {
-        const original = console[level];
-        console[level] = function(...args) {
-          original.apply(console, args);
-          const msg = args.map(a => {
-            if (typeof a === 'object') {
-              try { return JSON.stringify(a, null, 2); }
-              catch(e) { return String(a); }
-            }
-            return String(a);
-          }).join(' ');
-
-          const p = document.createElement('div');
-          p.textContent = `[${level.toUpperCase()}] ` + msg;
-          p.style.marginBottom = '4px';
-          if(level === 'error') p.style.color = '#f44';
-          else if(level === 'warn') p.style.color = '#fa0';
-          logDiv.appendChild(p);
-          logDiv.scrollTop = logDiv.scrollHeight;
-        }
-      });
-    })();
-
-    // Các function hiện tại giữ nguyên
     function showRegister() {
       document.getElementById('login-box').style.display = 'none';
       document.getElementById('register-box').style.display = 'block';
@@ -78,57 +135,48 @@
     }
 
     async function register() {
-      const user = document.getElementById('reg-user').value.trim();
-      const pass = document.getElementById('reg-pass').value;
+      const username = document.getElementById('reg-user').value.trim();
+      const password = document.getElementById('reg-pass').value;
       const confirm = document.getElementById('reg-pass-confirm').value;
 
-      if (user && pass && pass === confirm) {
-        const { data, error } = await supabase
-          .from('users')
-          .insert([{ user_id: user, password: pass }]);
+      if (!username || !password || password !== confirm) {
+        alert('Vui lòng nhập thông tin hợp lệ và khớp mật khẩu.');
+        return;
+      }
 
-        console.log('register data:', data);
-        console.error('register error:', error);
+      const { data, error } = await supabase
+        .from('users')
+        .insert([{ user_id: username, password: password }]);
 
-        if (error) {
-          alert("Lỗi đăng ký: " + error.message);
-        } else {
-          document.getElementById('register-box').style.display = 'none';
-          document.getElementById('login-box').style.display = 'block';
-          document.getElementById('success-popup').style.display = 'flex';
-        }
+      if (error) {
+        alert('Đăng ký thất bại: ' + error.message);
       } else {
-        alert("Vui lòng điền đúng và đủ thông tin.");
+        document.getElementById('register-box').style.display = 'none';
+        document.getElementById('login-box').style.display = 'block';
+        document.getElementById('success-popup').style.display = 'flex';
       }
     }
 
     async function login() {
-      try {
-        const user = document.getElementById('login-user').value.trim();
-        const pass = document.getElementById('login-pass').value;
+      const username = document.getElementById('login-user').value.trim();
+      const password = document.getElementById('login-pass').value;
 
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('user_id', user)
-          .eq('password', pass)
-          .single();
+      if (!username || !password) {
+        alert("Vui lòng nhập username và mật khẩu");
+        return;
+      }
 
-        if (error) {
-          alert("Sai tài khoản hoặc mật khẩu");
-          console.error(error);
-          return;
-        }
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('user_id', username)
+        .eq('password', password)
+        .single();
 
-        if (data) {
-          document.getElementById('home').style.display = 'flex';
-          console.log("Đăng nhập thành công:", data);
-        } else {
-          alert("Sai tài khoản hoặc mật khẩu");
-        }
-      } catch (err) {
-        alert("Có lỗi xảy ra, vui lòng thử lại.");
-        console.error(err);
+      if (error || !data) {
+        alert('Đăng nhập thất bại: Sai thông tin.');
+      } else {
+        document.getElementById('home').style.display = 'flex';
       }
     }
 
