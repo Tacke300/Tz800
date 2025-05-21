@@ -49,6 +49,7 @@
     }
 
     .bot {
+      width: 100%;
       flex: 0 1 300px;
       border: 1px solid #aaa;
       display: flex;
@@ -70,6 +71,18 @@
       padding: 0 5px;
   
       color:white;
+    }
+    
+  button {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      color: white;
+      background-color: #007bff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s;
     }
     .input-wrapper {
       position: relative;
@@ -123,8 +136,7 @@
       padding: 40px 20px;  
       text-align: center;  
       animation: slideUp 0.3s ease;  
-    }  
-  
+    }
     @keyframes slideUp {  
       from {  
         transform: translateY(100%);  
@@ -225,12 +237,19 @@
     padding-left: 3px;
     font-family: 'Roboto', Arial, sans-serif;
   }
-  
+ .all {
+      max-width: 480px;
+      margin: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 16px;
+    }
   
   
   </style>  
 </head>  
 <body>  
+  <div class="all">
   <div class="tab-001">  
     <p class="banner">Funding Bot</p>  
   </div>  
@@ -320,7 +339,7 @@
         <button onclick="submitApiForm()" style="width: 100%; padding: 12px; font-size: 16px; font-weight: bold; cursor: pointer;">Submit</button>  
       </div>  
     </div>  
-
+</div>
 
   <script>  
   // Bật/tắt input nhập tiền và đổi nút Khởi chạy <-> Dừng lại  
