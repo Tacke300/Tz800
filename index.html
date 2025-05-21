@@ -170,22 +170,33 @@
   }
 }
     async function login() {
-      const user = document.getElementById('login-user').value.trim();
-      const pass = document.getElementById('login-pass').value;
+  try {
+    const user = document.getElementById('login-user').value.trim();
+    const pass = document.getElementById('login-pass').value;
 
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('user_id', user)
-        .eq('password', pass)
-        .single();
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('user_id', user)
+      .eq('password', pass)
+      .single();
 
-      if (data) {
-        document.getElementById('home').style.display = 'flex';
-      } else {
-        alert("Sai tài khoản hoặc mật khẩu");
-      }
+    if (error) {
+      alert("Sai tài khoản hoặc mật khẩu");
+      console.error(error);
+      return;
     }
+
+    if (data) {
+      document.getElementById('home').style.display = 'flex';
+    } else {
+      alert("Sai tài khoản hoặc mật khẩu");
+    }
+  } catch (err) {
+    alert("Có lỗi xảy ra, vui lòng thử lại.");
+    console.error(err);
+  }
+}
 
     function closePopup() {
       document.getElementById('success-popup').style.display = 'none';
