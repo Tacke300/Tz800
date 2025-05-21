@@ -146,27 +146,29 @@
     }
 
     async function register() {
-      const user = document.getElementById('reg-user').value.trim();
-      const pass = document.getElementById('reg-pass').value;
-      const confirm = document.getElementById('reg-pass-confirm').value;
+  const user = document.getElementById('reg-user').value.trim();
+  const pass = document.getElementById('reg-pass').value;
+  const confirm = document.getElementById('reg-pass-confirm').value;
 
-      if (user && pass && pass === confirm) {
-        const { data, error } = await supabase
-          .from('users')
-          .insert([{ user_id: user, password: pass }]);
+  if (user && pass && pass === confirm) {
+    const { data, error } = await supabase
+      .from('users')
+      .insert([{ user_id: user, password: pass }]);
+    
+    console.log('register data:', data);
+    console.log('register error:', error);
 
-        if (error) {
-          alert("Lỗi đăng ký: " + error.message);
-        } else {
-          document.getElementById('register-box').style.display = 'none';
-          document.getElementById('login-box').style.display = 'block';
-          document.getElementById('success-popup').style.display = 'flex';
-        }
-      } else {
-        alert("Vui lòng điền đúng và đủ thông tin.");
-      }
+    if (error) {
+      alert("Lỗi đăng ký: " + error.message);
+    } else {
+      document.getElementById('register-box').style.display = 'none';
+      document.getElementById('login-box').style.display = 'block';
+      document.getElementById('success-popup').style.display = 'flex';
     }
-
+  } else {
+    alert("Vui lòng điền đúng và đủ thông tin.");
+  }
+}
     async function login() {
       const user = document.getElementById('login-user').value.trim();
       const pass = document.getElementById('login-pass').value;
