@@ -1,52 +1,23 @@
-const axios = require('axios');
-const crypto = require('crypto');
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OKX Balance</title>
+</head>
+<body>
+  <h2>Số dư USDT OKX:</h2>
+  <p id="usdt_okx">Đang tải...</p>
 
-// ==== Thông tin API Key OKX ====
-const apiKey = '6e61ebd4-be68-4914-a9f2-cb7de8ac189f';
-const apiSecret = '4E8831FB62BA99735CD14F6BDAC0CBEF';
-const passphrase = 'Altf4enter$';
-
-const getTimestamp = async () => {
-    try {
-        const res = await axios.get('https://www.okx.com/api/v5/public/time');
-        return res.data.data[0].ts;
-    } catch (err) {
-        console.error("Lỗi khi lấy timestamp:", err.message);
-        return null;
-    }
-};
-
-const sign = (message, secret) => {
-    return Buffer.from(
-        crypto.createHmac('sha256', secret).update(message).digest()
-    ).toString('base64');
-};
-
-const getOkxBalance = async () => {
-    const timestamp = await getTimestamp();
-    if (!timestamp) return;
-
-    const method = "GET";
-    const requestPath = "/api/v5/account/balance";
-    const body = "";
-    const prehash = `${timestamp}${method}${requestPath}${body}`;
-    const signature = sign(prehash, apiSecret);
-
-    const headers = {
-        "OK-ACCESS-KEY": apiKey,
-        "OK-ACCESS-SIGN": signature,
-        "OK-ACCESS-TIMESTAMP": timestamp,
-        "OK-ACCESS-PASSPHRASE": passphrase,
-        "Content-Type": "application/json"
-    };
-
-    try {
-        const response = await axios.get(`https://www.okx.com${requestPath}`, { headers });
-        console.log("Mã phản hồi:", response.status);
-        console.log("Số dư:", JSON.stringify(response.data, null, 2));
-    } catch (error) {
-        console.error("Lỗi gọi API:", error.response?.data || error.message);
-    }
-};
-
-getOkxBalance();
+  <script>
+    fetch('/api/balance')
+      .then(res => res.json())
+      .then(data => {
+        const usdt = data.find(item => item.ccy === 'USDT');
+        document.getElementById('usdt_okx').innerText = usdt ? usdt.availBal + ' USDT' : 'Không có USDT';
+      })
+      .catch(err => {
+        document.getElementById('usdt_okx').innerText = 'Lỗi tải dữ liệu';
+        console.error(err);
+      });
+  </script>
+</body>
+</html>
