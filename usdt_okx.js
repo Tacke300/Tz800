@@ -86,6 +86,6 @@ http.createServer((req, res) => {
             }
         });
     }
-}).listen(8080, () => {
+}).listen(3000, () => {
     console.log("Server chạy ở http://localhost:8080");
 });
