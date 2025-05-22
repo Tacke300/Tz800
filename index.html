@@ -1,190 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Bot Funding Login</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #121212;
-      color: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    .container {
-      width: 90%;
-      max-width: 400px;
-      background-color: #1f1f1f;
-      padding: 24px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #e0e0e0;
-    }
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 16px;
-      border-radius: 8px;
-      border: 1px solid #333;
-      background-color: #2c2c2c;
-      color: #fff;
-      font-size: 16px;
-      box-sizing: border-box;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      background-color: #4caf50;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    .link {
-      text-align: center;
-      margin-top: 12px;
-      color: #aaa;
-      font-size: 14px;
-    }
-    .link a {
-      color: #4caf50;
-      text-decoration: none;
-    }
-    .popup {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: rgba(0, 0, 0, 0.8);
-      justify-content: center;
-      align-items: center;
-      z-index: 10;
-    }
-    .popup-content {
-      background-color: #1f1f1f;
-      padding: 20px;
-      border-radius: 10px;
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
-    }
-    .popup-content p {
-      margin-bottom: 20px;
-    }
-  </style>
-</head>
-<body>
+const axios = require('axios');
+const crypto = require('crypto');
 
-  <div class="container" id="login-box">
-    <h2>Đăng nhập Bot</h2>
-    <input type="text" id="login-user" placeholder="Username">
-    <input type="password" id="login-pass" placeholder="Password">
-    <button onclick="login()">Đăng nhập</button>
-    <div class="link">Chưa có tài khoản? <a href="#" onclick="showRegister()">Đăng ký</a></div>
-  </div>
+// ==== Thông tin API Key OKX ====
+const apiKey = 'your_api_key';
+const apiSecret = 'your_api_secret';
+const passphrase = 'your_passphrase';
 
-  <div class="container" id="register-box" style="display: none;">
-    <h2>Đăng ký</h2>
-    <input type="text" id="reg-user" placeholder="Username">
-    <input type="password" id="reg-pass" placeholder="Mật khẩu">
-    <input type="password" id="reg-pass-confirm" placeholder="Nhập lại mật khẩu">
-    <button onclick="register()">Tạo tài khoản</button>
-    <div class="link"><a href="#" onclick="showLogin()">Quay lại đăng nhập</a></div>
-  </div>
-
-  <div class="popup" id="success-popup">
-    <div class="popup-content">
-      <p>Đăng ký tài khoản thành công! Vui lòng xác minh email nếu được yêu cầu.</p>
-      <button onclick="closePopup()">OK</button>
-    </div>
-  </div>
-
-  <div class="popup" id="home">
-    <div class="popup-content">
-      <h2>Chào mừng!</h2>
-      <p>Bạn đã đăng nhập thành công.</p>
-    </div>
-  </div>
-
-  <script>
-    const client = supabase.createClient(
-      'https://tramnanrzruzvkehpydl.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'
-    );
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    function showRegister() {
-      document.getElementById('login-box').style.display = 'none';
-      document.getElementById('register-box').style.display = 'block';
+const getTimestamp = async () => {
+    try {
+        const res = await axios.get('https://www.okx.com/api/v5/public/time');
+        return res.data.data[0].ts;
+    } catch (err) {
+        console.error("Lỗi khi lấy timestamp:", err.message);
+        return null;
     }
+};
 
-    function showLogin() {
-      document.getElementById('login-box').style.display = 'block';
-      document.getElementById('register-box').style.display = 'none';
+const sign = (message, secret) => {
+    return Buffer.from(
+        crypto.createHmac('sha256', secret).update(message).digest()
+    ).toString('base64');
+};
+
+const getOkxBalance = async () => {
+    const timestamp = await getTimestamp();
+    if (!timestamp) return;
+
+    const method = "GET";
+    const requestPath = "/api/v5/account/balance";
+    const body = "";
+    const prehash = `${timestamp}${method}${requestPath}${body}`;
+    const signature = sign(prehash, apiSecret);
+
+    const headers = {
+        "OK-ACCESS-KEY": apiKey,
+        "OK-ACCESS-SIGN": signature,
+        "OK-ACCESS-TIMESTAMP": timestamp,
+        "OK-ACCESS-PASSPHRASE": passphrase,
+        "Content-Type": "application/json"
+    };
+
+    try {
+        const response = await axios.get(`https://www.okx.com${requestPath}`, { headers });
+        console.log("Mã phản hồi:", response.status);
+        console.log("Số dư:", JSON.stringify(response.data, null, 2));
+    } catch (error) {
+        console.error("Lỗi gọi API:", error.response?.data || error.message);
     }
+};
 
-    async function register() {
-      const username = document.getElementById('reg-user').value.trim();
-      const password = document.getElementById('reg-pass').value.trim();
-      const confirm = document.getElementById('reg-pass-confirm').value.trim();
-
-      if (!username || !password || password !== confirm) {
-        alert('Vui lòng nhập thông tin hợp lệ và khớp mật khẩu.');
-        return;
-      }
-
-      const { data, error } = await client
-        .from('users')
-        .upsert({ user_id: reg-user, password: reg-pass});
-
-      if (error) {
-        alert('Đăng ký thất bại: ' + error.message);
-      } else {
-        document.getElementById('register-box').style.display = 'none';
-        document.getElementById('login-box').style.display = 'block';
-        document.getElementById('success-popup').style.display = 'flex';
-      }
-    }
-
-    async function login() {
-      const username = document.getElementById('login-user').value.trim();
-      const password = document.getElementById('login-pass').value.trim();
-
-      if (!username || !password) {
-        alert("Vui lòng nhập username và mật khẩu");
-        return;
-      }
-
-      const { data, error } = await client
-        .from('users')
-        .select('*')
-        .eq('user_id', login-user)
-        .eq('password', login-pass)
-        .single();
-
-      if (error || !data) {
-        alert('Đăng nhập thất bại: Sai thông tin.');
-      } else {
-        document.getElementById('home').style.display = 'flex';
-      }
-    }
-
-    function closePopup() {
-      document.getElementById('success-popup').style.display = 'none';
-    }
-  </script>
-</body>
-</html>
+getOkxBalance();
