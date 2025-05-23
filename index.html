@@ -2,138 +2,188 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Login with Supabase</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Supabase Auth</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
   <style>
     body {
-      background: #121212;
-      color: #ccc;
-      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #121212;
+      font-family: sans-serif;
+      color: white;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      margin: 0;
+      min-height: 100vh;
     }
-    #login-container {
+
+    .container {
       background: #1e1e1e;
       padding: 20px;
       border-radius: 10px;
-      width: 300px;
+      width: 90%;
+      max-width: 350px;
+      box-sizing: border-box;
     }
+
+    h2 { text-align: center; }
+
     input, button {
       width: 100%;
       margin: 8px 0;
       padding: 10px;
       border: none;
-      border-radius: 5px;
+      border-radius: 6px;
       font-size: 16px;
       box-sizing: border-box;
     }
+
     input {
       background: #2b2b2b;
       color: white;
     }
+
     button {
       background-color: #3b82f6;
       color: white;
+      font-weight: bold;
       cursor: pointer;
     }
-    #welcome {
-      display: none;
+
+    .link {
       text-align: center;
+      margin-top: 10px;
+      color: #a0a0a0;
+      cursor: pointer;
+    }
+
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .popup-overlay.active {
+      display: flex;
+    }
+
+    .welcome-popup {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 1000;
+    }
+
+    .welcome-popup.active {
+      display: flex;
     }
   </style>
 </head>
 <body>
 
-<div id="login-container">
-  <input id="username" placeholder="Username" />
-  <input id="password" type="password" placeholder="Password" />
-  <button onclick="login()">Đăng nhập</button>
-  <button onclick="signup()">Đăng ký</button>
-</div>
+  <!-- Đăng nhập -->
+  <div class="container" id="login-container">
+    <h2>Đăng nhập</h2>
+    <input id="login-userid" type="text" placeholder="User ID" />
+    <input id="login-password" type="password" placeholder="Password" />
+    <button onclick="login()">Đăng nhập</button>
+    <div class="link" onclick="showRegister()">Chưa có tài khoản? Đăng ký</div>
+  </div>
 
-<div id="welcome">
-  <h1>Chào <span id="welcome-user"></span>!</h1>
-  <button onclick="logout()">Đăng xuất</button>
-</div>
+  <!-- Popup đăng ký -->
+  <div class="popup-overlay" id="register-popup">
+    <div class="container">
+      <h2>Đăng ký</h2>
+      <input id="reg-userid" type="text" placeholder="User ID" />
+      <input id="reg-password" type="password" placeholder="Password" />
+      <input id="reg-repassword" type="password" placeholder="Nhập lại Password" />
+      <button onclick="register()">Tạo tài khoản</button>
+      <div class="link" onclick="hideRegister()">Hủy</div>
+    </div>
+  </div>
 
-<script>
-  const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'; // rút gọn key ở đây
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+  <!-- Welcome popup -->
+  <div class="welcome-popup" id="welcome">
+    <h1>Welcome!</h1>
+  </div>
 
-  // Tự kiểm tra nếu đã login
-  const savedUser = localStorage.getItem('username');
-  if (savedUser) {
-    showWelcome(savedUser);
-  }
+  <script>
+    // Thay bằng URL và key Supabase thật của bạn
+    const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-  async function login() {
-    const user = document.getElementById('username').value.trim();
-    const pass = document.getElementById('password').value;
-
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('username', user)
-      .eq('password', pass);
-
-    if (error || !data || data.length === 0) {
-      alert('Sai thông tin đăng nhập');
-    } else {
-      localStorage.setItem('username', user);
-      showWelcome(user);
-    }
-  }
-
-  async function signup() {
-    const user = document.getElementById('username').value.trim();
-    const pass = document.getElementById('password').value;
-
-    if (!user || !pass) {
-      alert('Vui lòng nhập đầy đủ username và password');
-      return;
+    function showRegister() {
+      document.getElementById('register-popup').classList.add('active');
     }
 
-    const { data: existing, error: checkError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('username', user);
-
-    if (checkError) {
-      alert('Lỗi khi kiểm tra username');
-      return;
+    function hideRegister() {
+      document.getElementById('register-popup').classList.remove('active');
     }
 
-    if (existing.length > 0) {
-      alert('Username đã tồn tại');
-      return;
+    async function register() {
+      const user = document.getElementById('reg-userid').value.trim();
+      const pass = document.getElementById('reg-password').value;
+      const repass = document.getElementById('reg-repassword').value;
+
+      if (!user || !pass || pass !== repass) {
+        alert('Vui lòng kiểm tra lại thông tin');
+        return;
+      }
+
+      // Kiểm tra user_id đã tồn tại chưa
+      const { data: existingUser, error: checkError } = await supabase
+        .from('users')
+        .select('user_id')
+        .eq('user_id', user)
+        .limit(1)
+        .single();
+
+      if (existingUser) {
+        alert('User ID đã tồn tại, vui lòng chọn User ID khác');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('users')
+        .insert([{ user_id: user, password: pass }]);
+
+      if (error) {
+        alert('Đăng ký thất bại: ' + error.message);
+      } else {
+        alert('Tạo tài khoản thành công');
+        hideRegister();
+      }
     }
 
-    const { error: insertError } = await supabase
-      .from('users')
-      .insert([{ username: user, password: pass }]);
+    async function login() {
+      const user = document.getElementById('login-userid').value.trim();
+      const pass = document.getElementById('login-password').value;
 
-    if (insertError) {
-      alert('Đăng ký thất bại');
-    } else {
-      alert('Đăng ký thành công! Giờ bạn có thể đăng nhập.');
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('user_id', user)
+        .eq('password', pass);
+
+      if (error || !data || data.length === 0) {
+        alert('Sai thông tin đăng nhập');
+      } else {
+        document.getElementById('login-container').style.display = 'none';
+        document.getElementById('welcome').classList.add('active');
+      }
     }
-  }
-
-  function showWelcome(user) {
-    document.getElementById('login-container').style.display = 'none';
-    document.getElementById('welcome-user').innerText = user;
-    document.getElementById('welcome').style.display = 'block';
-  }
-
-  function logout() {
-    localStorage.removeItem('username');
-    location.reload();
-  }
-</script>
+  </script>
 
 </body>
 </html>
