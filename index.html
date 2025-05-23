@@ -1,21 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>OKX Balance</title>
+  <meta charset="UTF-8">
+  <title>Hiển thị USDT</title>
 </head>
 <body>
-  <h2>Số dư USDT OKX:</h2>
   <p id="usdt_okx">Đang tải...</p>
 
   <script>
-    fetch('/api/balance')
+    fetch('data.json')
       .then(res => res.json())
       .then(data => {
-        const usdt = data.find(item => item.ccy === 'USDT');
-        document.getElementById('usdt_okx').innerText = usdt ? usdt.availBal + ' USDT' : 'Không có USDT';
+        document.getElementById('usdt_okx').innerText = 'USDT OKX: ' + data.usdt;
       })
       .catch(err => {
-        document.getElementById('usdt_okx').innerText = 'Lỗi tải dữ liệu';
+        document.getElementById('usdt_okx').innerText = 'Lỗi khi tải dữ liệu';
         console.error(err);
       });
   </script>
