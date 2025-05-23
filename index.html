@@ -132,27 +132,30 @@
     }
 
     async function register() {
-      const user = document.getElementById('reg-username').value.trim();
-      const pass = document.getElementById('reg-password').value;
-      const repass = document.getElementById('reg-repassword').value;
+  const user = document.getElementById('reg-username').value.trim();
+  const pass = document.getElementById('reg-password').value;
+  const repass = document.getElementById('reg-repassword').value;
 
-      if (!user || !pass || pass !== repass) {
-        alert('Vui lòng kiểm tra lại thông tin');
-        return;
-      }
+  if (!user || !pass || pass !== repass) {
+    alert('Vui lòng kiểm tra lại thông tin');
+    return;
+  }
 
-      const { data, error } = await supabase
-        .from('users')
-        .insert([{ username: user, password: pass }]);
+  console.log("Đang gửi dữ liệu đăng ký tới supabase...", user);
 
-      if (error) {
-        alert('Đăng ký thất bại: ' + error.message);
-      } else {
-        alert('Tạo tài khoản thành công');
-        hideRegister();
-      }
-    }
+  const { data, error } = await supabase
+    .from('users')
+    .insert([{ username: user, password: pass }]);
 
+  if (error) {
+    console.error("Lỗi đăng ký:", error);
+    alert('Đăng ký thất bại: ' + error.message);
+  } else {
+    console.log("Đăng ký thành công:", data);
+    alert('Tạo tài khoản thành công');
+    hideRegister();
+  }
+}
     async function login() {
       const user = document.getElementById('login-username').value.trim();
       const pass = document.getElementById('login-password').value;
