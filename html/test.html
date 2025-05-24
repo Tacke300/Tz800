@@ -7,153 +7,173 @@
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f0f2f5;
+      background: #121212;
+      color: #ffffff;
       padding: 20px;
       text-align: center;
     }
 
-    .form-input {
+    .form-input, input, button {
       width: 100%;
       padding: 12px;
       margin: 10px 0;
-      border: 1.5px solid #ccc;
+      border: none;
       border-radius: 8px;
       font-size: 1rem;
     }
 
-    #popup {
-      background: #fff;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      max-width: 400px;
-      margin: 50px auto;
+    input {
+      background-color: #1e1e1e;
+      color: white;
+      border: 1.5px solid #333;
     }
 
-    .popup-buttons button {
-      padding: 10px 20px;
-      margin: 5px;
+    button {
+      background-color: #2979ff;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #1c54b2;
+    }
+
+    .link {
+      color: #90caf9;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    #login-container, #register-container {
+      max-width: 400px;
+      margin: 40px auto;
+    }
+
+    #funding-container {
+      display: none;
+      width: 100%;
+      height: 100vh;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
     }
   </style>
 </head>
 <body>
+
 <div class="container" id="login-container">
-    <h2>Đăng nhập</h2>
-    <input id="login-username" type="text" placeholder="User ID" />
-    <input id="login-password" type="password" placeholder="Password" />
-    <button onclick="login()">Đăng nhập</button>
-    <div class="link" onclick="showRegister()">Chưa có tài khoản? Đăng ký</div>
-  </div>
-  
-  <div class="container" id="register-container">
-    <h1>SET API OKX</h1>
-    <input type="text" id="username" placeholder="Tên đăng nhập" class="form-input" />
-    <input type="password" id="password" placeholder="Mật khẩu" class="form-input" />
-    <input type="password" id="repassword" placeholder="Nhập lại mật khẩu" class="form-input" />
-    <div class="popup-buttons">
-      <button onclick="submitReg()">Đăng ký</button>
-    </div>
-    <div class="link" onclick="hideRegister()">Hủy</div>
-  </div>
+  <h2>Đăng nhập</h2>
+  <input id="login-username" type="text" placeholder="User ID" class="form-input" />
+  <input id="login-password" type="password" placeholder="Password" class="form-input" />
+  <button onclick="login()">Đăng nhập</button>
+  <div class="link" onclick="showRegister()">Chưa có tài khoản? Đăng ký</div>
+</div>
 
-
-<div id="funding-container" style="display:none">
-    <iframe src="fundingbot.html"></iframe>
+<div class="container" id="register-container" style="display:none;">
+  <h1>SET API OKX</h1>
+  <input type="text" id="username" placeholder="Tên đăng nhập" class="form-input" />
+  <input type="password" id="password" placeholder="Mật khẩu" class="form-input" />
+  <input type="password" id="repassword" placeholder="Nhập lại mật khẩu" class="form-input" />
+  <div class="popup-buttons">
+    <button onclick="submitReg()">Đăng ký</button>
   </div>
-  <script>
-    // Token và URL Supabase bạn dùng để upsert
-    const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co/rest/v1/users';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
+  <div class="link" onclick="hideRegister()">Hủy</div>
+</div>
 
-    async function submitReg() {
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
-      const repassword = document.getElementById('repassword').value.trim();
-      
-function showRegister() {
-      document.getElementById('login-container').style.display = 'none';
-      document.getElementById('register-container').style.display = 'block';
+<div id="funding-container">
+  <iframe src="html/fundingbot.html"></iframe>
+</div>
+
+<script>
+  const USERS_URL = 'https://tramnanrzruzvkehpydl.supabase.co/rest/v1/users';
+  const SUPABASE_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
+
+  function showRegister() {
+    document.getElementById('login-container').style.display = 'none';
+    document.getElementById('register-container').style.display = 'block';
+  }
+
+  function hideRegister() {
+    document.getElementById('register-container').style.display = 'none';
+    document.getElementById('login-container').style.display = 'block';
+  }
+
+  async function submitReg() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const repassword = document.getElementById('repassword').value.trim();
+
+    if (!username || !password || !repassword) {
+      alert("Vui lòng điền đầy đủ thông tin.");
+      return;
     }
 
-    function hideRegister() {
-      document.getElementById('register-container').style.display = 'none';
-      document.getElementById('login-container').style.display = 'block';
+    if (password !== repassword) {
+      alert("Mật khẩu không khớp.");
+      return;
     }
 
-      
-      if (!username) {
-        alert("Vui lòng nhập username.");
-        return;
+    try {
+      const response = await fetch(USERS_URL, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_API_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_API_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify({ user_id: username, password: password })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Lỗi Server');
       }
 
-      if (!username || !password || !repassword) {
-        alert("Vui lòng điền đầy đủ thông tin.");
-        return;
-      }
+      alert("Đăng ký thành công!");
+      hideRegister();
+    } catch (error) {
+      alert("Lỗi đăng ký: " + error.message);
+      console.error(error);
+    }
+  }
 
-      try {
-        const response = await fetch(supabaseUrl, {
-          method: 'POST',
-          headers: {
-            'apikey': supabaseKey,
-            'Authorization': 'Bearer ' + supabaseKey,
-            'Content-Type': 'application/json',
-            'Prefer': 'resolution=merge-duplicates'
-          },
-          body: JSON.stringify({
-            user_id: username,
-            password: password,
-           
-          })
-        });
+  async function login() {
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Lỗi Sever');
+    if (!username || !password) {
+      alert("Vui lòng nhập tài khoản và mật khẩu.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${USERS_URL}?user_id=eq.${encodeURIComponent(username)}&password=eq.${encodeURIComponent(password)}`, {
+        method: 'GET',
+        headers: {
+          'apikey': SUPABASE_API_KEY,
+          'Authorization': `Bearer ${SUPABASE_API_KEY}`,
+          'Content-Type': 'application/json'
         }
+      });
 
-        alert("Đăng ký thành công!");
-      } catch (error) {
-        alert("Lỗi đăng ký" + error.message);
-        console.error(error);
+      const data = await response.json();
+
+      if (data.length === 0) {
+        alert("Sai tài khoản hoặc mật khẩu.");
+      } else {
+        document.getElementById('login-container').style.display = 'none';
+        document.getElementById('register-container').style.display = 'none';
+        document.getElementById('funding-container').style.display = 'block';
       }
+    } catch (error) {
+      alert("Lỗi đăng nhập: " + error.message);
+      console.error(error);
     }
-
-    
-    async function login() {
-  const username = document.getElementById('username').value.trim();
-  const password = document.getElementById('password').value;
-
-  if (!username || !password) {
-    alert("Vui lòng nhập tài khoản và mật khẩu.");
-    return;
   }
-
-  try {
-    const response = await fetch(`${USERS_URL}?user_id=eq.${encodeURIComponent(username)}&password=eq.${encodeURIComponent(password)}`, {
-      method: 'GET',
-      headers: {
-        'apikey': SUPABASE_API_KEY,
-        'Authorization': `Bearer ${SUPABASE_API_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const data = await response.json();
-
-    if (data.length === 0) {
-      alert("Sai tài khoản hoặc mật khẩu.");
-    } else {
-      document.getElementById('auth-container').style.display = 'none';
-      document.getElementById('funding-container').style.display = 'block';
-    }
-  } catch (error) {
-    alert("Lỗi đăng nhập: " + error.message);
-    console.error(error);
-  }
-}
-  </script>
+</script>
 </body>
 </html>
-
-
