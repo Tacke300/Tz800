@@ -356,7 +356,7 @@
       </div>  
     </div>  
   <div style="text-align: center; margin-top: 20px;" class="bot">
-  <button id="logoutBtn" style="background-color: #f44336;">Đăng xuất</button>
+<button onclick="logoutParent()">Đăng xuất</button>
 </div>
 </div>
 
@@ -450,20 +450,19 @@ function resetBot(botId) {
     input.value = '';  
     closeApiForm();  
   }  
-document.getElementById('logoutBtn').addEventListener('click', function() {
-  // Xóa token hoặc thông tin đăng nhập, ví dụ:
-  localStorage.removeItem('userToken');
-  localStorage.removeItem('userId');
+    //777
 
-  // Hoặc xóa cookie nếu dùng cookie:
-  // document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 
-  // Thông báo
-  alert('Bạn đã đăng xuất.');
 
-  // Tải lại trang hoặc chuyển sang trang đăng nhập
-  window.location.reload(); // hoặc window.location.href = 'login.html';
-});
+  function logoutParent() {
+    // Gọi hàm logout của trang cha để xóa đăng nhập
+    if (parent && typeof parent.logout === 'function') {
+      parent.logout();
+    } else {
+      // Nếu không gọi được logout, có thể chuyển trang cha về login
+      parent.location.href = 'index.html'; // hoặc '/' tùy cấu trúc bạn
+    }
+  }
 
 </script>
     
