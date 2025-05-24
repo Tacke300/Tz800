@@ -104,9 +104,8 @@
   </div>
 
   <script>
-    // Khởi tạo supabase client
     const supabase = supabase.createClient(
-      'https://tramnanrzruzvkehpydl.supabase.co', // Thay bằng URL supabase của bạn
+      'https://tramnanrzruzvkehpydl.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'
     );
 
@@ -128,27 +127,12 @@
         return;
       }
 
-      // Kiểm tra user_id đã tồn tại chưa
-      const { data: existingUser, error: checkError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('user_id', userId)
-        .limit(1);
-
-      if (checkError) {
-        alert('Lỗi khi kiểm tra người dùng: ' + checkError.message);
-        return;
-      }
-
-      if (existingUser && existingUser.length > 0) {
-        alert('User ID đã tồn tại, vui lòng chọn user_id khác.');
-        return;
-      }
-
-      // Thêm user mới
       const { data, error } = await supabase
         .from('users')
         .insert([{ user_id: userId, password: pass }]);
+
+      console.log('Insert data:', data);
+      console.log('Insert error:', error);
 
       if (error) {
         alert('Đăng ký thất bại: ' + error.message);
@@ -166,8 +150,10 @@
         .from('users')
         .select('*')
         .eq('user_id', userId)
-        .eq('password', pass)
-        .limit(1);
+        .eq('password', pass);
+
+      console.log('Login data:', data);
+      console.log('Login error:', error);
 
       if (error || !data || data.length === 0) {
         alert('Sai thông tin đăng nhập');
