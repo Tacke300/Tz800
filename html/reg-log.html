@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login / Register</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 400px;
+      margin: 80px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-top: 0;
+      text-align: center;
+    }
+    input {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      border: none;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .link {
+      text-align: center;
+      margin-top: 10px;
+      color: #007bff;
+      cursor: pointer;
+    }
+    .popup-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+</head>
+<body>
+  <!-- Login -->
+  <div class="container" id="login-container">
+    <h2>Đăng nhập</h2>
+    <input id="login-username" type="text" placeholder="User ID" />
+    <input id="login-password" type="password" placeholder="Password" />
+    <button onclick="login()">Đăng nhập</button>
+    <div class="link" onclick="showRegister()">Chưa có tài khoản? Đăng ký</div>
+  </div>
+
+  <!-- Popup Đăng ký -->
+  <div id="popup-container" style="display:none">
+    <div class="popup-overlay" id="register-popup">
+      <div class="container">
+        <h2>Đăng ký</h2>
+        <input id="reg-username" type="text" placeholder="User ID" />
+        <input id="reg-password" type="password" placeholder="Password" />
+        <input id="reg-repassword" type="password" placeholder="Nhập lại Password" />
+        <button onclick="register()">Tạo tài khoản</button>
+        <div class="link" onclick="hideRegister()">Hủy</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const supabase = supabase.createClient(
+      'https://tramnanrzruzvkehpydl.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'
+    );
+
+    function showRegister() {
+      document.getElementById('popup-container').style.display = 'block';
+    }
+
+    function hideRegister() {
+      document.getElementById('popup-container').style.display = 'none';
+    }
+
+    async function register() {
+      const userId = document.getElementById('reg-username').value.trim();
+      const pass = document.getElementById('reg-password').value;
+      const repass = document.getElementById('reg-repassword').value;
+
+      if (!userId || !pass || pass !== repass) {
+        alert('Vui lòng kiểm tra lại thông tin');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('users')
+        .insert([{ user_id: userId, password: pass }]);
+
+      if (error) {
+        alert('Đăng ký thất bại: ' + error.message);
+      } else {
+        alert('Tạo tài khoản thành công');
+        hideRegister();
+      }
+    }
+
+    async function login() {
+      const userId = document.getElementById('login-username').value.trim();
+      const pass = document.getElementById('login-password').value;
+
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('password', pass);
+
+      if (error || !data || data.length === 0) {
+        alert('Sai thông tin đăng nhập');
+      } else {
+        window.location.href = 'html/fundingbot.html';
+      }
+    }
+  </script>
+</body>
+</html>
