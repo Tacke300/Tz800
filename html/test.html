@@ -30,10 +30,23 @@
   <button onclick="openPopup('after.html')">Mở After</button>
 
   <script>
-    function openPopup(url) {
-      window.open(url, 'popupWindow', 'width=600,height=400,scrollbars=yes');
-    }
-  </script>
+function openPopup(url) {
+  const screenWidth = window.innerWidth;
+  const screenHeight = window.innerHeight;
+
+  const width = Math.min(screenWidth * 0.9, 480);  // tối đa 480px
+  const height = Math.min(screenHeight * 0.9, 800); // tối đa 800px
+
+  const left = (screenWidth - width) / 2;
+  const top = (screenHeight - height) / 2;
+
+  window.open(
+    url,
+    'popupWindow',
+    `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
+  );
+}
+</script>
 
 </body>
 </html>
