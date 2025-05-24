@@ -57,7 +57,7 @@
       cursor: pointer;
     }
 
-    .popup-overlay {
+    .popup-overlay, .welcome-popup {
       display: none;
       position: fixed;
       top: 0; left: 0;
@@ -66,35 +66,21 @@
       justify-content: center;
       align-items: center;
       z-index: 1000;
-    }
-
-    .popup-overlay.active {
-      display: flex;
-    }
-
-    .welcome-popup {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      justify-content: center;
-      align-items: center;
       flex-direction: column;
-      z-index: 1000;
     }
 
+    .popup-overlay.active,
     .welcome-popup.active {
       display: flex;
     }
   </style>
 </head>
 <body>
-
+  <h1> test </h1>
   <!-- Đăng nhập -->
   <div class="container" id="login-container">
     <h2>Đăng nhập</h2>
-    <input id="login-userid" type="text" placeholder="User ID" />
+    <input id="login-username" type="text" placeholder="User ID" />
     <input id="login-password" type="password" placeholder="Password" />
     <button onclick="login()">Đăng nhập</button>
     <div class="link" onclick="showRegister()">Chưa có tài khoản? Đăng ký</div>
@@ -104,7 +90,7 @@
   <div class="popup-overlay" id="register-popup">
     <div class="container">
       <h2>Đăng ký</h2>
-      <input id="reg-userid" type="text" placeholder="User ID" />
+      <input id="reg-username" type="text" placeholder="User ID" />
       <input id="reg-password" type="password" placeholder="Password" />
       <input id="reg-repassword" type="password" placeholder="Nhập lại Password" />
       <button onclick="register()">Tạo tài khoản</button>
@@ -118,10 +104,11 @@
   </div>
 
   <script>
-    // Thay bằng URL và key Supabase thật của bạn
-    const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    // Khởi tạo supabase client
+    const supabase = supabase.createClient(
+      'https://tramnanrzruzvkehpydl.supabase.co', // Thay bằng URL supabase của bạn
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'
+    );
 
     function showRegister() {
       document.getElementById('register-popup').classList.add('active');
@@ -132,11 +119,11 @@
     }
 
     async function register() {
-      const user = document.getElementById('reg-userid').value.trim();
+      const userId = document.getElementById('reg-username').value.trim();
       const pass = document.getElementById('reg-password').value;
       const repass = document.getElementById('reg-repassword').value;
 
-      if (!user || !pass || pass !== repass) {
+      if (!userId || !pass || pass !== repass) {
         alert('Vui lòng kiểm tra lại thông tin');
         return;
       }
@@ -144,19 +131,24 @@
       // Kiểm tra user_id đã tồn tại chưa
       const { data: existingUser, error: checkError } = await supabase
         .from('users')
-        .select('user_id')
-        .eq('user_id', user)
-        .limit(1)
-        .single();
+        .select('*')
+        .eq('user_id', userId)
+        .limit(1);
 
-      if (existingUser) {
-        alert('User ID đã tồn tại, vui lòng chọn User ID khác');
+      if (checkError) {
+        alert('Lỗi khi kiểm tra người dùng: ' + checkError.message);
         return;
       }
 
+      if (existingUser && existingUser.length > 0) {
+        alert('User ID đã tồn tại, vui lòng chọn user_id khác.');
+        return;
+      }
+
+      // Thêm user mới
       const { data, error } = await supabase
         .from('users')
-        .insert([{ user_id: user, password: pass }]);
+        .insert([{ user_id: userId, password: pass }]);
 
       if (error) {
         alert('Đăng ký thất bại: ' + error.message);
@@ -167,14 +159,15 @@
     }
 
     async function login() {
-      const user = document.getElementById('login-userid').value.trim();
+      const userId = document.getElementById('login-username').value.trim();
       const pass = document.getElementById('login-password').value;
 
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('user_id', user)
-        .eq('password', pass);
+        .eq('user_id', userId)
+        .eq('password', pass)
+        .limit(1);
 
       if (error || !data || data.length === 0) {
         alert('Sai thông tin đăng nhập');
@@ -184,6 +177,5 @@
       }
     }
   </script>
-
 </body>
 </html>
