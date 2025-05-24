@@ -276,7 +276,7 @@
   <div style="padding: 10px; font-size: 20px;">
     <div class="tab-002001">
       <p class="left-text">ID của bạn:</p>
-      <p id="user_id" class="right-text">74447831114</p>
+      <p id="user_id" class="right-text">777777</p>
     </div>
     <div class="tab-002001">
       <p class="left-text">Hôm nay:</p>
@@ -454,9 +454,14 @@ function resetBot(botId) {
     closeApiForm();  
   }  
     //777
+// hien user name
+    function showUserId() {
+  // Hiển thị tên người dùng
+  const user = localStorage.getItem('loggedInUser');
+  document.getElementById('user_id').textContent = `${user}`;
+}
 
-
-
+// dang xuat
   function logoutParent() {
     // Gọi hàm logout của trang cha để xóa đăng nhập
     if (parent && typeof parent.logout === 'function') {
