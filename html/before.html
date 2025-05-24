@@ -1,1 +1,121 @@
-<p>be</p>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+
+    .exchange-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #eee;
+      border-radius: 8px;
+      padding: 10px 15px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .exchange-btn.active {
+      background: #c8f7c5;
+    }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #333;
+    }
+
+    .exchange-btn.active .dot {
+      background: green;
+    }
+
+    #invest {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      margin: 15px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    #run-btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      background: green;
+      color: white;
+    }
+
+    #run-btn.running {
+      background: red;
+    }
+  </style>
+</head>
+<body>
+
+  <h3>Chọn sàn sử dụng:</h3>
+  
+  <div class="exchange-btn" onclick="toggleExchange('binance')">
+    Binance <span class="dot" id="dot-binance"></span>
+  </div>
+  <div class="exchange-btn" onclick="toggleExchange('bitget')">
+    Bitget <span class="dot" id="dot-bitget"></span>
+  </div>
+  <div class="exchange-btn" onclick="toggleExchange('bingx')">
+    BingX <span class="dot" id="dot-bingx"></span>
+  </div>
+  <div class="exchange-btn" onclick="toggleExchange('okx')">
+    OKX <span class="dot" id="dot-okx"></span>
+  </div>
+
+  <input type="number" id="invest" placeholder="Nhập số $ đầu tư">
+
+  <button id="run-btn" onclick="toggleBot()">Chạy bot</button>
+
+  <script>
+    const selectedExchanges = {
+      binance: false,
+      bitget: false,
+      bingx: false,
+      okx: false
+    };
+
+    function toggleExchange(name) {
+      selectedExchanges[name] = !selectedExchanges[name];
+      const btn = document.querySelector(`.exchange-btn:has(#dot-${name})`);
+      const dot = document.getElementById(`dot-${name}`);
+      btn.classList.toggle('active');
+    }
+
+    let botRunning = false;
+
+    function toggleBot() {
+      const btn = document.getElementById('run-btn');
+      botRunning = !botRunning;
+      btn.classList.toggle('running');
+      btn.innerText = botRunning ? 'Dừng bot' : 'Chạy bot';
+
+      if (botRunning) {
+        const activeExchanges = Object.keys(selectedExchanges).filter(k => selectedExchanges[k]);
+        const investAmount = document.getElementById('invest').value;
+
+        console.log('Bắt đầu bot với:', {
+          activeExchanges,
+          investAmount,
+          // Supabase credentials fetch sẽ thêm sau
+        });
+      } else {
+        console.log('Bot dừng.');
+      }
+    }
+  </script>
+
+</body>
+</html>
