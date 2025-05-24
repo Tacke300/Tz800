@@ -8,127 +8,134 @@
     body {
       font-family: 'Segoe UI', sans-serif;
       background: #f0f2f5;
-      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .box {
+      background: #fff;
       padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.15);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
     }
     input {
-      width: 80%;
+      width: 90%;
       padding: 10px;
-      margin: 10px;
+      margin: 10px 0;
       border-radius: 8px;
       border: 1px solid #ccc;
       font-size: 1rem;
     }
     button {
       padding: 10px 20px;
-      margin: 10px;
+      margin: 10px 5px;
       font-size: 1rem;
       border-radius: 8px;
       cursor: pointer;
     }
-    .box {
-      background: #fff;
-      padding: 20px;
-      max-width: 400px;
-      margin: auto;
-      border-radius: 16px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    #repassword {
+      display: none;
     }
   </style>
 </head>
 <body>
   <div class="box" id="auth-container">
-    <h2>Đăng nhập / Đăng ký</h2>
+    <h2 id="form-title">Đăng nhập</h2>
     <input type="text" id="username" placeholder="Username" />
     <input type="password" id="password" placeholder="Mật khẩu" />
     <input type="password" id="repassword" placeholder="Nhập lại mật khẩu" />
     <br>
-    <button onclick="register()">Đăng ký</button>
     <button onclick="login()">Đăng nhập</button>
+    <button onclick="toggleRegister()">Đăng ký</button>
   </div>
 
   <div class="box" id="funding-container" style="display:none;">
-    <h2>Chào mừng bạn!</h2>
-    <p>Đăng nhập thành công!</p>
+    <h2>Chào mừng!</h2>
+    <p>Đăng nhập thành công</p>
   </div>
 
   <script>
     const SUPABASE_URL = "https://tramnanrzruzvkehpydl.supabase.co";
-    const SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+    const SUPABASE_API_KEY = "YOUR_SUPABASE_API_KEY_HERE";
     const USERS_URL = `${SUPABASE_URL}/rest/v1/users`;
 
-    async function register() {
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
-      const repassword = document.getElementById('repassword').value;
+    let isRegistering = false;
 
-      if (!username || !password || !repassword) {
-        alert("Vui lòng nhập đầy đủ thông tin.");
-        return;
-      }
-      if (password !== repassword) {
-        alert("Mật khẩu không khớp.");
-        return;
-      }
-
-      try {
-        const response = await fetch(USERS_URL, {
-          method: 'POST',
-          headers: {
-            'apikey': SUPABASE_API_KEY,
-            'Authorization': `Bearer ${SUPABASE_API_KEY}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=representation'
-          },
-          body: JSON.stringify({
-            user_id: username,
-            password: password
-          })
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Lỗi đăng ký');
-        }
-
-        alert("Đăng ký thành công!");
-      } catch (error) {
-        alert("Lỗi đăng ký: " + error.message);
-        console.error(error);
-      }
+    function toggleRegister() {
+      isRegistering = !isRegistering;
+      document.getElementById('repassword').style.display = isRegistering ? 'block' : 'none';
+      document.getElementById('form-title').innerText = isRegistering ? 'Đăng ký' : 'Đăng nhập';
     }
 
     async function login() {
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value;
+      const repassword = document.getElementById('repassword').value;
 
-      if (!username || !password) {
-        alert("Vui lòng nhập đủ thông tin.");
+      if (!username || !password || (isRegistering && !repassword)) {
+        alert("Vui lòng nhập đầy đủ thông tin.");
         return;
       }
 
-      try {
-        const response = await fetch(`${USERS_URL}?user_id=eq.${encodeURIComponent(username)}&password=eq.${encodeURIComponent(password)}`, {
-          method: 'GET',
-          headers: {
-            'apikey': SUPABASE_API_KEY,
-            'Authorization': `Bearer ${SUPABASE_API_KEY}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        const data = await response.json();
-
-        if (data.length === 0) {
-          alert("Sai tài khoản hoặc mật khẩu.");
-        } else {
-          alert("Đăng nhập thành công!");
-          document.getElementById('auth-container').style.display = 'none';
-          document.getElementById('funding-container').style.display = 'block';
+      if (isRegistering) {
+        if (password !== repassword) {
+          alert("Mật khẩu không khớp.");
+          return;
         }
-      } catch (error) {
-        alert("Lỗi đăng nhập: " + error.message);
-        console.error(error);
+
+        try {
+          const response = await fetch(USERS_URL, {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_API_KEY,
+              'Authorization': `Bearer ${SUPABASE_API_KEY}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=representation'
+            },
+            body: JSON.stringify({
+              user_id: username,
+              password: password
+            })
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Lỗi đăng ký');
+          }
+
+          alert("Đăng ký thành công!");
+        } catch (error) {
+          alert("Lỗi đăng ký: " + error.message);
+          console.error(error);
+        }
+
+      } else {
+        try {
+          const response = await fetch(`${USERS_URL}?user_id=eq.${encodeURIComponent(username)}&password=eq.${encodeURIComponent(password)}`, {
+            method: 'GET',
+            headers: {
+              'apikey': SUPABASE_API_KEY,
+              'Authorization': `Bearer ${SUPABASE_API_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          const data = await response.json();
+
+          if (data.length === 0) {
+            alert("Sai tài khoản hoặc mật khẩu.");
+          } else {
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('funding-container').style.display = 'block';
+          }
+        } catch (error) {
+          alert("Lỗi đăng nhập: " + error.message);
+          console.error(error);
+        }
       }
     }
   </script>
