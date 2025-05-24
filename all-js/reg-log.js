@@ -5,7 +5,7 @@ const supabase = supabase.createClient(
 
 // Tải reg.html khi cần đăng ký
 function showRegister() {
-  fetch('reg.html')
+  fetch('html/reg.html')
     .then(res => res.text())
     .then(html => {
       document.getElementById('popup-container').innerHTML = html;
