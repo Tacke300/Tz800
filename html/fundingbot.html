@@ -54,7 +54,7 @@
     }
 
     .bot {
-      width: 100%;
+      
       flex: 0 1 300px;
       border: 1px solid #aaa;
       display: flex;
@@ -64,6 +64,8 @@
       transition: all 0.3s ease;
       padding: 10px;
       border-radius: 10px;
+      width: 100% !important;
+    min-width: unset;
     }
 
     .bot button {
@@ -250,7 +252,16 @@
       padding: 16px;
     }
   
-  
+  /* Responsive Mobile Fix cho phần cài API */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    height: auto;
+    padding: 20px;
+    gap: 16px;
+  }
+
+
   </style>  
 </head>  
 <body>  
