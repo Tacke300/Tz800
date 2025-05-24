@@ -448,14 +448,20 @@ function resetBot(botId) {
     input.value = '';  
     closeApiForm();  
   }  
-document.getElementById('btnLogout').addEventListener('click', function() {
-    // Gọi hàm logout ở trang cha
-    if (parent && parent.logout) {
-      parent.logout(); // gọi hàm logout trong trang cha
-    } else {
-      alert("Không thể đăng xuất.");
-    }
-  });
+document.getElementById('logoutBtn').addEventListener('click', function() {
+  // Xóa token hoặc thông tin đăng nhập, ví dụ:
+  localStorage.removeItem('userToken');
+  localStorage.removeItem('userId');
+
+  // Hoặc xóa cookie nếu dùng cookie:
+  // document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
+  // Thông báo
+  alert('Bạn đã đăng xuất.');
+
+  // Tải lại trang hoặc chuyển sang trang đăng nhập
+  window.location.reload(); // hoặc window.location.href = 'login.html';
+});
 
 </script>
     
