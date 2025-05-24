@@ -40,12 +40,11 @@
 
   <div id="popup">
     <h1>SET API OKX</h1>
-    <input type="text" id="username" placeholder="Username (user_id)" class="form-input" />
-    <input type="text" id="apikey" placeholder="API Key" class="form-input" />
-    <input type="text" id="secret" placeholder="Secret" class="form-input" />
-    <input type="text" id="passshare" placeholder="Passshare" class="form-input" />
+    <input type="text" id="username" placeholder="Tên đăng nhập" class="form-input" />
+    <input type="password" id="password" placeholder="Mật khẩu" class="form-input" />
+    <input type="password" id="repassword" placeholder="Nhập lại mật khẩu" class="form-input" />
     <div class="popup-buttons">
-      <button onclick="submitAPI()">Submit</button>
+      <button onclick="submitReg()">Đăng ký</button>
     </div>
   </div>
 
@@ -54,18 +53,18 @@
     const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co/rest/v1/users';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
 
-    async function submitAPI() {
+    async function submitReg() {
       const username = document.getElementById('username').value.trim();
-      const apikey = document.getElementById('apikey').value.trim();
-      const secret = document.getElementById('secret').value.trim();
-      const passshare = document.getElementById('passshare').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const repassword = document.getElementById('repassword').value.trim();
+      
 
       if (!username) {
         alert("Vui lòng nhập username.");
         return;
       }
 
-      if (!apikey || !secret || !passshare) {
+      if (!username || !password || !repassword) {
         alert("Vui lòng điền đầy đủ thông tin.");
         return;
       }
@@ -81,9 +80,8 @@
           },
           body: JSON.stringify({
             user_id: username,
-            password: apikey,
-            password: secret,
-            password: passshare
+            password: password,
+           
           })
         });
 
@@ -99,5 +97,63 @@
       }
     }
   </script>
+</body>
+</html>
+
+<body>
+
+  <h2>Đăng ký / Đăng nhập</h2>
+  <input type="text" id="username" placeholder="Username" />
+  <input type="password" id="password" placeholder="Password" />
+  <input type="password" id="repassword" placeholder="Nhập lại Password" />
+  <button onclick="handleLogin()">Tiếp tục</button>
+
+  <script>
+    const supabase = supabase.createClient(
+      'https://tramnanrzruzvkehpydl.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'
+    );
+
+    async function handleLogin() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const repassword = document.getElementById('repassword').value.trim();
+
+      if (!username || !password || !repassword) {
+        alert('Vui lòng điền đầy đủ thông tin');
+        return;
+      }
+
+      if (password !== repassword) {
+        alert('Mật khẩu nhập lại không khớp');
+        return;
+      }
+
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('user_id', username)
+        .single();
+
+      if (user) {
+        if (user.password === password) {
+          alert('Đăng nhập thành công!');
+        } else {
+          alert('Sai mật khẩu!');
+        }
+      } else {
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({ user_id: username, password: password });
+
+        if (insertError) {
+          alert('Lỗi khi đăng ký: ' + insertError.message);
+        } else {
+          alert('Đăng ký thành công!');
+        }
+      }
+    }
+  </script>
+
 </body>
 </html>
