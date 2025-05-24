@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Set API</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1.5px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    #popup {
+      background: #fff;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+      margin: 50px auto;
+    }
+
+    .popup-buttons button {
+      padding: 10px 20px;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="popup">
+    <h1>SET API OKX</h1>
+    <input type="text" id="username" placeholder="Username (user_id)" class="form-input" />
+    <input type="text" id="apikey" placeholder="API Key" class="form-input" />
+    <input type="text" id="secret" placeholder="Secret" class="form-input" />
+    <input type="text" id="passshare" placeholder="Passshare" class="form-input" />
+    <div class="popup-buttons">
+      <button onclick="submitAPI()">Submit</button>
+    </div>
+  </div>
+
+  <script>
+    // Token và URL Supabase bạn dùng để upsert
+    const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co/rest/v1/users';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
+
+    async function submitAPI() {
+      const username = document.getElementById('username').value.trim();
+      const apikey = document.getElementById('apikey').value.trim();
+      const secret = document.getElementById('secret').value.trim();
+      const passshare = document.getElementById('passshare').value.trim();
+
+      if (!username) {
+        alert("Vui lòng nhập username.");
+        return;
+      }
+
+      if (!apikey || !secret || !passshare) {
+        alert("Vui lòng điền đầy đủ thông tin.");
+        return;
+      }
+
+      try {
+        const response = await fetch(supabaseUrl, {
+          method: 'POST',
+          headers: {
+            'apikey': supabaseKey,
+            'Authorization': 'Bearer ' + supabaseKey,
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates'
+          },
+          body: JSON.stringify({
+            user_id: username,
+            apikey_okx: apikey,
+            secret_okx: secret,
+            pass_okx: passshare
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Lỗi khi lưu API');
+        }
+
+        alert("Đã lưu API thành công!");
+      } catch (error) {
+        alert("Lỗi khi lưu API: " + error.message);
+        console.error(error);
+      }
+    }
+  </script>
+</body>
+</html>
