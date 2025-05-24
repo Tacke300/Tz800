@@ -3,12 +3,17 @@ const supabase = supabase.createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'
 );
 
+// Tải reg.html khi cần đăng ký
 function showRegister() {
-  document.getElementById('register-popup').classList.add('active');
+  fetch('reg.html')
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById('popup-container').innerHTML = html;
+    });
 }
 
 function hideRegister() {
-  document.getElementById('register-popup').classList.remove('active');
+  document.getElementById('register-popup').remove();
 }
 
 async function register() {
@@ -24,9 +29,6 @@ async function register() {
   const { data, error } = await supabase
     .from('users')
     .insert([{ user_id: userId, password: pass }]);
-
-  console.log('Insert data:', data);
-  console.log('Insert error:', error);
 
   if (error) {
     alert('Đăng ký thất bại: ' + error.message);
@@ -46,13 +48,9 @@ async function login() {
     .eq('user_id', userId)
     .eq('password', pass);
 
-  console.log('Login data:', data);
-  console.log('Login error:', error);
-
   if (error || !data || data.length === 0) {
     alert('Sai thông tin đăng nhập');
   } else {
-    document.getElementById('login-container').style.display = 'none';
-    document.getElementById('welcome').classList.add('active');
+    window.location.href = 'fundingbot.html';  // Chuyển đến bot
   }
 }
