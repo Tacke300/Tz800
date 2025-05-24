@@ -58,7 +58,7 @@
 
 
 <div id="funding-container" style="display:none">
-    <iframe src="html/fundingbot.html"></iframe>
+    <iframe src="fundingbot.html"></iframe>
   </div>
   <script>
     // Token và URL Supabase bạn dùng để upsert
@@ -121,72 +121,37 @@ function showRegister() {
 
     
     async function login() {
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
-      const repassword = document.getElementById('repassword').value;
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
 
-      if (!username || !password || (isRegistering && !repassword)) {
-        alert("Vui lòng nhập đầy đủ thông tin.");
-        return;
+  if (!username || !password) {
+    alert("Vui lòng nhập tài khoản và mật khẩu.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${USERS_URL}?user_id=eq.${encodeURIComponent(username)}&password=eq.${encodeURIComponent(password)}`, {
+      method: 'GET',
+      headers: {
+        'apikey': SUPABASE_API_KEY,
+        'Authorization': `Bearer ${SUPABASE_API_KEY}`,
+        'Content-Type': 'application/json'
       }
+    });
 
-      if (isRegistering) {
-        if (password !== repassword) {
-          alert("Mật khẩu không khớp.");
-          return;
-        }
+    const data = await response.json();
 
-        try {
-          const response = await fetch(USERS_URL, {
-            method: 'POST',
-            headers: {
-              'apikey': SUPABASE_API_KEY,
-              'Authorization': `Bearer ${SUPABASE_API_KEY}`,
-              'Content-Type': 'application/json',
-              'Prefer': 'return=representation'
-            },
-            body: JSON.stringify({
-              user_id: username,
-              password: password
-            })
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Lỗi đăng ký');
-          }
-
-          alert("Đăng ký thành công!");
-        } catch (error) {
-          alert("Lỗi đăng ký: " + error.message);
-          console.error(error);
-        }
-
-      } else {
-        try {
-          const response = await fetch(`${USERS_URL}?user_id=eq.${encodeURIComponent(username)}&password=eq.${encodeURIComponent(password)}`, {
-            method: 'GET',
-            headers: {
-              'apikey': SUPABASE_API_KEY,
-              'Authorization': `Bearer ${SUPABASE_API_KEY}`,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          const data = await response.json();
-
-          if (data.length === 0) {
-            alert("Sai tài khoản hoặc mật khẩu.");
-          } else {
-            document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('funding-container').style.display = 'block';
-          }
-        } catch (error) {
-          alert("Lỗi đăng nhập: " + error.message);
-          console.error(error);
-        }
-      }
+    if (data.length === 0) {
+      alert("Sai tài khoản hoặc mật khẩu.");
+    } else {
+      document.getElementById('auth-container').style.display = 'none';
+      document.getElementById('funding-container').style.display = 'block';
     }
+  } catch (error) {
+    alert("Lỗi đăng nhập: " + error.message);
+    console.error(error);
+  }
+}
   </script>
 </body>
 </html>
