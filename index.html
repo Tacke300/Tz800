@@ -1,23 +1,18 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <title>Login</title>
-  <link rel="stylesheet" href="css/reg-log.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
-  
+  <meta charset="UTF-8">
+  <title>Funding Login</title>
 </head>
 <body>
-  <div class="container" id="login-container">
-    <h2>Đăng nhập</h2>
-    <input id="login-username" type="text" placeholder="User ID" />
-    <input id="login-password" type="password" placeholder="Password" />
-    <button onclick="login()">Đăng nhập</button>
-    <div class="link" onclick="showRegister()">Chưa có tài khoản? Đăng ký</div>
-  </div>
+  <div id="main"></div>
 
-  <div id="popup-container"></div>
+  <script>
+    fetch('html/reg-log.html')
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById('main').innerHTML = html;
+      });
+  </script>
 </body>
-  <script src="js/reg-log.js" defer></script>
 </html>
