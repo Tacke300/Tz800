@@ -78,3 +78,17 @@ body {
     box-shadow: 0 0 12px rgba(0,0,0,0.3);
     margin-top: 30px;
   }
+#funding-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+}
+
+#funding-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
