@@ -1,4 +1,4 @@
-body {
+html,body {
     font-family: 'Segoe UI', sans-serif;
     background: #1e1e2f;
     color: #f0f0f0;
@@ -8,6 +8,9 @@ body {
     justify-content: center;
     align-items: flex-start;
     min-height: 100vh;
+    overflow: hidden;
+    height: 100%;
+  width: 100%;
   }
 
   .container {
@@ -19,6 +22,8 @@ body {
     width: 90%;
     max-width: 420px;
     text-align: center;
+    margin: 40px auto;
+
   }
 
   h1, h2 {
@@ -82,13 +87,17 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   z-index: 999;
+  background: #1e1e2f; 
+  padding: 0;
+  margin: 0;
 }
 
-#funding-iframe {
-  width: 100%;
-  height: 100%;
+#funding-container iframe {
+  width: 100vw;
+  height: 100vh;
   border: none;
+  display: block;
 }
