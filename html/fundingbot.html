@@ -448,7 +448,16 @@ function resetBot(botId) {
     input.value = '';  
     closeApiForm();  
   }  
+document.getElementById('btnLogout').addEventListener('click', function() {
+    // Gọi hàm logout ở trang cha
+    if (parent && parent.logout) {
+      parent.logout(); // gọi hàm logout trong trang cha
+    } else {
+      alert("Không thể đăng xuất.");
+    }
+  });
+
 </script>
     
     
-    </script>
+
