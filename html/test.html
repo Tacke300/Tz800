@@ -3,74 +3,123 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login & Register</title>
+  <title>Set API</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       background: #f0f2f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .box {
-      background: #fff;
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.15);
-      width: 100%;
-      max-width: 400px;
+      padding: 20px;
       text-align: center;
     }
-    input {
-      width: 90%;
-      padding: 10px;
+
+    .form-input {
+      width: 100%;
+      padding: 12px;
       margin: 10px 0;
+      border: 1.5px solid #ccc;
       border-radius: 8px;
-      border: 1px solid #ccc;
       font-size: 1rem;
     }
-    button {
+
+    #popup {
+      background: #fff;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+      margin: 50px auto;
+    }
+
+    .popup-buttons button {
       padding: 10px 20px;
-      margin: 10px 5px;
-      font-size: 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    #repassword {
-      display: none;
+      margin: 5px;
     }
   </style>
 </head>
 <body>
-  <div class="box" id="auth-container">
-    <h2 id="form-title">Đăng nhập</h2>
-    <input type="text" id="username" placeholder="Username" />
-    <input type="password" id="password" placeholder="Mật khẩu" />
-    <input type="password" id="repassword" placeholder="Nhập lại mật khẩu" />
-    <br>
+<div class="container" id="login-container">
+    <h2>Đăng nhập</h2>
+    <input id="login-username" type="text" placeholder="User ID" />
+    <input id="login-password" type="password" placeholder="Password" />
     <button onclick="login()">Đăng nhập</button>
-    <button onclick="toggleRegister()">Đăng ký</button>
+    <div class="link" onclick="showRegister()">Chưa có tài khoản? Đăng ký</div>
+  </div>
+  
+  <div class="container" id="register-container">
+    <h1>SET API OKX</h1>
+    <input type="text" id="username" placeholder="Tên đăng nhập" class="form-input" />
+    <input type="password" id="password" placeholder="Mật khẩu" class="form-input" />
+    <input type="password" id="repassword" placeholder="Nhập lại mật khẩu" class="form-input" />
+    <div class="popup-buttons">
+      <button onclick="submitReg()">Đăng ký</button>
+    </div>
+    <div class="link" onclick="hideRegister()">Hủy</div>
   </div>
 
-  <div class="box" id="funding-container" style="display:none;">
-    <h2>Chào mừng!</h2>
-    <p>Đăng nhập thành công</p>
-  </div>
 
+<div id="funding-container" style="display:none">
+    <iframe src="html/fundingbot.html"></iframe>
+  </div>
   <script>
-    const SUPABASE_URL = "https://tramnanrzruzvkehpydl.supabase.co";
-    const SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0";
-    const USERS_URL = `${SUPABASE_URL}/rest/v1/users`;
+    // Token và URL Supabase bạn dùng để upsert
+    const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co/rest/v1/users';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
 
-    let isRegistering = false;
-
-    function toggleRegister() {
-      isRegistering = !isRegistering;
-      document.getElementById('repassword').style.display = isRegistering ? 'block' : 'none';
-      document.getElementById('form-title').innerText = isRegistering ? 'Đăng ký' : 'Đăng nhập';
+    async function submitReg() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const repassword = document.getElementById('repassword').value.trim();
+      
+function showRegister() {
+      document.getElementById('login-container').style.display = 'none';
+      document.getElementById('register-container').style.display = 'block';
     }
 
+    function hideRegister() {
+      document.getElementById('register-container').style.display = 'none';
+      document.getElementById('login-container').style.display = 'block';
+    }
+
+      
+      if (!username) {
+        alert("Vui lòng nhập username.");
+        return;
+      }
+
+      if (!username || !password || !repassword) {
+        alert("Vui lòng điền đầy đủ thông tin.");
+        return;
+      }
+
+      try {
+        const response = await fetch(supabaseUrl, {
+          method: 'POST',
+          headers: {
+            'apikey': supabaseKey,
+            'Authorization': 'Bearer ' + supabaseKey,
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates'
+          },
+          body: JSON.stringify({
+            user_id: username,
+            password: password,
+           
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Lỗi Sever');
+        }
+
+        alert("Đăng ký thành công!");
+      } catch (error) {
+        alert("Lỗi đăng ký" + error.message);
+        console.error(error);
+      }
+    }
+
+    
     async function login() {
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value;
@@ -141,3 +190,5 @@
   </script>
 </body>
 </html>
+
+
