@@ -405,16 +405,16 @@ function resetBot(botId) {
   }  
 // dang xuat
   function logoutParent() {
-  // Xóa token hoặc session trong localStorage
-  localStorage.removeItem('token');  
+  // Xóa thông tin đăng nhập
+  localStorage.removeItem('loggedInUser');
   sessionStorage.clear();
 
-  // Thay đổi src của iframe cha về trang đăng nhập
+  // Tải lại toàn bộ trang index.html (trang cha)
   if (window.parent) {
-    const iframe = window.parent.document.getElementById('mainIframe');
-    if (iframe) {
-      iframe.src = 'reg-log.html';
-    }
+    window.parent.location.href = '/index.html';
+  } else {
+    // fallback nếu đang không ở trong iframe
+    window.location.href = '/index.html';
   }
 }
 
