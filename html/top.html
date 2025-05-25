@@ -166,6 +166,26 @@
       showUserId();
       fetchPnLData();
     });
+    displayPnLData([
+  {
+    user_id: 'User123',
+    pnl_today: '+10.5',
+    pnl_7days: '+50',
+    pnl_30days: '+200',
+    total_win: '+500',
+    total_loss: '-100',
+    total_net: '+400'
+  },
+  {
+    user_id: 'User456',
+    pnl_today: '+5.5',
+    pnl_7days: '+20',
+    pnl_30days: '+80',
+    total_win: '+200',
+    total_loss: '-50',
+    total_net: '+150'
+  }
+]);
   </script>
 </body>
 </html>
