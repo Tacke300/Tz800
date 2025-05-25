@@ -163,19 +163,18 @@
       }
 
       function displayPnLData(data) {
-        const tableBody = document.getElementById('pnlTable').getElementsByTagName('tbody')[0];
-        tableBody.innerHTML = '';
-        data.forEach(row => {
-          const newRow = tableBody.insertRow();
-          newRow.insertCell(0).textContent = row.user_id;
-          newRow.insertCell(1).textContent = row.pnl_today;
-          newRow.insertCell(2).textContent = row.pnl_7days;
-          newRow.insertCell(3).textContent = row.pnl_30days;
-          newRow.insertCell(4).textContent = row.total_win;
-          newRow.insertCell(5).textContent = row.total_loss;
-          newRow.insertCell(6).textContent = row.total_net;
-        });
-      }
+  if (data.length === 0) return; // Nếu không có dữ liệu thì thôi
+
+  const row = data[0]; // Lấy dòng đầu tiên vì chỉ in 1 user thôi
+
+  document.getElementById('user_id').textContent = row.user_id || 'N/A';
+  document.getElementById('today').textContent = row.pnl_today || '0';
+  document.getElementById('week').textContent = row.pnl_7days || '0';
+  document.getElementById('month').textContent = row.pnl_30days || '0';
+  document.getElementById('win').textContent = row.total_win || '0';
+  document.getElementById('lose').textContent = row.total_loss || '0';
+  document.getElementById('total').textContent = row.total_net || '0';
+}
 
       window.addEventListener('DOMContentLoaded', () => {
         fetchPnLData();
