@@ -1,166 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bot Controller</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
 
-<!DOCTYPE html>  
-<html lang="en">  
-<head>  
-  <meta charset="UTF-8" />  
-  <title>Bot Controller</title>  
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet" />  
-
-  <style>  
-    * {  
-      box-sizing: border-box;  
-    }  
-  
-    html,body {  
-      margin: 0;  
-      padding: 0;  
-      color: white;  
-      background-color: black;  
-      font-family: 'Baloo 2', cursive;  
+    html, body {
+      margin: 0;
+      padding: 0;
+      color: white;
+      background-color: black;
+      font-family: 'Baloo 2', cursive;
       height: 100%;
-  width: 100%;
-  overflow: hidden;
-    }  
-/* tab-001 */
-.banner {  
-  font-size: 64px;  
-  margin-top: 40px;  
-  margin-bottom: 40px;  
-  text-align: center;  
-  background: linear-gradient(270deg, #00ffff, #ff00ff, #ffff00, #00ffff);  
-  background-size: 800% 800%;  
-  -webkit-background-clip: text;  
-  -webkit-text-fill-color: transparent;  
-  animation: titanColor 8s ease infinite;  
-}
+      width: 100%;
+      overflow: hidden;
+    }
 
-/* tab-002 */
-.tab-002 {
-  padding-left: 3px;
-  font-family: 'Roboto', Arial, sans-serif;
-}
+    .banner {
+      font-size: 64px;
+      margin-top: 40px;
+      margin-bottom: 40px;
+      text-align: center;
+      background: linear-gradient(270deg, #00ffff, #ff00ff, #ffff00, #00ffff);
+      background-size: 800% 800%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: titanColor 8s ease infinite;
+    }
 
-.tab-002001 {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+    .tab-002 {
+      padding-left: 3px;
+      font-family: 'Roboto', Arial, sans-serif;
+    }
 
-.tab-002001 p {
-  margin: 0; /* Xoá khoảng cách mặc định */
-  font-size: 15px;
-}
-</style>  
-</head>  
-<body>  
-  <div class="all">
-  <div class="tab-001">  
-    <p class="banner">Funding Bot</p>  
-  </div>  
-<div class="tab-002">
-  <div style="padding: 10px; font-size: 20px;">
-    <div class="tab-002001">
-      <p class="left-text">Tài khoản:</p>
-      <p id="user_id" class="right-text">777777</p>
-    </div>
-    <div class="tab-002001">
-      <p class="left-text">Hôm nay:</p>
-      <p id="today" class="right-text">+14.64 USDT</p>
-    </div>
-    <div class="tab-002001">
-      <p class="left-text">Tuần này:</p>
-      <p id="week" class="right-text">+112.96 USDT</p>
-    </div>
-    <div class="tab-002001">
-      <p class="left-text">Tháng này:</p>
-      <p id="month" class="right-text">+468.20 USDT</p>
-    </div>
-    <div class="tab-002001">
-      <p class="left-text">Tổng lỗ:</p>
-      <p id="lose" class="right-text">-684.00 USDT</p>
-    </div>
-    <div class="tab-002001">
-      <p class="left-text">Tổng lợi nhuận:</p>
-      <p id="win" class="right-text">+8,190.00 USDT</p>
-    </div>
-    <div class="tab-002001">
-      <p class="left-text">Tổng P&L từ trước tới nay:</p>
-      <p id="total" class="right-text">+8,874.00 USDT</p>
-    </div>
-  </div>
-</div>
-    
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        table, th, td {
-            border: 1px solid black;
-        }
-        th, td {
-            padding: 10px;
-            text-align: center;
-        }
-    </style>
+    .tab-002001 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .tab-002001 p {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+
+    table, th, td {
+      border: 1px solid white;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-    <h1>PnL Report</h1>
-    
-    <!-- Table to display data -->
-    <table id="pnlTable">
-        <thead>
-            <tr>
-                <th>User ID</th>
-                <th>PnL Today</th>
-                <th>PnL Last 7 Days</th>
-                <th>PnL Last 30 Days</th>
-                <th>Total Win</th>
-                <th>Total Loss</th>
-                <th>Total Net</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Data will be populated here -->
-        </tbody>
-    </table>
-
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    
-</body>
-
+  <div class="tab-001">
+    <p class="banner">Funding Bot</p>
   </div>
-<script>
-// Đây là URL API mà bạn sẽ sử dụng để lấy dữ liệu từ Supabase
-const apiUrl = 'https://tramnanrzruzvkehpydl.supabase.co/rest/v1/pnl_report'; // Thay thế URL đúng của bạn
 
-// Hàm để lấy dữ liệu từ Supabase
-async function fetchPnLData() {
-    try {
-        // Gửi yêu cầu GET tới Supabase API
+  <div class="tab-002">
+    <div style="padding: 10px; font-size: 20px;">
+      <div class="tab-002001">
+        <p class="left-text">Tài khoản:</p>
+        <p id="user_id" class="right-text">777777</p>
+      </div>
+      <div class="tab-002001">
+        <p class="left-text">Hôm nay:</p>
+        <p id="today" class="right-text">+14.64 USDT</p>
+      </div>
+      <div class="tab-002001">
+        <p class="left-text">Tuần này:</p>
+        <p id="week" class="right-text">+112.96 USDT</p>
+      </div>
+      <div class="tab-002001">
+        <p class="left-text">Tháng này:</p>
+        <p id="month" class="right-text">+468.20 USDT</p>
+      </div>
+      <div class="tab-002001">
+        <p class="left-text">Tổng lỗ:</p>
+        <p id="lose" class="right-text">-684.00 USDT</p>
+      </div>
+      <div class="tab-002001">
+        <p class="left-text">Tổng lợi nhuận:</p>
+        <p id="win" class="right-text">+8,190.00 USDT</p>
+      </div>
+      <div class="tab-002001">
+        <p class="left-text">Tổng P&L từ trước tới nay:</p>
+        <p id="total" class="right-text">+8,874.00 USDT</p>
+      </div>
+    </div>
+  </div>
+
+  <h1>PnL Report</h1>
+  <table id="pnlTable">
+    <thead>
+      <tr>
+        <th>User ID</th>
+        <th>PnL Today</th>
+        <th>PnL Last 7 Days</th>
+        <th>PnL Last 30 Days</th>
+        <th>Total Win</th>
+        <th>Total Loss</th>
+        <th>Total Net</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Data will be populated here -->
+    </tbody>
+  </table>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    const apiUrl = 'https://tramnanrzruzvkehpydl.supabase.co/rest/v1/pnl_report?select=*';
+
+    async function fetchPnLData() {
+      try {
         const response = await axios.get(apiUrl, {
-            headers: {
-                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0', // Thay thế YOUR_API_KEY bằng khóa API Supabase của bạn
-                'Content-Type': 'application/json'
-            }
+          headers: {
+            'Authorization': 'Bearer <YOUR_API_KEY>',
+            'apikey': '<YOUR_API_KEY>',
+            'Content-Type': 'application/json'
+          }
         });
-
-        // Gọi hàm để hiển thị dữ liệu lên bảng
+        console.log('Fetched data:', response.data);
         displayPnLData(response.data);
-    } catch (error) {
-        console.error('Error fetching PnL data:', error);
+      } catch (error) {
+        console.error('Error fetching PnL data:', error.message, error.response?.data || error);
+      }
     }
-}
 
-// Hàm để hiển thị dữ liệu lên bảng
-function displayPnLData(data) {
-    const tableBody = document.getElementById('pnlTable').getElementsByTagName('tbody')[0];
-    tableBody.innerHTML = '';  // Xóa dữ liệu cũ nếu có
-
-    // Duyệt qua dữ liệu và thêm vào bảng
-    data.forEach(row => {
+    function displayPnLData(data) {
+      const tableBody = document.getElementById('pnlTable').getElementsByTagName('tbody')[0];
+      tableBody.innerHTML = '';
+      data.forEach(row => {
         const newRow = tableBody.insertRow();
-
         newRow.insertCell(0).textContent = row.user_id;
         newRow.insertCell(1).textContent = row.pnl_today;
         newRow.insertCell(2).textContent = row.pnl_7days;
@@ -168,25 +150,22 @@ function displayPnLData(data) {
         newRow.insertCell(4).textContent = row.total_win;
         newRow.insertCell(5).textContent = row.total_loss;
         newRow.insertCell(6).textContent = row.total_net;
+      });
+    }
+
+    function showUserId() {
+      const user = localStorage.getItem('loggedInUser');
+      if (user) {
+        document.getElementById('user_id').textContent = user;
+      } else {
+        document.getElementById('user_id').textContent = 'Chưa đăng nhập';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      showUserId();
+      fetchPnLData();
     });
-}
-
-// Gọi hàm để lấy dữ liệu ngay khi trang web được tải
-window.onload = fetchPnLData;
-  //hien id
-function showUserId() {
-  const user = localStorage.getItem('loggedInUser');
-  if (user) {
-    document.getElementById('user_id').textContent = user;
-  } else {
-    document.getElementById('user_id').textContent = 'Chưa đăng nhập';
-  }
-}
-
-// Gọi hàm khi DOM load xong
-window.addEventListener('DOMContentLoaded', () => {
-  showUserId();
-});
-  
-</script>
-  
+  </script>
+</body>
+</html>
