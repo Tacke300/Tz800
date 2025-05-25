@@ -135,7 +135,7 @@
       document.getElementById('error-message').textContent = 'Vui lòng đăng nhập để xem dữ liệu.';
     } else {
       document.getElementById('user_id').textContent = user;
-      const apiUrl = `https://tramnanrzruzvkehpydl.supabase.co/rest/v1/pnl_report?user_id=eq.${encodeURIComponent(user)}&select=*`;
+      const apiUrl = `https://tramnanrzruzvkehpydl.supabase.co/rest/v1/users?user_id=eq.${encodeURIComponent(user)}&select=*`;
 
       async function fetchPnLData() {
         const errorDiv = document.getElementById('error-message');
