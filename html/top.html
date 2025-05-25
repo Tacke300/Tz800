@@ -127,8 +127,8 @@
         const response = await fetch(apiUrl, {
   method: 'GET',
   headers: {
-    'Authorization': 'Bearer <eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0>',
-    'apikey': '<eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0>',
+    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0',
+    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0',
     'Content-Type': 'application/json'
   }
 });
@@ -168,31 +168,7 @@ displayPnLData(data);
       }
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-  showUserId();
-  // Test data mock
-  const testData = [
-    {
-      user_id: '12345',
-      pnl_today: '+10.00 USDT',
-      pnl_7days: '+50.00 USDT',
-      pnl_30days: '+200.00 USDT',
-      total_win: '+1000.00 USDT',
-      total_loss: '-200.00 USDT',
-      total_net: '+800.00 USDT'
-    },
-    {
-      user_id: '67890',
-      pnl_today: '+5.00 USDT',
-      pnl_7days: '+20.00 USDT',
-      pnl_30days: '+70.00 USDT',
-      total_win: '+500.00 USDT',
-      total_loss: '-100.00 USDT',
-      total_net: '+400.00 USDT'
-    }
-  ];
-  displayPnLData(testData);
-});
+    
   </script>
 </body>
 </html>
