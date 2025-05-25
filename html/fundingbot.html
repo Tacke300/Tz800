@@ -406,26 +406,30 @@ function resetBot(botId) {
 
 // dang xuat
   function logoutParent() {
-    // Gọi hàm logout của trang cha để xóa đăng nhập
-    if (parent && typeof parent.logout === 'function') {
-      parent.logout();
-    } else {
-      // Nếu không gọi được logout, có thể chuyển trang cha về login
-      parent.location.href = 'index.html'; // hoặc '/' tùy cấu trúc bạn
-    }
+  // Xóa thông tin người dùng khỏi localStorage
+  localStorage.removeItem('loggedInUser');
+
+  // Reset lastUser để lần sau detect login mới
+  lastUser = null;
+
+  if (parent && typeof parent.logout === 'function') {
+    parent.logout();
+  } else {
+    parent.location.href = 'index.html';
   }
-    let lastUser = localStorage.getItem('loggedInUser');
+}
+
+    //reset
+ let lastUser = localStorage.getItem('loggedInUser');
 
 setInterval(() => {
   const currentUser = localStorage.getItem('loggedInUser');
-  if (currentUser !== lastUser) {
+  if (currentUser !== lastUser && currentUser !== null) {
     lastUser = currentUser;
     setLoading();
     fetchPnLData(currentUser);
   }
-}, 1000); // check mỗi 1 giây
-  
-
+}, 1000);
 </script>
     
     
