@@ -1,119 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Popup iFrame</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+  <!-- Buttons -->
+  <div class="fixed bottom-6 left-6 flex flex-col gap-3 z-50">
+    <button onclick="openPopup('binance')" class="bg-yellow-600 text-white px-4 py-2 rounded-full shadow">API Binance</button>
+    <button onclick="openPopup('bitget')" class="bg-red-600 text-white px-4 py-2 rounded-full shadow">API Bitget</button>
+    <button onclick="openPopup('bingx')" class="bg-purple-600 text-white px-4 py-2 rounded-full shadow">API BingX</button>
+    <button onclick="openPopup('okx')" class="bg-teal-600 text-white px-4 py-2 rounded-full shadow">API OKX</button>
+  </div>
+
+  <!-- Popups -->
+  <div id="popup-binance" class="popup-container hidden">
+    <div class="popup-header">API Binance <button onclick="closePopup('binance')">Đóng</button></div>
+    <iframe src="api_binance.html" class="popup-iframe"></iframe>
+  </div>
+
+  <div id="popup-bitget" class="popup-container hidden">
+    <div class="popup-header">API Bitget <button onclick="closePopup('bitget')">Đóng</button></div>
+    <iframe src="api_bitget.html" class="popup-iframe"></iframe>
+  </div>
+
+  <div id="popup-bingx" class="popup-container hidden">
+    <div class="popup-header">API BingX <button onclick="closePopup('bingx')">Đóng</button></div>
+    <iframe src="api_bingx.html" class="popup-iframe"></iframe>
+  </div>
+
+  <div id="popup-okx" class="popup-container hidden">
+    <div class="popup-header">API OKX <button onclick="closePopup('okx')">Đóng</button></div>
+    <iframe src="api_okx.html" class="popup-iframe"></iframe>
+  </div>
+
+  <!-- Styles -->
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
+    .popup-container {
+      @apply fixed bottom-0 left-0 w-full h-[70vh] bg-white shadow-lg transition-transform duration-500 z-40;
+      transform: translateY(100%);
     }
-
-    .exchange-btn {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #eee;
-      border-radius: 8px;
-      padding: 10px 15px;
-      margin-bottom: 10px;
-      cursor: pointer;
+    .popup-container.show {
+      transform: translateY(0%);
     }
-
-    .exchange-btn.active {
-      background: #c8f7c5;
+    .popup-header {
+      @apply flex justify-between items-center px-4 py-2 border-b text-lg font-semibold;
     }
-
-    .dot {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: #333;
-    }
-
-    .exchange-btn.active .dot {
-      background: green;
-    }
-
-    #invest {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      margin: 15px 0;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-
-    #run-btn {
-      width: 100%;
-      padding: 12px;
-      font-size: 18px;
-      border: none;
-      border-radius: 8px;
-      background: green;
-      color: white;
-    }
-
-    #run-btn.running {
-      background: red;
+    .popup-iframe {
+      @apply w-full h-full border-none;
     }
   </style>
-</head>
-<body>
 
-  <h3>Chọn sàn sử dụng:</h3>
-  
-  <div class="exchange-btn" onclick="toggleExchange('binance')">
-    Binance <span class="dot" id="dot-binance"></span>
-  </div>
-  <div class="exchange-btn" onclick="toggleExchange('bitget')">
-    Bitget <span class="dot" id="dot-bitget"></span>
-  </div>
-  <div class="exchange-btn" onclick="toggleExchange('bingx')">
-    BingX <span class="dot" id="dot-bingx"></span>
-  </div>
-  <div class="exchange-btn" onclick="toggleExchange('okx')">
-    OKX <span class="dot" id="dot-okx"></span>
-  </div>
-
-  <input type="number" id="invest" placeholder="Nhập số $ đầu tư">
-
-  <button id="run-btn" onclick="toggleBot()">Chạy bot</button>
-
+  <!-- Script -->
   <script>
-    const selectedExchanges = {
-      binance: false,
-      bitget: false,
-      bingx: false,
-      okx: false
-    };
-
-    function toggleExchange(name) {
-      selectedExchanges[name] = !selectedExchanges[name];
-      const btn = document.querySelector(`.exchange-btn:has(#dot-${name})`);
-      const dot = document.getElementById(`dot-${name}`);
-      btn.classList.toggle('active');
+    function openPopup(id) {
+      document.querySelectorAll(".popup-container").forEach(el => {
+        el.classList.add("hidden");
+        el.classList.remove("show");
+      });
+      const popup = document.getElementById(`popup-${id}`);
+      popup.classList.remove("hidden");
+      setTimeout(() => popup.classList.add("show"), 10);
     }
 
-    let botRunning = false;
-
-    function toggleBot() {
-      const btn = document.getElementById('run-btn');
-      botRunning = !botRunning;
-      btn.classList.toggle('running');
-      btn.innerText = botRunning ? 'Dừng bot' : 'Chạy bot';
-
-      if (botRunning) {
-        const activeExchanges = Object.keys(selectedExchanges).filter(k => selectedExchanges[k]);
-        const investAmount = document.getElementById('invest').value;
-
-        console.log('Bắt đầu bot với:', {
-          activeExchanges,
-          investAmount,
-          // Supabase credentials fetch sẽ thêm sau
-        });
-      } else {
-        console.log('Bot dừng.');
-      }
+    function closePopup(id) {
+      const popup = document.getElementById(`popup-${id}`);
+      popup.classList.remove("show");
+      setTimeout(() => popup.classList.add("hidden"), 300);
     }
   </script>
 
