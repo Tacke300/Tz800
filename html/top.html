@@ -175,7 +175,7 @@ window.addEventListener('DOMContentLoaded', () => {
   showUserId();
   fetchPnLData();
 });
-*/
+
 
 
     //test
@@ -202,7 +202,7 @@ window.addEventListener('DOMContentLoaded', () => {
     errorDiv.textContent = `Lỗi: ${error.message}`;
   }
 }
-
+*/
     //test2
 const user = localStorage.getItem('loggedInUser') || '1'; // ví dụ fallback user
 const apiUrl = `https://tramnanrzruzvkehpydl.supabase.co/rest/v1/pnl_report?user_id=eq.${encodeURIComponent(user)}&select=*`;
