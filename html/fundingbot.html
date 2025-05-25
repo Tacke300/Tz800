@@ -405,13 +405,12 @@ function resetBot(botId) {
   }  
 // dang xuat
   function logoutParent() {
-  // Nếu bạn lưu token hoặc session ở localStorage/sessionStorage
-  localStorage.removeItem('userToken'); // nếu có token lưu ở localStorage
-  sessionStorage.clear(); // hoặc xóa sessionStorage nếu dùng
+  // Xóa token hoặc session trong localStorage
+  localStorage.removeItem('token');  
+  sessionStorage.clear();
 
-  // Sau đó chuyển về trang đăng nhập hoặc reload
-  window.location.href = '/index.html'; // thay bằng trang bạn muốn
-  // hoặc location.reload();
+  // Sau đó reload trang
+  location.reload();
 }
 
 </script>
