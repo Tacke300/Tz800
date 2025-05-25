@@ -89,53 +89,90 @@
     </div>
   </div>
 </div>
+    
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>PnL Report</h1>
+    
+    <!-- Table to display data -->
+    <table id="pnlTable">
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>PnL Today</th>
+                <th>PnL Last 7 Days</th>
+                <th>PnL Last 30 Days</th>
+                <th>Total Win</th>
+                <th>Total Loss</th>
+                <th>Total Net</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be populated here -->
+        </tbody>
+    </table>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="app.js"></script>
+</body>
+
   </div>
 <script>
-function handleClick(botId) {
-  const bot = document.getElementById(botId);
-  const inputWrapper = bot.querySelector('.input-wrapper');
-  const button = bot.querySelector('button');
-  const otherBot = document.getElementById(botId === 'bot1' ? 'bot2' : 'bot1');
+// Đây là URL API mà bạn sẽ sử dụng để lấy dữ liệu từ Supabase
+const apiUrl = 'https://https://tramnanrzruzvkehpydl.supabase.co/rest/v1/pnl_report'; // Thay thế URL đúng của bạn
 
-  const isInitial =
-    (botId === 'bot1' && button.innerText === 'BOT trước funding') ||
-    (botId === 'bot2' && button.innerText === 'BOT sau funding');
+// Hàm để lấy dữ liệu từ Supabase
+async function fetchPnLData() {
+    try {
+        // Gửi yêu cầu GET tới Supabase API
+        const response = await axios.get(apiUrl, {
+            headers: {
+                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0', // Thay thế YOUR_API_KEY bằng khóa API Supabase của bạn
+                'Content-Type': 'application/json'
+            }
+        });
 
-  if (isInitial) {
-    inputWrapper.style.display = 'block';
-    button.innerText = 'Bắt đầu';
-    button.classList.add('start');
-    otherBot.style.display = 'none';
-  } else if (button.innerText === 'Bắt đầu') {
-    inputWrapper.style.display = 'none';
-    button.innerText = 'Dừng bot';
-    button.classList.remove('start');
-    button.classList.add('stop');
-    otherBot.style.display = 'flex';
-  } else {
-    resetBot(botId);
-  }
+        // Gọi hàm để hiển thị dữ liệu lên bảng
+        displayPnLData(response.data);
+    } catch (error) {
+        console.error('Error fetching PnL data:', error);
+    }
 }
 
-function resetBot(botId) {
-  const bot = document.getElementById(botId);
-  const input = bot.querySelector('input');
-  const button = bot.querySelector('button');
-  const inputWrapper = bot.querySelector('.input-wrapper');
+// Hàm để hiển thị dữ liệu lên bảng
+function displayPnLData(data) {
+    const tableBody = document.getElementById('pnlTable').getElementsByTagName('tbody')[0];
+    tableBody.innerHTML = '';  // Xóa dữ liệu cũ nếu có
 
-  input.value = '';
-  inputWrapper.style.display = 'none';
+    // Duyệt qua dữ liệu và thêm vào bảng
+    data.forEach(row => {
+        const newRow = tableBody.insertRow();
 
-  if (botId === 'bot1') {
-    button.innerText = 'BOT trước funding';
-  } else if (botId === 'bot2') {
-    button.innerText = 'BOT sau funding';
-  }
-
-  button.classList.remove('start', 'stop');
-  document.getElementById('bot1').style.display = 'flex';
-  document.getElementById('bot2').style.display = 'flex';
+        newRow.insertCell(0).textContent = row.user_id;
+        newRow.insertCell(1).textContent = row.pnl_today;
+        newRow.insertCell(2).textContent = row.pnl_7days;
+        newRow.insertCell(3).textContent = row.pnl_30days;
+        newRow.insertCell(4).textContent = row.total_win;
+        newRow.insertCell(5).textContent = row.total_loss;
+        newRow.insertCell(6).textContent = row.total_net;
+    });
 }
+
+// Gọi hàm để lấy dữ liệu ngay khi trang web được tải
+window.onload = fetchPnLData;
   //hien id
 function showUserId() {
   const user = localStorage.getItem('loggedInUser');
