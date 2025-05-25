@@ -201,6 +201,36 @@ window.addEventListener('DOMContentLoaded', () => {
     errorDiv.textContent = `Lỗi: ${error.message}`;
   }
 }
+
+    //test2
+const user = localStorage.getItem('loggedInUser') || '1'; // Mặc định user 777777 nếu chưa login
+const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'; // Thay bằng anon public key thật của bạn
+
+const apiUrl = `https://tramnanrzruzvkehpydl.supabase.co/rest/v1/pnl_report?user_id=eq.${encodeURIComponent(user)}&select=*`;
+
+async function fetchPnL() {
+  try {
+    const res = await fetch(apiUrl, {
+      headers: {
+        'apikey': anonKey,
+        'Authorization': `Bearer ${anonKey}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      }
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} - ${res.statusText}`);
+    }
+    const data = await res.json();
+    console.log('PnL data:', data);
+  } catch (error) {
+    console.error('Fetch error:', error.message);
+    alert(`Lỗi khi gọi API: ${error.message}`); // Hiện lỗi ngay trên web
+  }
+}
+
+fetchPnL();
+    
   </script>
 </body>
 </html>
