@@ -256,77 +256,9 @@
 <body>  
   <div class="all">
   
-  <iframe src="top.html" width="100%" height="300px" style="border:none;"></iframe>
+  <iframe src="top.html" width="100%" height="30vh" style="border:none;"></iframe>
   <div class="top">
-    <script>
-import { useState } from "react";
-
-export default function DualPopup() {
-  const [showBefore, setShowBefore] = useState(false);
-  const [showAfter, setShowAfter] = useState(false);
-
-  return (
-    <div className="relative h-screen">
-      {/* Buttons */}
-      <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
-        <button
-          onClick={() => setShowBefore(true)}
-          className="bg-green-600 text-white px-4 py-2 rounded-full shadow"
-        >
-          Mở Before
-        </button>
-        <button
-          onClick={() => setShowAfter(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-full shadow"
-        >
-          Mở After
-        </button>
-      </div>
-
-      {/* Popup Before */}
-      <div
-        className={`fixed bottom-0 left-0 w-full h-[70vh] bg-white shadow-lg transform transition-transform duration-500 z-40 ${
-          showBefore ? "translate-y-0" : "translate-y-full"
-        }`}
-      >
-        <div className="flex justify-between items-center px-4 py-2 border-b">
-          <h2 className="text-lg font-semibold">Before</h2>
-          <button
-            onClick={() => setShowBefore(false)}
-            className="text-gray-600 hover:text-black"
-          >
-            Đóng
-          </button>
-        </div>
-        <iframe
-          src="/before.html"
-          className="w-full h-full border-none"
-        ></iframe>
-      </div>
-
-      {/* Popup After */}
-      <div
-        className={`fixed bottom-0 left-0 w-full h-[70vh] bg-white shadow-lg transform transition-transform duration-500 z-40 ${
-          showAfter ? "translate-y-0" : "translate-y-full"
-        }`}
-      >
-        <div className="flex justify-between items-center px-4 py-2 border-b">
-          <h2 className="text-lg font-semibold">After</h2>
-          <button
-            onClick={() => setShowAfter(false)}
-            className="text-gray-600 hover:text-black"
-          >
-            Đóng
-          </button>
-        </div>
-        <iframe
-          src="/after.html"
-          className="w-full h-full border-none"
-        ></iframe>
-      </div>
-    </div>
-  );
-}
+    <iframe src="bot.html" width="100%" height="10vh" style="border:none;"></iframe>
     </div>
     );
       }
