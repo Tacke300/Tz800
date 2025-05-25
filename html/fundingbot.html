@@ -476,7 +476,24 @@ function resetBot(botId) {
   const user = localStorage.getItem('loggedInUser');
   document.getElementById('user_id').textContent = `${user}`;
 }
+//api
 
+function showPopup(page) {
+      document.getElementById('api_okx.html').src = page;
+      document.getElementById('api_binance.html').style.display = 'flex';
+document.getElementById('api_bingx.html').style.display = 'flex';
+document.getElementById('api_bitget.html').style.display = 'flex';
+  
+    }
+
+    function closePopup() {
+      document.getElementById('api_okx.html').src = '';
+      document.getElementById('api_binance.html').style.display = 'none';
+document.getElementById('api_bingx.html').style.display = 'none';
+document.getElementById('api_bitget.html').style.display = 'none';
+      
+    }
+    
 // dang xuat
   function logoutParent() {
     // Gọi hàm logout của trang cha để xóa đăng nhập
