@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+6<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -204,12 +204,12 @@ window.addEventListener('DOMContentLoaded', () => {
 }
 
     //test2
-const user = localStorage.getItem('loggedInUser') || '777777'; // ví dụ fallback user
+const user = localStorage.getItem('loggedInUser') || '1'; // ví dụ fallback user
 const apiUrl = `https://tramnanrzruzvkehpydl.supabase.co/rest/v1/pnl_report?user_id=eq.${encodeURIComponent(user)}&select=*`;
 
 const headers = {
-  'apikey': 'YOUR_ANON_KEY',
-  'Authorization': 'Bearer YOUR_ANON_KEY',
+  'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0',
+  'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0',
   'Content-Type': 'application/json',
 };
 
