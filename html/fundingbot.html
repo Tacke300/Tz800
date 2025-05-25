@@ -404,27 +404,7 @@ function resetBot(botId) {
     closeApiForm();  
   }  
 
-let lastUser = localStorage.getItem('loggedInUser'); // biến toàn cục
 
-setInterval(() => {
-  const currentUser = localStorage.getItem('loggedInUser');
-  if (currentUser !== lastUser && currentUser !== null) {
-    lastUser = currentUser;
-    setLoading();
-    fetchPnLData(currentUser);
-  }
-}, 1000);
-
-function logoutParent() {
-  localStorage.removeItem('loggedInUser');
-  lastUser = null; // reset để detect user mới lần sau
-
-  if (parent && typeof parent.logout === 'function') {
-    parent.logout();
-  } else {
-    parent.location.href = 'index.html';
-  }
-}
 </script>
     
     
