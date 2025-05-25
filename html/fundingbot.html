@@ -413,8 +413,9 @@ function resetBot(botId) {
       // Nếu không gọi được logout, có thể chuyển trang cha về login
       parent.location.href = 'index.html'; // hoặc '/' tùy cấu trúc bạn
     }
+  }
     let lastUser = localStorage.getItem('loggedInUser');
-}
+
 setInterval(() => {
   const currentUser = localStorage.getItem('loggedInUser');
   if (currentUser !== lastUser) {
