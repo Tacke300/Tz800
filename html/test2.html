@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+7<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -135,47 +135,45 @@
 
   <script>
     const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
-    const USER_ID = 'user_id'; // thay bằng ID thật từ auth Supabase nếu có
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
 
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const USER_ID = localStorage.getItem('user_id'); // Lấy user_id từ localStorage
 
-    function openApiForm(exchange) {
-      document.getElementById(`api-form-${exchange}`).style.display = 'block';
-    }
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    function closeApiForm(exchange) {
-      document.getElementById(`api-form-${exchange}`).style.display = 'none';
-    }
+async function saveApi(exchange) {
+  if (!USER_ID) {
+    alert('Chưa có user_id. Vui lòng đăng nhập lại.');
+    return;
+  }
 
-    async function saveApi(exchange) {
-      const key = document.getElementById(`apikey_${exchange}`).value.trim();
-      const secret = document.getElementById(`secret_${exchange}`).value.trim();
-      const pass = document.getElementById(`pass_${exchange}`).value.trim();
+  const key = document.getElementById(`apikey_${exchange}`).value.trim();
+  const secret = document.getElementById(`secret_${exchange}`).value.trim();
+  const pass = document.getElementById(`pass_${exchange}`).value.trim();
 
-      if (!key || !secret) {
-        alert('API Key và Secret là bắt buộc!');
-        return;
-      }
+  if (!key || !secret) {
+    alert('API Key và Secret là bắt buộc!');
+    return;
+  }
 
-      const updates = {
-        [`apikey_${exchange}`]: key,
-        [`secret_${exchange}`]: secret,
-        [`pass_${exchange}`]: pass || null,
-      };
+  const updates = {
+    [`apikey_${exchange}`]: key,
+    [`secret_${exchange}`]: secret,
+    [`pass_${exchange}`]: pass || null,
+  };
 
-      const { error } = await supabase
-        .from('users')
-        .update(updates)
-        .eq('id', user_id); // nếu dùng email thì thay bằng .eq('email', USER_ID)
+  const { error } = await supabase
+    .from('users')
+    .update(updates)
+    .eq('id', USER_ID);
 
-      if (error) {
-        alert('Lỗi khi lưu API: ' + error.message);
-      } else {
-        alert(`Đã lưu API ${exchange.toUpperCase()}!`);
-        closeApiForm(exchange);
-      }
-    }
+  if (error) {
+    alert('Lỗi khi lưu API: ' + error.message);
+  } else {
+    alert(`Đã lưu API ${exchange.toUpperCase()}!`);
+    closeApiForm(exchange);
+  }
+}
   </script>
 </body>
 </html>
