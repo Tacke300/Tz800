@@ -405,14 +405,14 @@ function resetBot(botId) {
   }  
 // dang xuat
   function logoutParent() {
-    // Gọi hàm logout của trang cha để xóa đăng nhập
-    if (parent && typeof parent.logout === 'function') {
-      parent.logout();
-    } else {
-      // Nếu không gọi được logout, có thể chuyển trang cha về login
-      parent.location.href = 'index.html'; // hoặc '/' tùy cấu trúc bạn
-    }
-  }
+  // Nếu bạn lưu token hoặc session ở localStorage/sessionStorage
+  localStorage.removeItem('userToken'); // nếu có token lưu ở localStorage
+  sessionStorage.clear(); // hoặc xóa sessionStorage nếu dùng
+
+  // Sau đó chuyển về trang đăng nhập hoặc reload
+  window.location.href = '/index.html'; // thay bằng trang bạn muốn
+  // hoặc location.reload();
+}
 
 </script>
     
