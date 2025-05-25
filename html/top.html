@@ -205,7 +205,7 @@ window.addEventListener('DOMContentLoaded', () => {
 */
     //test2
 const user = localStorage.getItem('loggedInUser') || '1'; // ví dụ fallback user
-const apiUrl = `https://tramnanrzruzvkehpydl.supabase.co/rest/v1/pnl_report?user_id=eq.${encodeURIComponent(user)}&select=*`;
+const apiUrl = `https://tramnanrzruzvkehpydl.supabase.co/rest/v1/users?user_id=eq.${encodeURIComponent(user)}&select=*`;
 
 const headers = {
   'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0',
