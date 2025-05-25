@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Before & After Popups</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .popup {
+      @apply fixed bottom-0 left-0 w-full h-[70vh] bg-white shadow-lg transition-transform duration-500 z-40;
+      transform: translateY(100%);
+    }
+
+    .popup.show {
+      transform: translateY(0%);
+    }
+
+    .popup-header {
+      @apply flex justify-between items-center px-4 py-2 border-b text-lg font-semibold;
+    }
+
+    .popup-iframe {
+      @apply w-full h-full border-none;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+
+  <!-- Buttons -->
+  <div class="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+    <button onclick="openPopup('before')" class="bg-blue-600 text-white px-4 py-2 rounded-full shadow">Before</button>
+    <button onclick="openPopup('after')" class="bg-green-600 text-white px-4 py-2 rounded-full shadow">After</button>
+  </div>
+
+  <!-- Popup Before -->
+  <div id="popup-before" class="popup hidden">
+    <div class="popup-header">
+      Before
+      <button onclick="closePopup('before')" class="text-gray-600 hover:text-black">Đóng</button>
+    </div>
+    <iframe src="/before.html" class="popup-iframe"></iframe>
+  </div>
+
+  <!-- Popup After -->
+  <div id="popup-after" class="popup hidden">
+    <div class="popup-header">
+      After
+      <button onclick="closePopup('after')" class="text-gray-600 hover:text-black">Đóng</button>
+    </div>
+    <iframe src="/after.html" class="popup-iframe"></iframe>
+  </div>
+
+  <!-- JS -->
+  <script>
+    function openPopup(id) {
+      const popup = document.getElementById(`popup-${id}`);
+      popup.classList.remove("hidden");
+      setTimeout(() => popup.classList.add("show"), 10);
+    }
+
+    function closePopup(id) {
+      const popup = document.getElementById(`popup-${id}`);
+      popup.classList.remove("show");
+      setTimeout(() => popup.classList.add("hidden"), 300);
+    }
+  </script>
+
+</body>
+</html>
