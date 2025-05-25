@@ -100,10 +100,8 @@
 
   const supabase = createClient(
     'https://tramnanrzruzvkehpydl.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'
+    'your-public-anon-key' // bạn có thể dùng service-role nếu chạy server-side, nhưng KHÔNG dùng ở client
   );
-
-  const user = localStorage.getItem('loggedInUser');
 
   function showError(msg) {
     document.getElementById('error-message').textContent = msg;
@@ -120,38 +118,6 @@
     });
   }
 
-  async function fetchPnLData(userId) {
-    clearError();
-    if (!userId) {
-      showError('Chưa đăng nhập');
-      document.getElementById('user_id').textContent = 'Chưa đăng nhập';
-      return;
-    }
-
-    const apiUrl = `https://tramnanrzruzvkehpydl.supabase.co/rest/v1/users?user_id=eq.${encodeURIComponent(userId)}&select=*`;
-
-    try {
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'apikey': supabase.supabaseKey,
-          'Authorization': `Bearer ${supabase.supabaseKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) throw new Error(`HTTP lỗi: ${response.status}`);
-      const data = await response.json();
-      if (data.length === 0) {
-        showError('Không tìm thấy dữ liệu P&L cho tài khoản này.');
-        return;
-      }
-      displayPnLData(data[0]);
-    } catch (e) {
-      showError(`Lỗi tải dữ liệu: ${e.message}`);
-    }
-  }
-
   function displayPnLData(row) {
     document.getElementById('user_id').textContent = row.user_id || 'N/A';
     document.getElementById('today').textContent = row.pnl_today || '0';
@@ -162,8 +128,47 @@
     document.getElementById('total').textContent = row.total_net || '0';
   }
 
-  function startRealtime(userId) {
+  async function fetchPnLData() {
+    clearError();
+    const { data: { session }, error } = await supabase.auth.getSession();
+
+    if (error || !session) {
+      showError('Chưa đăng nhập');
+      document.getElementById('user_id').textContent = 'Chưa đăng nhập';
+      return null;
+    }
+
+    const userId = session.user.id;
+    const accessToken = session.access_token;
+
+    const apiUrl = `https://tramnanrzruzvkehpydl.supabase.co/rest/v1/users?user_id=eq.${encodeURIComponent(userId)}&select=*`;
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) throw new Error(`HTTP lỗi: ${response.status}`);
+      const data = await response.json();
+      if (data.length === 0) {
+        showError('Không tìm thấy dữ liệu P&L cho tài khoản này.');
+        return null;
+      }
+      displayPnLData(data[0]);
+      return userId;
+    } catch (e) {
+      showError(`Lỗi tải dữ liệu: ${e.message}`);
+      return null;
+    }
+  }
+
+  async function startRealtime(userId) {
     if (!userId) return;
+
     supabase
       .channel('realtime-pnl')
       .on(
@@ -182,15 +187,10 @@
       .subscribe();
   }
 
-  window.addEventListener('DOMContentLoaded', () => {
+  window.addEventListener('DOMContentLoaded', async () => {
     setLoading();
-    if (user) {
-      fetchPnLData(user);
-      startRealtime(user);
-    } else {
-      showError('Chưa đăng nhập');
-      document.getElementById('user_id').textContent = 'Chưa đăng nhập';
-    }
+    const userId = await fetchPnLData();
+    if (userId) startRealtime(userId);
   });
 </script>
 </body>
