@@ -204,8 +204,20 @@ window.addEventListener('DOMContentLoaded', () => {
 }
 */
     //test2
-const user = localStorage.getItem('loggedInUser') || '1'; // ví dụ fallback user
+// Tạo hàm log để ghi ra console và ra HTML
+function logToPage(message) {
+  console.log(message); // vẫn ghi console bình thường
+  const logContainer = document.getElementById('log-container');
+  if (logContainer) {
+    logContainer.textContent += message + '\n';
+  }
+}
+
+const user = localStorage.getItem('loggedInUser') || '1';
+logToPage('User from localStorage or fallback: ' + user);
+
 const apiUrl = `https://tramnanrzruzvkehpydl.supabase.co/rest/v1/users?user_id=eq.${encodeURIComponent(user)}&select=*`;
+logToPage('API URL: ' + apiUrl);
 
 const headers = {
   'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0',
@@ -214,38 +226,42 @@ const headers = {
 };
 
 async function fetchPnLData() {
+  logToPage('Starting fetchPnLData...');
   try {
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers: headers,
     });
+    logToPage('Fetch response status: ' + response.status);
 
     if (!response.ok) {
-      // Lỗi HTTP, in ra lỗi kèm body nếu có
       const errorText = await response.text();
+      logToPage('Response not OK: ' + errorText);
       throw new Error(`HTTP ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('Data from Supabase:', data);
-    // Gọi hàm hiển thị dữ liệu nếu cần
+    logToPage('Data from Supabase: ' + JSON.stringify(data, null, 2));
+
     displayPnLData(data);
   } catch (error) {
-    console.error('Fetch error:', error.message);
-    // Hiện lỗi trên giao diện HTML nếu muốn
-    document.getElementById('error-message').textContent = error.message;
+    logToPage('Fetch error: ' + error.message);
+    const errorElement = document.getElementById('error-message');
+    if (errorElement) {
+      errorElement.textContent = error.message;
+    }
   }
 }
 
 function displayPnLData(data) {
-  // Ví dụ hiển thị dữ liệu lên bảng hoặc phần tử HTML
-  // Cái này bạn tự sửa theo cấu trúc HTML của bạn
-  console.log(data);
+  logToPage('Displaying data: ' + JSON.stringify(data));
+  // hiển thị dữ liệu tùy bạn
 }
 
-// Gọi hàm lấy dữ liệu khi trang tải xong
-window.addEventListener('DOMContentLoaded', fetchPnLData);
-    
+window.addEventListener('DOMContentLoaded', () => {
+  logToPage('DOM fully loaded');
+  fetchPnLData();
+});
   </script>
 </body>
 </html>
