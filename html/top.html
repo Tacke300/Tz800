@@ -93,7 +93,14 @@
     <div id="error-message"></div>
   </div>
 
+  <!-- Supabase JS + Logic -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.5/dist/umd/supabase.min.js"></script>
   <script>
+    const supabase = window.supabase.createClient(
+      'https://tramnanrzruzvkehpydl.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'
+    );
+
     const user = localStorage.getItem('loggedInUser');
 
     function showError(msg) {
@@ -125,14 +132,13 @@
         const response = await fetch(apiUrl, {
           method: 'GET',
           headers: {
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0',
-            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0',
+            'apikey': supabase.supabaseKey,
+            'Authorization': `Bearer ${supabase.supabaseKey}`,
             'Content-Type': 'application/json'
           }
         });
 
         if (!response.ok) throw new Error(`HTTP lỗi: ${response.status}`);
-
         const data = await response.json();
         if (data.length === 0) {
           showError('Không tìm thấy dữ liệu P&L cho tài khoản này.');
@@ -154,10 +160,30 @@
       document.getElementById('total').textContent = row.total_net || '0';
     }
 
+    function startRealtime(userId) {
+      if (!userId) return;
+      supabase.channel('realtime-pnl')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'users',
+            filter: `user_id=eq.${userId}`
+          },
+          (payload) => {
+            console.log('Realtime update:', payload.new);
+            displayPnLData(payload.new);
+          }
+        )
+        .subscribe();
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       setLoading();
       if (user) {
         fetchPnLData(user);
+        startRealtime(user);
       } else {
         showError('Chưa đăng nhập');
         document.getElementById('user_id').textContent = 'Chưa đăng nhập';
