@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>API Key Form</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    .popup { display: none; position: fixed; top: 20%; left: 50%; transform: translateX(-50%); background: #fff; padding: 20px; border: 1px solid #ccc; z-index: 1000; width: 300px; }
+    .popup.active { display: block; }
+    .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+    .overlay.active { display: block; }
+    input { display: block; width: 100%; margin-bottom: 10px; padding: 8px; }
+    button { padding: 8px 12px; margin-top: 10px; }
+    .exchange-box { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Nhập API Key</h1>
+  <div id="exchange-container"></div>
+
+  <!-- Overlay và popup -->
+  <div id="overlay" class="overlay"></div>
+  <div id="popup" class="popup">
+    <h3 id="popup-title">Nhập API</h3>
+    <input id="api-key" placeholder="API Key" />
+    <input id="api-secret" placeholder="API Secret" />
+    <input id="api-pass" placeholder="Passphrase (nếu có)" />
+    <button onclick="saveApi()">Lưu</button>
+    <button onclick="closePopup()">Hủy</button>
+  </div>
+
+  <script>
+    const supabase = supabase.createClient(
+      "https://tramnanrzruzvkehpydl.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0"
+    );
+
+    const exchanges = ["Binance", "OKX", "MEXC", "Bybit"];
+
+    const columnMap = {
+      Binance: { key: "apikey_binance", secret: "secret_binance", pass: "pass_binance" },
+      OKX: { key: "apikey_okx", secret: "secret_okx", pass: "pass_okx" },
+      MEXC: { key: "apikey_mexc", secret: "secret_mexc", pass: "pass_mexc" },
+      Bybit: { key: "apikey_bybit", secret: "secret_bybit", pass: "pass_bybit" },
+    };
+
+    let currentExchange = null;
+
+    function createButtons() {
+      const container = document.getElementById("exchange-container");
+      exchanges.forEach((exchange) => {
+        const div = document.createElement("div");
+        div.className = "exchange-box";
+        div.innerHTML = `
+          <strong>${exchange}</strong><br />
+          <button onclick="openPopup('${exchange}')">Nhập API</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function openPopup(exchange) {
+      currentExchange = exchange;
+      document.getElementById("popup-title").innerText = `Nhập API cho ${exchange}`;
+      document.getElementById("api-key").value = "";
+      document.getElementById("api-secret").value = "";
+      document.getElementById("api-pass").value = "";
+      document.getElementById("overlay").classList.add("active");
+      document.getElementById("popup").classList.add("active");
+    }
+
+    function closePopup() {
+      currentExchange = null;
+      document.getElementById("overlay").classList.remove("active");
+      document.getElementById("popup").classList.remove("active");
+    }
+
+    async function saveApi() {
+      const key = document.getElementById("api-key").value;
+      const secret = document.getElementById("api-secret").value;
+      const passphrase = document.getElementById("api-pass").value;
+
+      if (!key || !secret) {
+        alert("API Key và Secret là bắt buộc.");
+        return;
+      }
+
+      const user = await supabase.auth.getUser();
+      const userId = user?.data?.user?.id;
+
+      if (!userId) {
+        alert("Chưa đăng nhập Supabase.");
+        return;
+      }
+
+      const col = columnMap[currentExchange];
+      const updates = {
+        [col.key]: key,
+        [col.secret]: secret,
+        [col.pass]: passphrase || null,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from("users")
+        .update(updates)
+        .eq("id", userId);
+
+      if (error) {
+        alert("Lỗi khi lưu API.");
+        console.error(error);
+      } else {
+        alert(`Đã lưu API cho ${currentExchange}`);
+        closePopup();
+      }
+    }
+
+    createButtons();
+  </script>
+</body>
+</html>
