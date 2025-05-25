@@ -29,3 +29,49 @@
         
         <button onclick="submitApiForm()" style="width: 100%; padding: 12px; font-size: 16px; font-weight: bold; cursor: pointer;">Submit</button>  
       </div>  
+
+
+
+  // Bật/tắt input nhập tiền và đổi nút Khởi chạy <-> Dừng lại  
+  
+  // Mở popup chọn sàn API  
+  const api02 = document.getElementById('api-02');  
+  document.getElementById('api-01').addEventListener('click', () => {  
+    api02.style.display = 'block';  
+  });  
+  
+  // Đóng popup chọn sàn API  
+  function closePopup() {  
+    api02.style.display = 'none';  
+  }  
+  
+  // Mở form nhập API tương ứng với sàn đã chọn  
+  const apiForm = document.getElementById('api-form');  
+  const apiFormTitle = document.getElementById('api-form-title');  
+  
+  function openApiForm(exchange) {  
+    apiForm.style.display = 'block';  
+    api02.style.display = 'none';  
+    apiFormTitle.textContent = `Set API ${exchange.toUpperCase()}`;  
+  }  
+  
+  // Đóng form nhập API  
+  function closeApiForm() {  
+    apiForm.style.display = 'none';  
+  }  
+  
+  // Xử lý submit API (chưa thực hiện logic lưu)  
+  function submitApiForm() {  
+    // Lấy input API key  
+    const input = apiForm.querySelector('input[type="text"]');  
+    const apiKey = input.value.trim();  
+    if (!apiKey) {  
+      alert('Vui lòng nhập API key');  
+      return;  
+    }  
+    // TODO: Thêm logic lưu hoặc gửi API key ở đây  
+  
+    alert('API key đã được gửi');  
+    input.value = '';  
+    closeApiForm();  
+  }  
