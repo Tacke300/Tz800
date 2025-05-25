@@ -409,8 +409,13 @@ function resetBot(botId) {
   localStorage.removeItem('token');  
   sessionStorage.clear();
 
-  // Sau đó reload trang
-  location.reload();
+  // Thay đổi src của iframe cha về trang đăng nhập
+  if (window.parent) {
+    const iframe = window.parent.document.getElementById('mainIframe');
+    if (iframe) {
+      iframe.src = '/html/reg-log.html';
+    }
+  }
 }
 
 </script>
