@@ -95,100 +95,103 @@
 
   <!-- Supabase JS + Logic -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.5/dist/umd/supabase.min.js"></script>
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://tramnanrzruzvkehpydl.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'
-    );
+  <script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-    const user = localStorage.getItem('loggedInUser');
+  const supabase = createClient(
+    'https://tramnanrzruzvkehpydl.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'
+  );
 
-    function showError(msg) {
-      document.getElementById('error-message').textContent = msg;
+  const user = localStorage.getItem('loggedInUser');
+
+  function showError(msg) {
+    document.getElementById('error-message').textContent = msg;
+  }
+
+  function clearError() {
+    document.getElementById('error-message').textContent = '';
+  }
+
+  function setLoading() {
+    document.getElementById('user_id').textContent = 'Đang tải...';
+    ['today', 'week', 'month', 'lose', 'win', 'total'].forEach(id => {
+      document.getElementById(id).textContent = '-';
+    });
+  }
+
+  async function fetchPnLData(userId) {
+    clearError();
+    if (!userId) {
+      showError('Chưa đăng nhập');
+      document.getElementById('user_id').textContent = 'Chưa đăng nhập';
+      return;
     }
 
-    function clearError() {
-      document.getElementById('error-message').textContent = '';
-    }
+    const apiUrl = `https://tramnanrzruzvkehpydl.supabase.co/rest/v1/users?user_id=eq.${encodeURIComponent(userId)}&select=*`;
 
-    function setLoading() {
-      document.getElementById('user_id').textContent = 'Đang tải...';
-      ['today', 'week', 'month', 'lose', 'win', 'total'].forEach(id => {
-        document.getElementById(id).textContent = '-';
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'apikey': supabase.supabaseKey,
+          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'Content-Type': 'application/json'
+        }
       });
-    }
 
-    async function fetchPnLData(userId) {
-      clearError();
-      if (!userId) {
-        showError('Chưa đăng nhập');
-        document.getElementById('user_id').textContent = 'Chưa đăng nhập';
+      if (!response.ok) throw new Error(`HTTP lỗi: ${response.status}`);
+      const data = await response.json();
+      if (data.length === 0) {
+        showError('Không tìm thấy dữ liệu P&L cho tài khoản này.');
         return;
       }
+      displayPnLData(data[0]);
+    } catch (e) {
+      showError(`Lỗi tải dữ liệu: ${e.message}`);
+    }
+  }
 
-      const apiUrl = `https://tramnanrzruzvkehpydl.supabase.co/rest/v1/users?user_id=eq.${encodeURIComponent(userId)}&select=*`;
+  function displayPnLData(row) {
+    document.getElementById('user_id').textContent = row.user_id || 'N/A';
+    document.getElementById('today').textContent = row.pnl_today || '0';
+    document.getElementById('week').textContent = row.pnl_7days || '0';
+    document.getElementById('month').textContent = row.pnl_30days || '0';
+    document.getElementById('win').textContent = row.total_win || '0';
+    document.getElementById('lose').textContent = row.total_loss || '0';
+    document.getElementById('total').textContent = row.total_net || '0';
+  }
 
-      try {
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'apikey': supabase.supabaseKey,
-            'Authorization': `Bearer ${supabase.supabaseKey}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) throw new Error(`HTTP lỗi: ${response.status}`);
-        const data = await response.json();
-        if (data.length === 0) {
-          showError('Không tìm thấy dữ liệu P&L cho tài khoản này.');
-          return;
+  function startRealtime(userId) {
+    if (!userId) return;
+    supabase
+      .channel('realtime-pnl')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'users',
+          filter: `user_id=eq.${userId}`
+        },
+        (payload) => {
+          console.log('Realtime update:', payload.new);
+          displayPnLData(payload.new);
         }
-        displayPnLData(data[0]);
-      } catch (e) {
-        showError(`Lỗi tải dữ liệu: ${e.message}`);
-      }
-    }
+      )
+      .subscribe();
+  }
 
-    function displayPnLData(row) {
-      document.getElementById('user_id').textContent = row.user_id || 'N/A';
-      document.getElementById('today').textContent = row.pnl_today || '0';
-      document.getElementById('week').textContent = row.pnl_7days || '0';
-      document.getElementById('month').textContent = row.pnl_30days || '0';
-      document.getElementById('win').textContent = row.total_win || '0';
-      document.getElementById('lose').textContent = row.total_loss || '0';
-      document.getElementById('total').textContent = row.total_net || '0';
+  window.addEventListener('DOMContentLoaded', () => {
+    setLoading();
+    if (user) {
+      fetchPnLData(user);
+      startRealtime(user);
+    } else {
+      showError('Chưa đăng nhập');
+      document.getElementById('user_id').textContent = 'Chưa đăng nhập';
     }
-
-    function startRealtime(userId) {
-      if (!userId) return;
-      supabase.channel('realtime-pnl')
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'users',
-            filter: `user_id=eq.${userId}`
-          },
-          (payload) => {
-            console.log('Realtime update:', payload.new);
-            displayPnLData(payload.new);
-          }
-        )
-        .subscribe();
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      setLoading();
-      if (user) {
-        fetchPnLData(user);
-        startRealtime(user);
-      } else {
-        showError('Chưa đăng nhập');
-        document.getElementById('user_id').textContent = 'Chưa đăng nhập';
-      }
-    });
-  </script>
+  });
+</script>
 </body>
 </html>
