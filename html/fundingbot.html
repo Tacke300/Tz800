@@ -404,23 +404,7 @@ function resetBot(botId) {
     closeApiForm();  
   }  
 
-// dang xuat
-  function logoutParent() {
-  // Xóa thông tin người dùng khỏi localStorage
-  localStorage.removeItem('loggedInUser');
-
-  // Reset lastUser để lần sau detect login mới
-  lastUser = null;
-
-  if (parent && typeof parent.logout === 'function') {
-    parent.logout();
-  } else {
-    parent.location.href = 'index.html';
-  }
-}
-
-    //reset
- let lastUser = localStorage.getItem('loggedInUser');
+let lastUser = localStorage.getItem('loggedInUser'); // biến toàn cục
 
 setInterval(() => {
   const currentUser = localStorage.getItem('loggedInUser');
@@ -430,6 +414,17 @@ setInterval(() => {
     fetchPnLData(currentUser);
   }
 }, 1000);
+
+function logoutParent() {
+  localStorage.removeItem('loggedInUser');
+  lastUser = null; // reset để detect user mới lần sau
+
+  if (parent && typeof parent.logout === 'function') {
+    parent.logout();
+  } else {
+    parent.location.href = 'index.html';
+  }
+}
 </script>
     
     
