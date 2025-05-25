@@ -120,7 +120,7 @@
 
   
   <script>
-    /*
+    
     const user = localStorage.getItem('loggedInUser');
 const apiUrl = `https://tramnanrzruzvkehpydl.supabase.co/rest/v1/pnl_report?user_id=eq.${encodeURIComponent(user)}&select=*`;
 
@@ -176,7 +176,7 @@ window.addEventListener('DOMContentLoaded', () => {
   fetchPnLData();
 });
 
-/*
+
 
 
     //test
@@ -203,66 +203,9 @@ window.addEventListener('DOMContentLoaded', () => {
     errorDiv.textContent = `Lỗi: ${error.message}`;
   }
 }
-*/
+
     //test2
-// Tạo hàm log để ghi ra console và ra HTML
-function logToPage(message) {
-  console.log(message); // vẫn ghi console bình thường
-  const logContainer = document.getElementById('log-container');
-  if (logContainer) {
-    logContainer.textContent += message + '\n';
-  }
-}
 
-const user = localStorage.getItem('loggedInUser') || '1';
-logToPage('User from localStorage or fallback: ' + user);
-
-const apiUrl = `https://tramnanrzruzvkehpydl.supabase.co/rest/v1/users?user_id=eq.${encodeURIComponent(user)}&select=*`;
-logToPage('API URL: ' + apiUrl);
-
-const headers = {
-  'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0',
-  'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0',
-  'Content-Type': 'application/json',
-};
-
-async function fetchPnLData() {
-  logToPage('Starting fetchPnLData...');
-  try {
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: headers,
-    });
-    logToPage('Fetch response status: ' + response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      logToPage('Response not OK: ' + errorText);
-      throw new Error(`HTTP ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    logToPage('Data from Supabase: ' + JSON.stringify(data, null, 2));
-
-    displayPnLData(data);
-  } catch (error) {
-    logToPage('Fetch error: ' + error.message);
-    const errorElement = document.getElementById('error-message');
-    if (errorElement) {
-      errorElement.textContent = error.message;
-    }
-  }
-}
-
-function displayPnLData(data) {
-  logToPage('Displaying data: ' + JSON.stringify(data));
-  // hiển thị dữ liệu tùy bạn
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-  logToPage('DOM fully loaded');
-  fetchPnLData();
-});
   </script>
 </body>
 </html>
