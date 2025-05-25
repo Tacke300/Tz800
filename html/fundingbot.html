@@ -344,6 +344,19 @@
           <div class="api-option" onclick="openApiForm('binance')">Binance</div>  
           <div class="api-option" onclick="openApiForm('bitget')">Bitget</div>  
           <div class="api-option" onclick="openApiForm('bingx')">Bingx</div>  
+
+          
+          <button class="api-option" onclick="showPopup('api_binance.html')">Binance</button>
+<button class="api-option" onclick="showPopup('api_bitget.html')">Bitget</button>
+            <button class="api-option" onclick="showPopup('api_okx.html')">OKX</button>
+  <button class="api-option" onclick="showPopup('api_bingx.html')">BingX</button>
+
+  <div class="popup-overlay" id="popup">
+    <div class="popup-content">
+      <span class="popup-close" onclick="closePopup()">×</span>
+      <iframe id="popup-frame" src=""></iframe>
+    </div>
+  </div>
         </div>  
       </div>  
   
