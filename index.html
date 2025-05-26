@@ -2,37 +2,36 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Funding Login</title>
-</head>
+  <title>Funding App</title>
   <style>
     html, body {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    background: #000;
-  }
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #000;
+    }
   </style>
+</head>
 <body>
-  <iframe src="html/reg-log.html" style="width:100%; height:100vh; border:none"></iframe>
+  <iframe id="mainFrame" src="/html/reg-log.html" style="width:100%; height:100vh; border:none;"></iframe>
 
-  <p>helo</p>
-  </body>
   <script>
-  // Hàm logout trong trang cha
-function logout() {
-  localStorage.removeItem('loggedInUser');
-  sessionStorage.clear();
-  location.href = 'index.html'; // Hoặc location.reload()
-}
-
-// Lắng nghe tin nhắn từ iframe
-window.addEventListener('message', function(event) {
-  if (event.data === 'logout') {
-    logout();
-  }
-});
-</script>
+    window.addEventListener('message', function(event) {
+      if (event.data === 'logout') {
+        console.log('Đã nhận yêu cầu logout từ con');
+        // Xoá session/local nếu cần
+        localStorage.removeItem('loggedInUser');
+        sessionStorage.clear();
+        // Quay lại trang login
+        document.getElementById('mainFrame').src = '/html/reg-log.html';
+      }
+      if (event.data === 'loginSuccess') {
+        console.log('Đăng nhập thành công, chuyển sang fundingbot');
+        document.getElementById('mainFrame').src = '/html/fundingbot.html';
+      }
+    });
+  </script>
+</body>
 </html>
