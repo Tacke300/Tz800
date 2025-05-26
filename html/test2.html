@@ -37,40 +37,50 @@
   const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
 
+  // Biến lưu offset thời gian giữa local và Binance server
+  let binanceServerTimeOffset = 0;
 
-  const res = await fetch(url, {...});
-console.log('Status:', res.status);
-const text = await res.text();
-console.log('Response:', text);
-if (!res.ok) throw new Error('Failed to fetch user keys from Supabase: ' + text);
-  // Lấy user keys từ Supabase
+  async function getServerTime() {
+    const res = await fetch('https://fapi.binance.com/fapi/v1/time');
+    if (!res.ok) throw new Error('Failed to get Binance server time');
+    const data = await res.json();
+    return data.serverTime;
+  }
+
+  async function initServerTimeOffset() {
+    const serverTime = await getServerTime();
+    binanceServerTimeOffset = serverTime - Date.now();
+    console.log('Binance server time offset:', binanceServerTimeOffset, 'ms');
+  }
+
+  function getTimestamp() {
+    return Date.now() + binanceServerTimeOffset;
+  }
+
+  // Lấy user keys từ Supabase kèm log chi tiết
   async function getBinanceApiKeys(user_id) {
-  const url = `${SUPABASE_URL}/rest/v1/users?select=apikey_binance,secret_binance&id=eq.${encodeURIComponent(user_id)}`;
-  console.log('Fetching Supabase URL:', url);
-  const res = await fetch(url, {
-    headers: {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-  });
-  console.log('Supabase fetch status:', res.status);
-  const text = await res.text();
-  console.log('Supabase fetch response:', text);
-  if (!res.ok) throw new Error('Failed to fetch user keys from Supabase: ' + text);
-  const data = JSON.parse(text);
-  if (data.length === 0) throw new Error('User not found or no API keys');
-  return data[0];
-}
+    const url = `${SUPABASE_URL}/rest/v1/users?select=apikey_binance,secret_binance&id=eq.${encodeURIComponent(user_id)}`;
+    console.log('Fetching Supabase URL:', url);
+    const res = await fetch(url, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+    console.log('Supabase fetch status:', res.status);
+    const text = await res.text();
+    console.log('Supabase fetch response:', text);
+    if (!res.ok) throw new Error('Failed to fetch user keys from Supabase: ' + text);
+    const data = JSON.parse(text);
+    if (data.length === 0) throw new Error('User not found or no API keys');
+    return data[0];
+  }
 
   // Ký query với HMAC SHA256 (dùng CryptoJS)
   function signQuery(queryString, secret) {
     return CryptoJS.HmacSHA256(queryString, secret).toString(CryptoJS.enc.Hex);
-  }
-
-  function getTimestamp() {
-    return Date.now();
   }
 
   // Gọi Binance futures API có ký
@@ -98,7 +108,6 @@ if (!res.ok) throw new Error('Failed to fetch user keys from Supabase: ' + text)
 
   // Lấy số dư USDT của tài khoản futures
   async function getUsdtBalance(apiKey, secret) {
-    // futures account balance
     const data = await binanceFuturesApi('/fapi/v2/balance', apiKey, secret);
     const usdt = data.find(b => b.asset === 'USDT');
     return usdt ? usdt.balance : '0';
@@ -110,15 +119,19 @@ if (!res.ok) throw new Error('Failed to fetch user keys from Supabase: ' + text)
     const usdtBalanceEl = document.getElementById('usdt-balance');
     tbody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
     usdtBalanceEl.textContent = '';
+    statusEl.textContent = 'Initializing...';
 
     try {
       const user_id = localStorage.getItem('user_id');
       if (!user_id) throw new Error('User ID not found in localStorage');
 
       statusEl.textContent = `Fetching API keys for user "${user_id}"...`;
-
       const keys = await getBinanceApiKeys(user_id);
-      statusEl.textContent = 'Got API keys. Fetching Binance data...';
+
+      statusEl.textContent = 'Got API keys. Syncing Binance server time...';
+      await initServerTimeOffset();
+
+      statusEl.textContent = 'Fetching Binance data...';
 
       const [positions, exchangeInfo, usdtBalance] = await Promise.all([
         binanceFuturesApi('/fapi/v2/positionRisk', keys.apikey_binance, keys.secret_binance),
