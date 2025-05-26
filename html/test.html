@@ -1,74 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>Binance Futures Funding Rate</title>
   <style>
-    button {
-      margin: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
-    }
-
-    .popup-overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-    }
-
-    .popup-content {
-      width: 90%;
-      max-width: 400px;
-      height: 80vh;
-      background: #fff;
-      border-radius: 12px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .popup-content iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-
-    .popup-close {
-      position: absolute;
-      top: 5px;
-      right: 10px;
-      font-size: 20px;
-      cursor: pointer;
-      color: #888;
-    }
+    body { font-family: Arial, sans-serif; background: #121212; color: #eee; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; max-width: 900px; margin: auto; }
+    th, td { border: 1px solid #444; padding: 8px 12px; text-align: center; }
+    th { background-color: #222; }
+    tr:nth-child(even) { background-color: #1a1a1a; }
   </style>
 </head>
 <body>
 
-  <button onclick="showPopup('before.html')">Mở Before</button>
-  <button onclick="showPopup('after.html')">Mở After</button>
+<h1>Funding Rate - Binance Futures (USD-M)</h1>
+<table>
+  <thead>
+    <tr>
+      <th>Symbol</th>
+      <th>Funding Rate</th>
+      <th>Funding Time (UTC)</th>
+    </tr>
+  </thead>
+  <tbody id="funding-table-body">
+    <tr><td colspan="3">Loading...</td></tr>
+  </tbody>
+</table>
 
-  <div class="popup-overlay" id="popup">
-    <div class="popup-content">
-      <span class="popup-close" onclick="closePopup()">×</span>
-      <iframe id="popup-frame" src=""></iframe>
-    </div>
-  </div>
+<script>
+  async function fetchFundingRates() {
+    const tableBody = document.getElementById('funding-table-body');
+    tableBody.innerHTML = '<tr><td colspan="3">Loading...</td></tr>';
 
-  <script>
-    function showPopup(page) {
-      document.getElementById('popup-frame').src = page;
-      document.getElementById('popup').style.display = 'flex';
+    try {
+      // 1. Lấy danh sách symbol futures
+      const exchangeInfoRes = await fetch('https://fapi.binance.com/fapi/v1/exchangeInfo');
+      const exchangeInfo = await exchangeInfoRes.json();
+
+      const symbols = exchangeInfo.symbols
+        .filter(s => s.contractType === "PERPETUAL") // chỉ lấy perpetual contract
+        .map(s => s.symbol);
+
+      // Giới hạn số đồng để tránh request quá nhiều, bạn có thể tăng nếu muốn
+      const limitedSymbols = symbols.slice(0, 30);
+
+      // 2. Lấy funding rate từng symbol (latest)
+      // Binance API cho phép lấy funding rate với param limit=1 lấy bản mới nhất
+      // fetch funding rate từng symbol (chạy tuần tự để tránh quá tải server)
+      let rows = '';
+
+      for (const symbol of limitedSymbols) {
+        const url = `https://fapi.binance.com/fapi/v1/fundingRate?symbol=${symbol}&limit=1`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.length > 0) {
+          const fr = parseFloat(data[0].fundingRate);
+          const time = new Date(data[0].fundingTime).toUTCString();
+          rows += `
+            <tr>
+              <td>${symbol}</td>
+              <td>${(fr * 100).toFixed(5)}%</td>
+              <td>${time}</td>
+            </tr>`;
+        }
+      }
+
+      tableBody.innerHTML = rows || '<tr><td colspan="3">No data found</td></tr>';
+
+    } catch (error) {
+      console.error(error);
+      tableBody.innerHTML = `<tr><td colspan="3">Error loading data</td></tr>`;
     }
+  }
 
-    function closePopup() {
-      document.getElementById('popup-frame').src = '';
-      document.getElementById('popup').style.display = 'none';
-    }
-  </script>
+  fetchFundingRates();
+</script>
 
 </body>
 </html>
