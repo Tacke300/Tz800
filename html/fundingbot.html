@@ -148,8 +148,10 @@
   <iframe src="top.html" width="100%" height="400px" style="border:none;"></iframe>
 
     <p id="welcome"></p>
-<iframe src="test2.html" style="width:100%; height:100vh; border:none;"></iframe>
-    
+<button onclick="loadTest2()">Chuyển sang trang test2</button>
+
+<!-- iframe rỗng ban đầu -->
+<iframe id="mainFrame" style="width: 100%; height: 100vh; border: none;"></iframe>
     <div class="tab-004">  
       <!-- Nút Cài đặt API -->  
       <!-- Nút mở API -->  
@@ -194,7 +196,9 @@ const user = localStorage.getItem('loggedInUser');
   if (user) {
     document.getElementById('welcome').textContent = `Xin chào, ${user}`;
   }
-  
+  function loadTest2() {
+    document.getElementById('mainFrame').src = 'test2.html';
+  }
   // Mở popup chọn sàn API  
   const api02 = document.getElementById('api-02');  
   document.getElementById('api-01').addEventListener('click', () => {  
