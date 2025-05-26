@@ -21,15 +21,18 @@
   <p>helo</p>
   </body>
   <script>
-  function logout() {
-    localStorage.removeItem('loggedInUser');
-    sessionStorage.clear();
-    location.href = 'index.html';
-  }
+  // Hàm logout trong trang cha
+function logout() {
+  localStorage.removeItem('loggedInUser');
+  sessionStorage.clear();
+  location.href = 'index.html'; // Hoặc location.reload()
+}
 
-  // Hàm dành cho trang con gọi
-  function logoutParent() {
+// Lắng nghe tin nhắn từ iframe
+window.addEventListener('message', function(event) {
+  if (event.data === 'logout') {
     logout();
   }
+});
 </script>
 </html>
