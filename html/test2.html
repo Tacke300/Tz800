@@ -31,11 +31,25 @@
 </table>
 
 <script>
-  // --- Supabase config ---
-  const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';  // Thay bằng URL dự án Supabase bạn
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';               // Thay bằng public anon key Supabase
+  // Hàm lấy CryptoJS qua CDN (load script)
+  async function loadCryptoJS() {
+    return new Promise((resolve, reject) => {
+      if (typeof CryptoJS !== 'undefined') {
+        resolve();
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load CryptoJS'));
+      document.head.appendChild(script);
+    });
+  }
 
-  // Hàm gọi Supabase API lấy apikey_binance, secret_binance dựa user_id
+  // --- Supabase config ---
+  const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
+
   async function getBinanceApiKeys(user_id) {
     const url = `${SUPABASE_URL}/rest/v1/users?select=apikey_binance,secret_binance&id=eq.${user_id}`;
     const res = await fetch(url, {
@@ -52,17 +66,14 @@
     return data[0];
   }
 
-  // Binance API ký request với HMAC SHA256
   function signQuery(queryString, secret) {
     return CryptoJS.HmacSHA256(queryString, secret).toString(CryptoJS.enc.Hex);
   }
 
-  // Lấy thời gian hiện tại timestamp (ms)
   function getTimestamp() {
     return Date.now();
   }
 
-  // Gọi Binance futures API với API key/secret, return JSON
   async function binanceFuturesApi(path, apiKey, secret, params = {}) {
     params.timestamp = getTimestamp();
     const query = new URLSearchParams(params).toString();
@@ -80,7 +91,6 @@
     return res.json();
   }
 
-  // Lấy info exchange để lấy max leverage per symbol
   async function getExchangeInfo() {
     const res = await fetch('https://fapi.binance.com/fapi/v1/exchangeInfo');
     if (!res.ok) throw new Error('Failed to get exchangeInfo');
@@ -93,8 +103,13 @@
     tbody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
 
     try {
-      const user_id = localStorage.getItem('user_id');
-      if (!user_id) throw new Error('User ID not found in localStorage');
+      // Lấy user_id, nếu chưa có thì hỏi
+      let user_id = localStorage.getItem('user_id');
+      if (!user_id) {
+        user_id = prompt('Nhập user_id của bạn để load dữ liệu Binance:');
+        if (!user_id) throw new Error('User ID không được để trống');
+        localStorage.setItem('user_id', user_id);
+      }
 
       statusEl.textContent = `Fetching API keys for user ${user_id}...`;
 
@@ -142,22 +157,12 @@
     }
   }
 
-  function loadCryptoAndRun() {
-    if (typeof CryptoJS === 'undefined') {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js';
-      script.onload = main;
-      script.onerror = () => {
-        document.getElementById('status').textContent = 'Failed to load CryptoJS';
-      };
-      document.head.appendChild(script);
-    } else {
-      main();
-    }
-  }
-
-  loadCryptoAndRun();
+  loadCryptoJS().then(main).catch(e => {
+    const statusEl = document.getElementById('status');
+    const tbody = document.getElementById('table-body');
+    statusEl.textContent = `Error loading CryptoJS: ${e.message}`;
+    tbody.innerHTML = `<tr><td colspan="4">Error loading CryptoJS</td></tr>`;
+  });
 </script>
-
 </body>
 </html>
