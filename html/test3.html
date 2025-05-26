@@ -24,18 +24,11 @@ function log(msg) {
 }
 
 // Hàm ký HMAC SHA256 (chuẩn WebCrypto, không lỗi)
-async function hmacSHA256(secret, message) {
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    enc.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(message));
-  return [...new Uint8Array(sig)].map(b => b.toString(16).padStart(2, '0')).join('');
-}
+
+  // Ký query với HMAC SHA256 (dùng CryptoJS)
+  function signQuery(queryString, secret) {
+    return CryptoJS.HmacSHA256(queryString, secret).toString(CryptoJS.enc.Hex);
+  }
 
 // Lấy API Key từ Supabase
 async function getApiKeys(userId) {
