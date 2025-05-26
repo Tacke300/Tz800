@@ -30,6 +30,21 @@ function log(msg) {
     return CryptoJS.HmacSHA256(queryString, secret).toString(CryptoJS.enc.Hex);
   }
 
+  // Gọi Binance futures API có ký
+  async function binanceFuturesApi(path, apiKey, secret, params = {}) {
+    params.timestamp = getTimestamp();
+    const query = new URLSearchParams(params).toString();
+    const signature = signQuery(query, secret);
+    const fullQuery = query + `&signature=${signature}`;
+
+    const url = `https://fapi.binance.com${path}?${fullQuery}`;
+    const res = await fetch(url, { headers: { 'X-MBX-APIKEY': apiKey } });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`Binance API error: ${res.status} ${err}`);
+    }
+    return res.json();
+  }
 // Lấy API Key từ Supabase
 async function getApiKeys(userId) {
   const url = `${SUPABASE_URL}/rest/v1/users?user_id=eq.${userId}`;
