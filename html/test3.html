@@ -1,106 +1,83 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Binance Full Balance</title>
-  <style>
-    body { font-family: Arial; }
-    pre { background: #f9f9f9; padding: 10px; white-space: pre-wrap; }
-  </style>
+<meta charset="UTF-8" />
+<title>Binance Futures Balance Demo</title>
 </head>
 <body>
+<h2>Demo lấy số dư Binance Futures (USDT-M & COIN-M)</h2>
+<button id="btnUsdt">Lấy số dư USDT-M</button>
+<button id="btnCoin">Lấy số dư COIN-M</button>
 
-<h2>Binance All Balances (Spot, USDM, COINM)</h2>
-<pre id="log">Đang tải...</pre>
+<pre id="output"></pre>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-sha256@0.9.0/build/sha256.min.js"></script>
 <script>
-const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
+  // Đừng để key thật ngoài client nhé, chỉ demo
+  const apiKey = 'ynfUQ5PxqWQJdwPsAVREudagiF1WEN3HAENgLZIwWC3VrsNnT74wlRwY29hGXZky';
+  const apiSecret = 'pYTcusasHde67ajzvaOmgmSReqbZ7f0j2uwfR3VaeHai1emhuWRcacmlBCnrRglH';
 
-import fetch from 'node-fetch';
-import CryptoJS from 'crypto-js';
-
-
-// 1. Lấy API key/secret từ Supabase
-async function getApiKeysFromSupabase(user_id) {
-  const encodedUserId = encodeURIComponent(user_id);
-  const url = `${SUPABASE_URL}/rest/v1/users?select=apikey_binance,secret_binance&user_id=eq.${encodedUserId}`;
-  const res = await fetch(url, {
-    headers: {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Failed to fetch user keys from Supabase: ${errText}`);
+  async function getServerTime(base) {
+    const res = await fetch(base + '/fapi/v1/time');
+    if (!res.ok) throw new Error('Không lấy được server time');
+    const data = await res.json();
+    return data.serverTime;
   }
 
-  const data = await res.json();
-  if (data.length === 0) throw new Error('User not found or no API keys');
-
-  return { apiKey: data[0].apikey_binance, apiSecret: data[0].secret_binance };
-}
-
-// 2. Lấy server time Binance (để đồng bộ timestamp)
-async function getServerTime() {
-  const res = await fetch('https://api.binance.com/api/v3/time');
-  if (!res.ok) throw new Error('Failed to fetch Binance server time');
-  const data = await res.json();
-  return data.serverTime;
-}
-
-// 3. Ký query string
-function signQuery(queryString, secret) {
-  return CryptoJS.HmacSHA256(queryString, secret).toString(CryptoJS.enc.Hex);
-}
-
-// 4. Gọi API Binance có ký
-async function signedRequest(apiKey, secret, endpoint, base = 'https://api.binance.com', params = {}) {
-  const timestamp = await getServerTime();
-  params.timestamp = timestamp;
-
-  const query = new URLSearchParams(params).toString();
-  const signature = signQuery(query, secret);
-  const url = `${base}${endpoint}?${query}&signature=${signature}`;
-
-  const res = await fetch(url, {
-    headers: { 'X-MBX-APIKEY': apiKey }
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Binance API error: ${res.status} ${errText}`);
+  function sign(queryString, secret) {
+    return sha256.hmac(secret, queryString);
   }
 
-  return res.json();
-}
+  async function signedFuturesRequest(apiKey, apiSecret, endpoint, base) {
+    const timestamp = await getServerTime(base);
+    const params = `timestamp=${timestamp}`;
+    const signature = sign(params, apiSecret);
+    const url = `${base}${endpoint}?${params}&signature=${signature}`;
 
-// 5. Ví dụ: lấy số dư tài khoản Spot
-async function fetchSpotBalance(userId) {
-  try {
-    const { apiKey, apiSecret } = await getApiKeysFromSupabase(userId);
-    const accountInfo = await signedRequest(apiKey, apiSecret, '/api/v3/account');
-    return accountInfo.balances;
-  } catch (error) {
-    console.error('Error fetching spot balance:', error.message);
-    return null;
-  }
-}
+    const res = await fetch(url, {
+      headers: { 'X-MBX-APIKEY': apiKey }
+    });
 
-// --- chạy thử ---
-// Thay userId thành cái bạn cần lấy API key/secret
-fetchSpotBalance('user123').then(balances => {
-  if (balances) {
-    console.log('Spot balances:', balances);
-  } else {
-    console.log('Không lấy được số dư');
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Binance API lỗi: ${res.status} ${text}`);
+    }
+    return res.json();
   }
-});
+
+  async function fetchUsdtFuturesBalance() {
+    try {
+      const base = 'https://fapi.binance.com';
+      const data = await signedFuturesRequest(apiKey, apiSecret, '/fapi/v2/account', base);
+      return data.assets;
+    } catch (e) {
+      return 'Lỗi: ' + e.message;
+    }
+  }
+
+  async function fetchCoinFuturesBalance() {
+    try {
+      const base = 'https://dapi.binance.com';
+      const data = await signedFuturesRequest(apiKey, apiSecret, '/dapi/v1/account', base);
+      return data.assets;
+    } catch (e) {
+      return 'Lỗi: ' + e.message;
+    }
+  }
+
+  document.getElementById('btnUsdt').onclick = async () => {
+    const output = document.getElementById('output');
+    output.textContent = 'Đang lấy số dư USDT-M...';
+    const res = await fetchUsdtFuturesBalance();
+    output.textContent = JSON.stringify(res, null, 2);
+  };
+
+  document.getElementById('btnCoin').onclick = async () => {
+    const output = document.getElementById('output');
+    output.textContent = 'Đang lấy số dư COIN-M...';
+    const res = await fetchCoinFuturesBalance();
+    output.textContent = JSON.stringify(res, null, 2);
+  };
 </script>
-
 </body>
 </html>
