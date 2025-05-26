@@ -141,7 +141,7 @@ const user = localStorage.getItem('loggedInUser');
     statusEl.textContent = 'Initializing...';
 
     try {
-      const user_id = localStorage.getItem('user_id');
+      const user_id = localStorage.getItem('loggedInUser');
       if (!user_id) throw new Error('User ID not found in localStorage');
 
       statusEl.textContent = `Fetching API keys for user "${user_id}"...`;
