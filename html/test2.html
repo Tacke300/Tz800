@@ -30,28 +30,16 @@
   </tbody>
 </table>
 
-<script>
-  // Hàm lấy CryptoJS qua CDN (load script)
-  async function loadCryptoJS() {
-    return new Promise((resolve, reject) => {
-      if (typeof CryptoJS !== 'undefined') {
-        resolve();
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js';
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load CryptoJS'));
-      document.head.appendChild(script);
-    });
-  }
+<p id="usdt-balance"></p>
 
-  // --- Supabase config ---
+<script>
+  // Supabase config
   const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
 
+  // Lấy user keys từ Supabase
   async function getBinanceApiKeys(user_id) {
-    const url = `${SUPABASE_URL}/rest/v1/users?select=apikey_binance,secret_binance&id=eq.${user_id}`;
+    const url = `${SUPABASE_URL}/rest/v1/users?select=apikey_binance,secret_binance&id=eq.${encodeURIComponent(user_id)}`;
     const res = await fetch(url, {
       headers: {
         'apikey': SUPABASE_ANON_KEY,
@@ -66,6 +54,7 @@
     return data[0];
   }
 
+  // Ký query với HMAC SHA256 (dùng CryptoJS)
   function signQuery(queryString, secret) {
     return CryptoJS.HmacSHA256(queryString, secret).toString(CryptoJS.enc.Hex);
   }
@@ -74,6 +63,7 @@
     return Date.now();
   }
 
+  // Gọi Binance futures API có ký
   async function binanceFuturesApi(path, apiKey, secret, params = {}) {
     params.timestamp = getTimestamp();
     const query = new URLSearchParams(params).toString();
@@ -81,9 +71,7 @@
     const fullQuery = query + `&signature=${signature}`;
 
     const url = `https://fapi.binance.com${path}?${fullQuery}`;
-    const res = await fetch(url, {
-      headers: { 'X-MBX-APIKEY': apiKey },
-    });
+    const res = await fetch(url, { headers: { 'X-MBX-APIKEY': apiKey } });
     if (!res.ok) {
       const err = await res.text();
       throw new Error(`Binance API error: ${res.status} ${err}`);
@@ -91,46 +79,52 @@
     return res.json();
   }
 
+  // Lấy thông tin exchangeInfo (max leverage từng symbol)
   async function getExchangeInfo() {
     const res = await fetch('https://fapi.binance.com/fapi/v1/exchangeInfo');
     if (!res.ok) throw new Error('Failed to get exchangeInfo');
     return res.json();
   }
 
+  // Lấy số dư USDT của tài khoản futures
+  async function getUsdtBalance(apiKey, secret) {
+    // futures account balance
+    const data = await binanceFuturesApi('/fapi/v2/balance', apiKey, secret);
+    const usdt = data.find(b => b.asset === 'USDT');
+    return usdt ? usdt.balance : '0';
+  }
+
   async function main() {
     const statusEl = document.getElementById('status');
     const tbody = document.getElementById('table-body');
+    const usdtBalanceEl = document.getElementById('usdt-balance');
     tbody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
+    usdtBalanceEl.textContent = '';
 
     try {
-      // Lấy user_id, nếu chưa có thì hỏi
-      let user_id = localStorage.getItem('user_id');
-      if (!user_id) {
-        user_id = prompt('Nhập user_id của bạn để load dữ liệu Binance:');
-        if (!user_id) throw new Error('User ID không được để trống');
-        localStorage.setItem('user_id', user_id);
-      }
+      const user_id = localStorage.getItem('user_id');
+      if (!user_id) throw new Error('User ID not found in localStorage');
 
-      statusEl.textContent = `Fetching API keys for user ${user_id}...`;
+      statusEl.textContent = `Fetching API keys for user "${user_id}"...`;
 
       const keys = await getBinanceApiKeys(user_id);
       statusEl.textContent = 'Got API keys. Fetching Binance data...';
 
-      const positions = await binanceFuturesApi('/fapi/v2/positionRisk', keys.apikey_binance, keys.secret_binance);
-      const exchangeInfo = await getExchangeInfo();
+      const [positions, exchangeInfo, usdtBalance] = await Promise.all([
+        binanceFuturesApi('/fapi/v2/positionRisk', keys.apikey_binance, keys.secret_binance),
+        getExchangeInfo(),
+        getUsdtBalance(keys.apikey_binance, keys.secret_binance)
+      ]);
 
       const symbolInfoMap = {};
       for (const sym of exchangeInfo.symbols) {
-        let maxLev = 'N/A';
-        const levFilter = sym.filters.find(f => f.filterType === 'leverageFilter');
-        if (levFilter) maxLev = levFilter.maxLeverage;
-        symbolInfoMap[sym.symbol] = maxLev;
+        const levFilter = sym.filters.find(f => f.filterType === 'LEVERAGE');
+        symbolInfoMap[sym.symbol] = levFilter ? levFilter.maxLeverage : 'N/A';
       }
 
+      // map position theo symbol
       const positionMap = {};
-      positions.forEach(pos => {
-        positionMap[pos.symbol] = pos;
-      });
+      positions.forEach(pos => { positionMap[pos.symbol] = pos; });
 
       let rows = '';
       for (const symbol in symbolInfoMap) {
@@ -148,6 +142,7 @@
       }
 
       tbody.innerHTML = rows;
+      usdtBalanceEl.textContent = `USDT Futures Balance: ${usdtBalance}`;
       statusEl.textContent = 'Data loaded.';
 
     } catch (e) {
@@ -157,12 +152,20 @@
     }
   }
 
-  loadCryptoJS().then(main).catch(e => {
-    const statusEl = document.getElementById('status');
-    const tbody = document.getElementById('table-body');
-    statusEl.textContent = `Error loading CryptoJS: ${e.message}`;
-    tbody.innerHTML = `<tr><td colspan="4">Error loading CryptoJS</td></tr>`;
-  });
+  // Load CryptoJS trước rồi chạy main
+  async function loadCryptoAndRun() {
+    if (typeof CryptoJS === 'undefined') {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js';
+      script.onload = main;
+      document.head.appendChild(script);
+    } else {
+      main();
+    }
+  }
+
+  loadCryptoAndRun();
+
 </script>
 </body>
 </html>
