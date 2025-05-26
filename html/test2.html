@@ -1,90 +1,157 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Binance Balance & Leverage</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<meta charset="UTF-8" />
+<title>Binance Futures Leverage & Balance</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #121212; color: #eee; padding: 20px; }
+  table { width: 100%; max-width: 900px; margin: 20px auto; border-collapse: collapse; }
+  th, td { border: 1px solid #444; padding: 8px 12px; text-align: center; }
+  th { background: #222; }
+  tr:nth-child(even) { background: #1a1a1a; }
+</style>
 </head>
 <body>
-  <h2>Binance Futures Balance & Leverage</h2>
-  <pre id="output">Đang tải...</pre>
 
-  <script>
-    const SUPABASE_URL = 'https://bgtqxbxtbqbcxqxvqtqg.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'; // nhập key đầy đủ tại đây
+<h1>Thông tin Binance Futures - USDT Balance và Leverage</h1>
+<p id="status">Đang tải dữ liệu...</p>
+<table>
+  <thead>
+    <tr>
+      <th>Symbol</th>
+      <th>Leverage</th>
+      <th>Position Amount</th>
+    </tr>
+  </thead>
+  <tbody id="table-body">
+    <tr><td colspan="3">Đang tải dữ liệu...</td></tr>
+  </tbody>
+</table>
+<p id="usdt-balance"></p>
 
-    async function getBinanceApiKeysFromSupabase() {
-      const rawUser = localStorage.getItem("loggedInUser");
-      if (!rawUser) throw new Error("Chưa đăng nhập Supabase");
-      const user = JSON.parse(rawUser);
-      const user_id = user.user_id;
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<script>
+  const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
 
-      const url = `${SUPABASE_URL}/rest/v1/users?select=apikey_binance,secret_binance&user_id=eq.${user_id}`;
-      const res = await fetch(url, {
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
+  let binanceServerTimeOffset = 0;
+
+  async function getServerTime() {
+    const res = await fetch('https://fapi.binance.com/fapi/v1/time');
+    if (!res.ok) throw new Error('Không lấy được thời gian máy chủ Binance');
+    const data = await res.json();
+    return data.serverTime;
+  }
+
+  async function syncBinanceTime() {
+    const serverTime = await getServerTime();
+    binanceServerTimeOffset = serverTime - Date.now();
+    console.log('Chênh lệch thời gian Binance:', binanceServerTimeOffset, 'ms');
+  }
+
+  function getTimestamp() {
+    return Date.now() + binanceServerTimeOffset;
+  }
+
+  // Lấy API key & secret từ Supabase dựa user id lưu localStorage
+  async function getApiKeys(userId) {
+    const url = `${SUPABASE_URL}/rest/v1/users?select=apikey_binance,secret_binance&user_id=eq.${encodeURIComponent(userId)}`;
+    const res = await fetch(url, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      }
+    });
+    if (!res.ok) throw new Error('Lấy API keys từ Supabase thất bại');
+    const data = await res.json();
+    if (!data || data.length === 0) throw new Error('Không tìm thấy API keys cho user này');
+    return data[0];
+  }
+
+  // Hàm ký query string với secret key
+  function signQuery(queryString, secret) {
+    return CryptoJS.HmacSHA256(queryString, secret).toString(CryptoJS.enc.Hex);
+  }
+
+  // Gọi API Binance Futures có ký
+  async function binanceFuturesApi(path, apiKey, secret, params = {}) {
+    params.timestamp = getTimestamp();
+    const queryString = new URLSearchParams(params).toString();
+    const signature = signQuery(queryString, secret);
+    const url = `https://fapi.binance.com${path}?${queryString}&signature=${signature}`;
+    const res = await fetch(url, { headers: { 'X-MBX-APIKEY': apiKey } });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`Lỗi API Binance: ${res.status} ${err}`);
+    }
+    return res.json();
+  }
+
+  // Lấy balance USDT Futures
+  async function getUsdtBalance(apiKey, secret) {
+    const data = await binanceFuturesApi('/fapi/v2/balance', apiKey, secret);
+    const usdt = data.find(b => b.asset === 'USDT');
+    return usdt ? usdt.balance : '0';
+  }
+
+  // Lấy thông tin vị trí (có leverage)
+  async function getPositions(apiKey, secret) {
+    return binanceFuturesApi('/fapi/v2/positionRisk', apiKey, secret);
+  }
+
+  async function main() {
+    const statusEl = document.getElementById('status');
+    const tbody = document.getElementById('table-body');
+    const usdtBalanceEl = document.getElementById('usdt-balance');
+
+    tbody.innerHTML = '<tr><td colspan="3">Đang tải dữ liệu...</td></tr>';
+    usdtBalanceEl.textContent = '';
+    statusEl.textContent = 'Khởi tạo...';
+
+    try {
+      const userId = localStorage.getItem('loggedInUser');
+      if (!userId) throw new Error('Không tìm thấy user đã đăng nhập trong localStorage');
+
+      statusEl.textContent = 'Lấy API keys từ Supabase...';
+      const keys = await getApiKeys(userId);
+
+      statusEl.textContent = 'Đồng bộ thời gian với máy chủ Binance...';
+      await syncBinanceTime();
+
+      statusEl.textContent = 'Lấy số dư USDT và thông tin vị trí...';
+      const [usdtBalance, positions] = await Promise.all([
+        getUsdtBalance(keys.apikey_binance, keys.secret_binance),
+        getPositions(keys.apikey_binance, keys.secret_binance)
+      ]);
+
+      // Hiển thị bảng leverage & position amount từng symbol
+      let rows = '';
+      positions.forEach(pos => {
+        // Lọc symbol có position khác 0 để hiển thị leverage chính xác
+        if (parseFloat(pos.positionAmt) !== 0) {
+          rows += `<tr>
+            <td>${pos.symbol}</td>
+            <td>${pos.leverage}</td>
+            <td>${pos.positionAmt}</td>
+          </tr>`;
         }
       });
 
-      const data = await res.json();
-      if (!data || data.length === 0) throw new Error("Không tìm thấy API key trong Supabase");
-      return data[0];
+      tbody.innerHTML = rows || '<tr><td colspan="3">Không có vị trí đang mở</td></tr>';
+      usdtBalanceEl.textContent = `Số dư USDT Futures: ${usdtBalance}`;
+      statusEl.textContent = 'Dữ liệu đã tải thành công.';
+    } catch (err) {
+      statusEl.textContent = `Lỗi: ${err.message}`;
+      tbody.innerHTML = '<tr><td colspan="3">Lỗi khi tải dữ liệu</td></tr>';
+      console.error(err);
     }
+  }
 
-    async function getBinanceFuturesBalanceAndLeverage(apiKey, apiSecret) {
-      const timestamp = Date.now();
-      const queryString = `timestamp=${timestamp}`;
-      const signature = CryptoJS.HmacSHA256(queryString, apiSecret).toString();
+  main();
 
-      // Lấy số dư Futures
-      const accountInfoUrl = `https://fapi.binance.com/fapi/v2/account?${queryString}&signature=${signature}`;
-      const res1 = await fetch(accountInfoUrl, {
-        method: 'GET',
-        headers: {
-          'X-MBX-APIKEY': apiKey
-        }
-      });
-      const balanceData = await res1.json();
+</script>
 
-      // Lấy leverage từng coin
-      const symbols = balanceData.positions
-        .filter(p => parseFloat(p.initialMargin) > 0)
-        .map(p => p.symbol);
-
-      const leverages = {};
-      for (const symbol of symbols) {
-        const qs = `symbol=${symbol}&timestamp=${timestamp}`;
-        const sig = CryptoJS.HmacSHA256(qs, apiSecret).toString();
-        const url = `https://fapi.binance.com/fapi/v1/leverageBracket?${qs}&signature=${sig}`;
-        const res = await fetch(url, {
-          headers: { 'X-MBX-APIKEY': apiKey }
-        });
-        const data = await res.json();
-        leverages[symbol] = data?.[0]?.brackets?.[0]?.initialLeverage || 'N/A';
-      }
-
-      return { balanceData, leverages };
-    }
-
-    // Gọi toàn bộ
-    (async () => {
-      try {
-        const { apikey_binance, secret_binance } = await getBinanceApiKeysFromSupabase();
-        const result = await getBinanceFuturesBalanceAndLeverage(apikey_binance, secret_binance);
-
-        let out = `Tổng số dư Futures: ${result.balanceData.totalWalletBalance} USDT\n\n`;
-        out += `Đòn bẩy các cặp đang mở:\n`;
-        for (const [symbol, lev] of Object.entries(result.leverages)) {
-          out += `${symbol}: ${lev}x\n`;
-        }
-
-        document.getElementById('output').innerText = out;
-      } catch (e) {
-        document.getElementById('output').innerText = "LỖI: " + e.message;
-      }
-    })();
-  </script>
 </body>
 </html>
