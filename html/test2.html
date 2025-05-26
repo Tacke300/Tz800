@@ -2,211 +2,112 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Binance Futures Leverage Info</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Binance Balance Demo</title>
 <style>
-  body { font-family: Arial, sans-serif; padding: 20px; background: #121212; color: #eee; }
-  table { border-collapse: collapse; width: 100%; max-width: 900px; margin: auto; }
-  th, td { border: 1px solid #444; padding: 8px 12px; text-align: center; }
-  th { background-color: #222; }
-  tr:nth-child(even) { background-color: #1a1a1a; }
+  body { font-family: Arial, sans-serif; padding: 10px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+  th { background-color: #f2f2f2; }
+  #status { margin-top: 10px; color: green; }
 </style>
 </head>
 <body>
+<h2>Binance Account Balances</h2>
 
-<h1>Binance Futures Leverage Info for User</h1>
-<p id="status">Loading...</p>
-<p id="welcome"> </p>
-  <p id="usdt-balance"></p>
-<table>
-  <thead>
-    <tr>
-      <th>Symbol</th>
-      <th>Max Leverage</th>
-      <th>Current Leverage</th>
-      <th>Position Amount</th>
-    </tr>
-  </thead>
-  <tbody id="table-body">
-    <tr><td colspan="4">Loading data...</td></tr>
-  </tbody>
-</table>
+<div>
+  <label>API Key: <input type="text" id="apiKey" style="width: 400px;" /></label><br /><br />
+  <label>Secret Key: <input type="text" id="secretKey" style="width: 400px;" /></label><br /><br />
+  <button onclick="main()">Load Balances</button>
+</div>
 
+<div id="status"></div>
 
+<div id="balances" style="margin-top: 20px;">
+  <h3>Balances</h3>
+  <p><b>Spot USDT:</b> <span id="spot-usdt">-</span></p>
+  <p><b>USDT-M Futures USDT:</b> <span id="usdm-usdt">-</span></p>
+  <p><b>COIN-M Futures BTC (ví dụ):</b> <span id="coinm-btc">-</span></p>
+</div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <script>
-
-const user = localStorage.getItem('loggedInUser');
-  if (user) {
-    document.getElementById('welcome').textContent = `Xin chào, ${user}`;
-  }
-  function loadTest2() {
-    document.getElementById('mainFrame').src = 'test2.html';
-  }
-  
-  // Supabase config
-  const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
-
-  // Biến lưu offset thời gian giữa local và Binance server
-  let binanceServerTimeOffset = 0;
-
-  async function getServerTime() {
-    const res = await fetch('https://fapi.binance.com/fapi/v1/time');
-    if (!res.ok) throw new Error('Failed to get Binance server time');
-    const data = await res.json();
-    return data.serverTime;
-  }
-
-  async function initServerTimeOffset() {
-    const serverTime = await getServerTime();
-    binanceServerTimeOffset = serverTime - Date.now();
-    console.log('Binance server time offset:', binanceServerTimeOffset, 'ms');
-  }
-
   function getTimestamp() {
-    return Date.now() + binanceServerTimeOffset;
+    return Date.now();
   }
 
-  // Lấy user keys từ Supabase kèm log chi tiết
-  async function getBinanceApiKeys(user_id) {
-  const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
-
-  // Đặt user_id trong dấu nháy kép, rồi encode toàn bộ
-  const encodedUserId = encodeURIComponent(user_id);
-
-  const url = `${SUPABASE_URL}/rest/v1/users?select=apikey_binance,secret_binance&user_id=eq.${encodedUserId}`;
-  const res = await fetch(url, {
-    headers: {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Failed to fetch user keys from Supabase: ${errText}`);
-  }
-
-  const data = await res.json();
-  if (data.length === 0) throw new Error('User not found or no API keys');
-
-  return data[0];
-}
-
-  // Ký query với HMAC SHA256 (dùng CryptoJS)
   function signQuery(queryString, secret) {
     return CryptoJS.HmacSHA256(queryString, secret).toString(CryptoJS.enc.Hex);
   }
 
-  // Gọi Binance futures API có ký
-  async function binanceFuturesApi(path, apiKey, secret, params = {}) {
-    params.timestamp = getTimestamp();
-    const query = new URLSearchParams(params).toString();
+  async function fetchWithSignature(baseUrl, path, apiKey, secret) {
+    const timestamp = getTimestamp();
+    const query = `timestamp=${timestamp}`;
     const signature = signQuery(query, secret);
-    const fullQuery = query + `&signature=${signature}`;
+    const url = `${baseUrl}${path}?${query}&signature=${signature}`;
 
-    const url = `https://fapi.binance.com${path}?${fullQuery}`;
     const res = await fetch(url, { headers: { 'X-MBX-APIKEY': apiKey } });
     if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`Binance API error: ${res.status} ${err}`);
+      const text = await res.text();
+      throw new Error(`API error ${res.status}: ${text}`);
     }
     return res.json();
   }
 
-  // Lấy thông tin exchangeInfo (max leverage từng symbol)
-  async function getExchangeInfo() {
-    const res = await fetch('https://fapi.binance.com/fapi/v1/exchangeInfo');
-    if (!res.ok) throw new Error('Failed to get exchangeInfo');
-    return res.json();
+  async function getSpotBalance(apiKey, secret) {
+    return fetchWithSignature('https://api.binance.com', '/api/v3/account', apiKey, secret);
   }
 
-  // Lấy số dư USDT của tài khoản futures
-  async function getUsdtBalance(apiKey, secret) {
-    const data = await binanceFuturesApi('/fapi/v2/balance', apiKey, secret);
-    const usdt = data.find(b => b.asset === 'USDT');
-    return usdt ? usdt.balance : '0';
+  async function getUsdmBalance(apiKey, secret) {
+    return fetchWithSignature('https://fapi.binance.com', '/fapi/v2/balance', apiKey, secret);
+  }
+
+  async function getCoinmBalance(apiKey, secret) {
+    return fetchWithSignature('https://dapi.binance.com', '/dapi/v1/balance', apiKey, secret);
   }
 
   async function main() {
+    const apiKey = document.getElementById('apiKey').value.trim();
+    const secretKey = document.getElementById('secretKey').value.trim();
     const statusEl = document.getElementById('status');
-    const tbody = document.getElementById('table-body');
-    const usdtBalanceEl = document.getElementById('usdt-balance');
-    tbody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
-    usdtBalanceEl.textContent = '';
-    statusEl.textContent = 'Initializing...';
+    const spotEl = document.getElementById('spot-usdt');
+    const usdmEl = document.getElementById('usdm-usdt');
+    const coinmEl = document.getElementById('coinm-btc');
+
+    if (!apiKey || !secretKey) {
+      alert('Vui lòng nhập API Key và Secret Key');
+      return;
+    }
+
+    statusEl.textContent = 'Đang tải dữ liệu...';
+    spotEl.textContent = '-';
+    usdmEl.textContent = '-';
+    coinmEl.textContent = '-';
 
     try {
-      const user_id = localStorage.getItem('loggedInUser');
-      if (!user_id) throw new Error('User ID not found in localStorage');
+      // Spot
+      const spotData = await getSpotBalance(apiKey, secretKey);
+      const spotUsdt = spotData.balances.find(b => b.asset === 'USDT');
+      spotEl.textContent = spotUsdt ? spotUsdt.free : '0';
 
-      statusEl.textContent = `Fetching API keys for user "${user_id}"...`;
-      const keys = await getBinanceApiKeys(user_id);
+      // USDT-M Futures
+      const usdmData = await getUsdmBalance(apiKey, secretKey);
+      const usdmUsdt = usdmData.find(b => b.asset === 'USDT');
+      usdmEl.textContent = usdmUsdt ? usdmUsdt.balance : '0';
 
-      statusEl.textContent = 'Got API keys. Syncing Binance server time...';
-      await initServerTimeOffset();
+      // COIN-M Futures (ví dụ lấy số dư BTC)
+      const coinmData = await getCoinmBalance(apiKey, secretKey);
+      const coinmBtc = coinmData.find(b => b.asset === 'BTC');
+      coinmEl.textContent = coinmBtc ? coinmBtc.balance : '0';
 
-      statusEl.textContent = 'Fetching Binance data...';
-
-      const [positions, exchangeInfo, usdtBalance] = await Promise.all([
-        binanceFuturesApi('/fapi/v2/positionRisk', keys.apikey_binance, keys.secret_binance),
-        getExchangeInfo(),
-        getUsdtBalance(keys.apikey_binance, keys.secret_binance)
-      ]);
-
-      const symbolInfoMap = {};
-      for (const sym of exchangeInfo.symbols) {
-        const levFilter = sym.filters.find(f => f.filterType === 'LEVERAGE');
-        symbolInfoMap[sym.symbol] = levFilter ? levFilter.maxLeverage : 'N/A';
-      }
-
-      // map position theo symbol
-      const positionMap = {};
-      positions.forEach(pos => { positionMap[pos.symbol] = pos; });
-
-      let rows = '';
-      for (const symbol in symbolInfoMap) {
-        const maxLev = symbolInfoMap[symbol];
-        const pos = positionMap[symbol];
-        const currentLev = pos ? pos.leverage : '-';
-        const positionAmt = pos ? pos.positionAmt : '0';
-
-        rows += `<tr>
-          <td>${symbol}</td>
-          <td>${maxLev}</td>
-          <td>${currentLev}</td>
-          <td>${positionAmt}</td>
-        </tr>`;
-      }
-
-      tbody.innerHTML = rows;
-      usdtBalanceEl.textContent = `USDT Futures Balance: ${usdtBalance}`;
-      statusEl.textContent = 'Data loaded.';
+      statusEl.textContent = 'Đã tải dữ liệu thành công.';
 
     } catch (e) {
-      statusEl.textContent = `Error: ${e.message}`;
+      statusEl.textContent = 'Lỗi: ' + e.message;
       console.error(e);
-      tbody.innerHTML = `<tr><td colspan="4">Error loading data</td></tr>`;
     }
   }
-
-  // Load CryptoJS trước rồi chạy main
-  async function loadCryptoAndRun() {
-    if (typeof CryptoJS === 'undefined') {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js';
-      script.onload = main;
-      document.head.appendChild(script);
-    } else {
-      main();
-    }
-  }
-
-  loadCryptoAndRun();
-
 </script>
+
 </body>
 </html>
