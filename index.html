@@ -21,12 +21,15 @@
   <button onclick="logoutParent()"></button>
   </body>
   <script>
-    function logout() {
-  // Xóa token, session ...
-  localStorage.removeItem('loggedInUser');
-  sessionStorage.clear();
-  // Chuyển về trang đăng nhập hoặc reload
-  location.href = 'index.html'; // hoặc location.reload()
-}
-  </script>
+  function logout() {
+    localStorage.removeItem('loggedInUser');
+    sessionStorage.clear();
+    location.href = 'index.html';
+  }
+
+  // Hàm dành cho trang con gọi
+  function logoutParent() {
+    logout();
+  }
+</script>
 </html>
