@@ -15,7 +15,8 @@
 
 <h1>Binance Futures Leverage Info for User</h1>
 <p id="status">Loading...</p>
-
+<p id="welcome"> </p>
+  <p id="usdt-balance"></p>
 <table>
   <thead>
     <tr>
@@ -30,9 +31,18 @@
   </tbody>
 </table>
 
-<p id="usdt-balance"></p>
+
 
 <script>
+
+const user = localStorage.getItem('loggedInUser');
+  if (user) {
+    document.getElementById('welcome').textContent = `Xin chào, ${user}`;
+  }
+  function loadTest2() {
+    document.getElementById('mainFrame').src = 'test2.html';
+  }
+  
   // Supabase config
   const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
