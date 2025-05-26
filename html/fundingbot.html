@@ -233,21 +233,14 @@
   }  
 
 // dang xuat
- <script>
-  // Gửi tín hiệu đăng xuất về trang cha
+
+  
   function logoutParent() {
-    // Gửi message 'logout' lên cửa sổ cha (iframe container)
+    // Gửi sự kiện 'logout' lên cửa sổ cha (trang chứa iframe)
     window.parent.postMessage('logout', '*');
   }
-
-  // Ví dụ: gán sự kiện click cho nút logout (nếu có)
-  document.addEventListener('DOMContentLoaded', function () {
-    const logoutBtn = document.getElementById('logoutParent');
-    if (logoutParent) {
-      logoutParent.addEventListener('click', logoutParent);
-    }
-  });
-</script>
+   
+ 
 </script>
     
     
