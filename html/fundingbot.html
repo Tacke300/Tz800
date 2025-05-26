@@ -234,16 +234,17 @@
 
 // dang xuat
   function logoutParent() {
-    // Gọi hàm logout của trang cha để xóa đăng nhập
+  try {
     if (parent && typeof parent.logout === 'function') {
       parent.logout();
     } else {
-      // Nếu không gọi được logout, có thể chuyển trang cha về login
-      parent.location.href = 'index.html'; // hoặc '/' tùy cấu trúc bạn
+      parent.location.href = '/index.html'; // đường dẫn tuyệt đối để chắc chắn
     }
+  } catch (err) {
+    console.error('Không gọi được parent.logout:', err);
+    parent.location.href = '/index.html';
   }
-
-
+}
 
 </script>
     
