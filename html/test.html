@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Binance Futures Latest Funding Rates</title>
+<title>Binance Futures Funding Rate Fast</title>
 <style>
   body { background: #1e1e2f; color: white; font-family: Arial, sans-serif; padding: 20px; }
-  table { border-collapse: collapse; width: 100%; max-width: 800px; margin: auto; }
+  table { border-collapse: collapse; width: 100%; max-width: 900px; margin: auto; }
   th, td { border: 1px solid #444; padding: 8px 12px; text-align: center; }
   th { background: #333; }
   tbody tr:nth-child(odd) { background: #2a2a44; }
@@ -14,13 +14,13 @@
 </head>
 <body>
 
-<h2>Latest Funding Rate for All Binance Futures Symbols</h2>
+<h2>Latest Funding Rate for All Binance Futures PERPETUAL</h2>
 <table>
   <thead>
     <tr>
       <th>Symbol</th>
       <th>Funding Rate</th>
-      <th>Funding Time (UTC)</th>
+      <th>Next Funding Time (UTC)</th>
     </tr>
   </thead>
   <tbody id="funding-table-body">
@@ -29,71 +29,37 @@
 </table>
 
 <script>
-  async function fetchExchangeInfo() {
-    const res = await fetch('https://fapi.binance.com/fapi/v1/exchangeInfo');
-    const data = await res.json();
-    return data.symbols.filter(s => s.contractType === 'PERPETUAL' || s.contractType === 'CURRENT_MONTH' || s.contractType === 'NEXT_MONTH');
-  }
-
-  async function fetchFundingRate(symbol) {
-    const url = `https://fapi.binance.com/fapi/v1/fundingRate?symbol=${symbol}&limit=1`;
-    const res = await fetch(url);
-    const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) {
-      return data[0];
-    }
-    return null;
-  }
-
-  async function loadFundingRates() {
+  async function loadFundingRatesFast() {
     const tbody = document.getElementById('funding-table-body');
-    tbody.innerHTML = '<tr><td colspan="3">Loading symbols...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3">Loading...</td></tr>';
 
-    const symbols = await fetchExchangeInfo();
-    if (symbols.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="3">No symbols found</td></tr>';
-      return;
-    }
+    try {
+      // Gọi 1 lần lấy funding rate tất cả symbol PERPETUAL
+      const res = await fetch('https://fapi.binance.com/fapi/v1/premiumIndex');
+      const data = await res.json();
 
-    tbody.innerHTML = '';
+      tbody.innerHTML = '';
 
-    for (let i = 0; i < symbols.length; i++) {
-      const sym = symbols[i].symbol;
-      tbody.innerHTML += `<tr><td>${sym}</td><td>Loading...</td><td>Loading...</td></tr>`;
-    }
+      data.forEach(item => {
+        // item: {symbol, markPrice, lastFundingRate, nextFundingTime, ...}
+        const fundingRate = parseFloat(item.lastFundingRate).toFixed(8);
+        const nextTime = new Date(item.nextFundingTime).toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
 
-    // Now fetch funding rate for each symbol with delay to avoid rate limit
-    for (let i = 0; i < symbols.length; i++) {
-      const sym = symbols[i].symbol;
-      try {
-        const funding = await fetchFundingRate(sym);
-        if (funding) {
-          // Format funding time
-          const date = new Date(funding.fundingTime);
-          const dateStr = date.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
-          // Update row in tbody
-          const rows = tbody.querySelectorAll('tr');
-          const row = rows[i];
-          row.cells[1].textContent = funding.fundingRate;
-          row.cells[2].textContent = dateStr;
-        } else {
-          const rows = tbody.querySelectorAll('tr');
-          const row = rows[i];
-          row.cells[1].textContent = 'N/A';
-          row.cells[2].textContent = 'N/A';
-        }
-      } catch (e) {
-        const rows = tbody.querySelectorAll('tr');
-        const row = rows[i];
-        row.cells[1].textContent = 'Error';
-        row.cells[2].textContent = 'Error';
-      }
-      // Delay 100ms between calls (adjust if you get rate limited)
-      await new Promise(r => setTimeout(r, 100));
+        tbody.innerHTML += `
+          <tr>
+            <td>${item.symbol}</td>
+            <td>${fundingRate}</td>
+            <td>${nextTime}</td>
+          </tr>
+        `;
+      });
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="3">Error loading data</td></tr>`;
+      console.error(e);
     }
   }
 
-  loadFundingRates();
+  loadFundingRatesFast();
 </script>
 
 </body>
