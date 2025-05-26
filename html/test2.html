@@ -75,8 +75,7 @@ const user = localStorage.getItem('loggedInUser');
   // Đặt user_id trong dấu nháy kép, rồi encode toàn bộ
   const encodedUserId = encodeURIComponent(user_id);
 
-  const url = `${SUPABASE_URL}/rest/v1/users?select=apikey_binance,secret_binance&id=eq.${encodedUserId}`;
-
+  const url = `${SUPABASE_URL}/rest/v1/users?select=apikey_binance,secret_binance&user_id=eq.${encodedUserId}`;
   const res = await fetch(url, {
     headers: {
       'apikey': SUPABASE_ANON_KEY,
