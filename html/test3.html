@@ -6,10 +6,9 @@
 </head>
 <body>
   <h2>USDT Balance</h2>
-  <pre id="balance"></pre>
+  <pre id="balance">Đang tải...</pre>
 
   <script>
-    // Cấu hình Supabase
     const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
     const supabase = supabase.createClient(supabaseUrl, supabaseKey);
@@ -22,28 +21,7 @@
         .select('apikey_binance, secret_binance')
         .eq('user_id', user_id)
         .single();
-
-      if (error || !data) {
-        document.getElementById('balance').textContent = 'User not found or Supabase error.';
-        return null;
-      }
-      return data;
-    }
-
-    async function getBinanceBalances(apiKey, secretKey) {
-      const endpoint = 'https://api.binance.com/sapi/v1/capital/config/getall';
-      const timestamp = Date.now();
-      const query = `timestamp=${timestamp}`;
-      const signature = await signRequest(query, secretKey);
-
-      const res = await fetch(`${endpoint}?${query}&signature=${signature}`, {
-        method: 'GET',
-        headers: {
-          'X-MBX-APIKEY': apiKey
-        }
-      });
-
-      const data = await res.json();
+      if (error || !data) return null;
       return data;
     }
 
@@ -60,35 +38,73 @@
       return [...new Uint8Array(signature)].map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    async function updateBalanceOnSupabase(usdtTotal) {
+    async function getSpotBalance(apiKey, secretKey) {
+      const endpoint = 'https://api.binance.com/sapi/v1/capital/config/getall';
+      const timestamp = Date.now();
+      const query = `timestamp=${timestamp}`;
+      const signature = await signRequest(query, secretKey);
+
+      const res = await fetch(`${endpoint}?${query}&signature=${signature}`, {
+        method: 'GET',
+        headers: { 'X-MBX-APIKEY': apiKey }
+      });
+      const data = await res.json();
+      if (!Array.isArray(data)) return 0;
+
+      const usdt = data.find(a => a.asset === 'USDT');
+      return usdt ? parseFloat(usdt.free) : 0;
+    }
+
+    async function getFuturesBalance(apiKey, secretKey, type = 'usdm') {
+      const base = type === 'usdm' ? 'fapi' : 'dapi'; // usdm or coinm
+      const endpoint = `https://api.binance.com/${base}/v2/account`;
+      const timestamp = Date.now();
+      const query = `timestamp=${timestamp}`;
+      const signature = await signRequest(query, secretKey);
+
+      const res = await fetch(`${endpoint}?${query}&signature=${signature}`, {
+        method: 'GET',
+        headers: { 'X-MBX-APIKEY': apiKey }
+      });
+
+      const data = await res.json();
+      if (!Array.isArray(data.assets)) return 0;
+
+      const usdt = data.assets.find(a => a.asset === 'USDT');
+      return usdt ? parseFloat(usdt.walletBalance) : 0;
+    }
+
+    async function updateBalance(usdtTotal) {
       await supabase
         .from('users')
         .update({ usdt_balance: usdtTotal })
         .eq('user_id', user_id);
     }
 
+    function formatUSD(val) {
+      return '$' + val.toLocaleString('en-US', { minimumFractionDigits: 8 });
+    }
+
     async function run() {
       const user = await getUserData();
-      if (!user) return;
-
-      const balances = await getBinanceBalances(user.apikey_binance, user.secret_binance);
-      if (!Array.isArray(balances)) {
-        document.getElementById('balance').textContent = 'Error fetching Binance balances.';
+      if (!user) {
+        document.getElementById('balance').textContent = 'Không tìm thấy user hoặc thiếu API key.';
         return;
       }
 
-      let usdtTotal = 0;
-      let balanceDetails = [];
+      const spot = await getSpotBalance(user.apikey_binance, user.secret_binance);
+      const usdm = await getFuturesBalance(user.apikey_binance, user.secret_binance, 'usdm');
+      const coinm = await getFuturesBalance(user.apikey_binance, user.secret_binance, 'coinm');
 
-      for (let item of balances) {
-        if (item.asset === 'USDT' && parseFloat(item.free) > 0) {
-          usdtTotal += parseFloat(item.free);
-          balanceDetails.push(`${item.asset} - ${item.free} (${item.name})`);
-        }
-      }
+      const total = spot + usdm + coinm;
+      await updateBalance(total);
 
-      await updateBalanceOnSupabase(usdtTotal);
-      document.getElementById('balance').textContent = `Total USDT: ${usdtTotal.toFixed(2)}\n` + balanceDetails.join('\n');
+      let output = `Tổng USDT: ${formatUSD(total)}\n`;
+      output += `- Spot: ${formatUSD(spot)}\n`;
+      output += `- USD-M: ${formatUSD(usdm)}\n`;
+      output += `- COIN-M: ${formatUSD(coinm)}\n`;
+
+      document.getElementById('balance').textContent = output;
     }
 
     run();
