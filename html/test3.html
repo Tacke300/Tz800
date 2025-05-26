@@ -3,10 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>Binance Balance Viewer</title>
-
-  <!-- Chỉ dùng 1 thư viện CryptoJS -->
-  <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     pre { background: #f3f3f3; padding: 10px; border-radius: 5px; white-space: pre-wrap; }
@@ -16,111 +13,120 @@
   <h2>Binance Balances (SPOT, USDM, COINM)</h2>
   <pre id="log">Loading...</pre>
 
-<script>
-const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'; // rút gọn vì lý do bảo mật
-const userId = localStorage.getItem('loggedInUser');
-const logEl = document.getElementById('log');
+  <script>
+    const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // rút gọn
+    const userId = localStorage.getItem('loggedInUser');
+    const logEl = document.getElementById('log');
 
-function log(msg) {
-  console.log(msg);
-  logEl.textContent += msg + '\n';
-}
-
-function signQuery(query, secret) {
-  return CryptoJS.HmacSHA256(query, secret).toString(CryptoJS.enc.Hex);
-}
-
-async function signedRequest(apiKey, apiSecret, endpoint, baseUrl, params = {}) {
-  params.timestamp = Date.now();
-  const query = new URLSearchParams(params).toString();
-  const signature = signQuery(query, apiSecret);
-  const url = `${baseUrl}${endpoint}?${query}&signature=${signature}`;
-
-  const res = await fetch(url, { headers: { 'X-MBX-APIKEY': apiKey } });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Binance API error: ${res.status} ${err}`);
-  }
-  return res.json();
-}
-
-async function getApiKeys(userId) {
-  const url = `${SUPABASE_URL}/rest/v1/users?user_id=eq.${userId}`;
-  const res = await fetch(url, {
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      Accept: 'application/json'
+    function log(msg) {
+      console.log(msg);
+      logEl.textContent += msg + '\n';
     }
-  });
-  const data = await res.json();
-  if (!data || data.length === 0) throw new Error("Không tìm thấy user hoặc API.");
-  return {
-    apiKey: data[0].binance_api_key,
-    apiSecret: data[0].binance_api_secret
-  };
-}
 
-async function saveUSDTBalance(userId, totalUSDT) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/users?user_id=eq.${userId}`, {
-    method: 'PATCH',
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation'
-    },
-    body: JSON.stringify({ usdt_binance: totalUSDT })
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Supabase update error: ${res.status} ${err}`);
-  }
-}
+    function signQuery(query, secret) {
+      if (!query || !secret) throw new Error("Thiếu query hoặc secret khi ký.");
+      try {
+        const hmac = CryptoJS.HmacSHA256(query, secret);
+        return hmac.toString(CryptoJS.enc.Hex);
+      } catch (e) {
+        throw new Error("Lỗi ký HMAC: " + e.message);
+      }
+    }
 
-async function fetchAllBalances() {
-  try {
-    log(`▶ Lấy API key cho user: ${userId}`);
-    const { apiKey, apiSecret } = await getApiKeys(userId);
-    log(`✔ API key OK\n`);
+    async function signedRequest(apiKey, apiSecret, endpoint, baseUrl, params = {}) {
+      params.timestamp = Date.now();
+      const query = new URLSearchParams(params).toString();
+      const signature = signQuery(query, apiSecret);
+      const url = `${baseUrl}${endpoint}?${query}&signature=${signature}`;
+      const res = await fetch(url, {
+        headers: { 'X-MBX-APIKEY': apiKey }
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Binance API error: ${res.status} ${err}`);
+      }
+      return res.json();
+    }
 
-    let totalUSDT = 0;
+    async function getApiKeys(userId) {
+      const url = `${SUPABASE_URL}/rest/v1/users?user_id=eq.${userId}`;
+      const res = await fetch(url, {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          Accept: 'application/json'
+        }
+      });
+      const data = await res.json();
+      if (!data || data.length === 0) throw new Error("Không tìm thấy user hoặc API.");
+      if (!data[0].binance_api_key || !data[0].binance_api_secret)
+        throw new Error("API key/secret bị thiếu hoặc sai.");
+      return {
+        apiKey: data[0].binance_api_key,
+        apiSecret: data[0].binance_api_secret
+      };
+    }
 
-    // SPOT
-    log(`▶ Lấy số dư SPOT...`);
-    const spot = await signedRequest(apiKey, apiSecret, '/sapi/v1/capital/config/getall', 'https://api.binance.com');
-    spot.filter(c => parseFloat(c.free) > 0 || parseFloat(c.locked) > 0).forEach(c => {
-      const sum = parseFloat(c.free) + parseFloat(c.locked);
-      log(`${c.coin}: ${sum}`);
-      if (c.coin === 'USDT') totalUSDT += sum;
-    });
+    async function saveUSDTBalance(userId, totalUSDT) {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/users?user_id=eq.${userId}`, {
+        method: 'PATCH',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation'
+        },
+        body: JSON.stringify({ usdt_binance: totalUSDT })
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Supabase update error: ${res.status} ${err}`);
+      }
+    }
 
-    // USDM
-    log(`\n▶ Lấy số dư USDM...`);
-    const usdm = await signedRequest(apiKey, apiSecret, '/fapi/v2/account', 'https://fapi.binance.com');
-    usdm.assets.filter(a => parseFloat(a.walletBalance) > 0).forEach(a => {
-      log(`${a.asset}: ${a.walletBalance}`);
-      if (a.asset === 'USDT') totalUSDT += parseFloat(a.walletBalance);
-    });
+    async function fetchAllBalances() {
+      try {
+        log(`▶ Lấy API key cho user: ${userId}`);
+        const { apiKey, apiSecret } = await getApiKeys(userId);
+        log(`✔ API key OK\n`);
 
-    // COINM
-    log(`\n▶ Lấy số dư COINM...`);
-    const coinm = await signedRequest(apiKey, apiSecret, '/dapi/v1/account', 'https://dapi.binance.com');
-    coinm.assets.filter(a => parseFloat(a.walletBalance) > 0).forEach(a => {
-      log(`${a.asset}: ${a.walletBalance}`);
-      if (a.asset === 'USDT') totalUSDT += parseFloat(a.walletBalance);
-    });
+        let totalUSDT = 0;
 
-    log(`\n💰 Tổng USDT: ${totalUSDT.toFixed(2)}`);
-    await saveUSDTBalance(userId, totalUSDT.toFixed(2));
-    log(`\n✅ Đã lưu vào Supabase.`);
-  } catch (e) {
-    log(`❌ Lỗi: ${e.message}`);
-  }
-}
+        // SPOT
+        log(`▶ Lấy số dư SPOT...`);
+        const spot = await signedRequest(apiKey, apiSecret, '/sapi/v1/capital/config/getall', 'https://api.binance.com');
+        spot.filter(c => parseFloat(c.free) > 0 || parseFloat(c.locked) > 0).forEach(c => {
+          const sum = parseFloat(c.free) + parseFloat(c.locked);
+          log(`${c.coin}: ${sum}`);
+          if (c.coin === 'USDT') totalUSDT += sum;
+        });
 
-fetchAllBalances();
-</script>
+        // USDM
+        log(`\n▶ Lấy số dư USDM...`);
+        const usdm = await signedRequest(apiKey, apiSecret, '/fapi/v2/account', 'https://fapi.binance.com');
+        usdm.assets.filter(a => parseFloat(a.walletBalance) > 0).forEach(a => {
+          log(`${a.asset}: ${a.walletBalance}`);
+          if (a.asset === 'USDT') totalUSDT += parseFloat(a.walletBalance);
+        });
+
+        // COINM
+        log(`\n▶ Lấy số dư COINM...`);
+        const coinm = await signedRequest(apiKey, apiSecret, '/dapi/v1/account', 'https://dapi.binance.com');
+        coinm.assets.filter(a => parseFloat(a.walletBalance) > 0).forEach(a => {
+          log(`${a.asset}: ${a.walletBalance}`);
+          if (a.asset === 'USDT') totalUSDT += parseFloat(a.walletBalance);
+        });
+
+        log(`\n💰 Tổng USDT: ${totalUSDT.toFixed(2)}`);
+        await saveUSDTBalance(userId, totalUSDT.toFixed(2));
+        log(`\n✅ Đã lưu vào Supabase.`);
+      } catch (e) {
+        log(`❌ Lỗi: ${e.message}`);
+      }
+    }
+
+    fetchAllBalances();
+  </script>
 </body>
 </html>
