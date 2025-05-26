@@ -73,7 +73,7 @@ const user = localStorage.getItem('loggedInUser');
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
 
   // Đặt user_id trong dấu nháy kép, rồi encode toàn bộ
-  const encodedUserId = encodeURIComponent(`"${user_id}"`);
+  const encodedUserId = encodeURIComponent(user_id);
 
   const url = `${SUPABASE_URL}/rest/v1/users?select=apikey_binance,secret_binance&id=eq.${encodedUserId}`;
 
