@@ -188,53 +188,7 @@
 </div>
 </div>  
   <script>  
-  // Bật/tắt input nhập tiền và đổi nút Khởi chạy <-> Dừng lại  
-  function handleClick(botId) {
-  const bot = document.getElementById(botId);
-  const inputWrapper = bot.querySelector('.input-wrapper');
-  const button = bot.querySelector('button');
-  const otherBot = document.getElementById(botId === 'bot1' ? 'bot2' : 'bot1');
 
-  const isInitial =
-    (botId === 'bot1' && button.innerText === 'BOT trước funding') ||
-    (botId === 'bot2' && button.innerText === 'BOT sau funding');
-
-  if (isInitial) {
-    inputWrapper.style.display = 'block';
-    button.innerText = 'Bắt đầu';
-    button.classList.add('start');
-    otherBot.style.display = 'none';
-  } else if (button.innerText === 'Bắt đầu') {
-    inputWrapper.style.display = 'none';
-    button.innerText = 'Dừng bot';
-    button.classList.remove('start');
-    button.classList.add('stop');
-    otherBot.style.display = 'flex';
-  } else {
-    resetBot(botId);
-  }
-}
-
-function resetBot(botId) {
-  const bot = document.getElementById(botId);
-  const input = bot.querySelector('input');
-  const button = bot.querySelector('button');
-  const inputWrapper = bot.querySelector('.input-wrapper');
-
-  input.value = '';
-  inputWrapper.style.display = 'none';
-
-  // Gán lại nhãn đúng với từng bot
-  if (botId === 'bot1') {
-    button.innerText = 'BOT trước funding';
-  } else if (botId === 'bot2') {
-    button.innerText = 'BOT sau funding';
-  }
-
-  button.classList.remove('start', 'stop');
-  document.getElementById('bot1').style.display = 'flex';
-  document.getElementById('bot2').style.display = 'flex';
-}
   
   // Mở popup chọn sàn API  
   const api02 = document.getElementById('api-02');  
