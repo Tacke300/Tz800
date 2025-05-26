@@ -130,10 +130,7 @@ const user = localStorage.getItem('loggedInUser');
     const usdt = data.find(b => b.asset === 'USDT');
     return usdt ? usdt.balance : '0';
   }
-console.log('Balance raw data:', data);
-const usdt = data.find(b => b.asset === 'USDT');
-console.log('USDT balance found:', usdt);
-  
+
   async function main() {
     const statusEl = document.getElementById('status');
     const tbody = document.getElementById('table-body');
