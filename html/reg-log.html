@@ -123,122 +123,116 @@
     <div class="link" style="margin-top:10px; cursor:pointer;" onclick="logout()">Đăng xuất</div>
   </div>
 
-  <script>
-    const USERS_URL = 'https://tramnanrzruzvkehpydl.supabase.co/rest/v1/users';
-    const SUPABASE_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
+ <script>
+const USERS_URL = 'https://tramnanrzruzvkehpydl.supabase.co/rest/v1/users';
+const SUPABASE_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
 
-    // Hiển thị form đăng ký
-    function showRegister() {
-      document.getElementById('login-container').style.display = 'none';
-      document.getElementById('register-container').style.display = 'block';
+// Hiển thị form đăng ký
+function showRegister() {
+  document.getElementById('login-container').style.display = 'none';
+  document.getElementById('register-container').style.display = 'block';
+}
+
+// Ẩn form đăng ký, hiện form đăng nhập
+function hideRegister() {
+  document.getElementById('register-container').style.display = 'none';
+  document.getElementById('login-container').style.display = 'block';
+}
+
+// Đăng ký tài khoản mới
+async function submitReg() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const repassword = document.getElementById('repassword').value.trim();
+
+  if (!username || !password || !repassword) {
+    alert("Vui lòng điền đầy đủ thông tin.");
+    return;
+  }
+
+  if (password !== repassword) {
+    alert("Mật khẩu không khớp.");
+    return;
+  }
+
+  try {
+    const response = await fetch(USERS_URL, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_API_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_API_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({
+        user_id: username,
+        password: password
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Lỗi Server');
     }
 
-    // Ẩn form đăng ký, hiện form đăng nhập
-    function hideRegister() {
-      document.getElementById('register-container').style.display = 'none';
-      document.getElementById('login-container').style.display = 'block';
+    alert("Đăng ký thành công!");
+    hideRegister();
+  } catch (error) {
+    alert("Lỗi đăng ký: " + error.message);
+    console.error(error);
+  }
+}
+
+// Đăng nhập và lưu trạng thái vào localStorage
+async function login() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+
+  if (!username || !password) {
+    alert("Vui lòng nhập tài khoản và mật khẩu.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${USERS_URL}?user_id=eq.${encodeURIComponent(username)}&password=eq.${encodeURIComponent(password)}`, {
+      method: 'GET',
+      headers: {
+        'apikey': SUPABASE_API_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_API_KEY,
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Lỗi mạng');
     }
 
-    // Đăng ký tài khoản mới
-    async function submitReg() {
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
-      const repassword = document.getElementById('repassword').value.trim();
+    const data = await response.json();
 
-      if (!username || !password || !repassword) {
-        alert("Vui lòng điền đầy đủ thông tin.");
-        return;
-      }
-
-      if (password !== repassword) {
-        alert("Mật khẩu không khớp.");
-        return;
-      }
-
-      try {
-        const response = await fetch(USERS_URL, {
-          method: 'POST',
-          headers: {
-            'apikey': SUPABASE_API_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_API_KEY,
-            'Content-Type': 'application/json',
-            'Prefer': 'resolution=merge-duplicates'
-          },
-          body: JSON.stringify({
-            user_id: username,
-            password: password
-          })
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Lỗi Server');
-        }
-
-        alert("Đăng ký thành công!");
-        hideRegister();
-      } catch (error) {
-        alert("Lỗi đăng ký: " + error.message);
-        console.error(error);
-      }
+    if (data.length === 0) {
+      alert('Sai tên đăng nhập hoặc mật khẩu');
+      return;
     }
 
-    // Đăng nhập và lưu trạng thái vào localStorage
-    async function login() {
-      const username = document.getElementById('login-username').value.trim();
-      const password = document.getElementById('login-password').value;
+    // Lưu user_id vào localStorage
+    localStorage.setItem('loggedInUser', username);
 
-      if (!username || !password) {
-        alert("Vui lòng nhập tài khoản và mật khẩu.");
-        return;
-      }
+    // Gửi sự kiện login thành công cho trang cha
+    window.parent.postMessage('loginSuccess', '*');
 
-      try {
-        const response = await fetch(`${USERS_URL}?user_id=eq.${encodeURIComponent(username)}&password=eq.${encodeURIComponent(password)}`, {
-          method: 'GET',
-          headers: {
-            'apikey': SUPABASE_API_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_API_KEY,
-            'Content-Type': 'application/json',
-          }
-        });
+  } catch (error) {
+    alert("Lỗi đăng nhập: " + error.message);
+    console.error(error);
+  }
+}
 
-        if (!response.ok) {
-          throw new Error('Lỗi mạng');
-        }
-
-        const data = await response.json();
-
-        if (data.length === 0) {
-          alert('Sai tên đăng nhập hoặc mật khẩu');
-          return;
-        }
-
-        // Lưu user_id vào localStorage để giữ đăng nhập
-        localStorage.setItem('loggedInUser', username);
-        showFundingBot();
-      } catch (error) {
-        alert("Lỗi đăng nhập: " + error.message);
-        console.error(error);
-      }
-    }
-
-    // Hiển thị giao diện bot sau khi đăng nhập thành công
-    function showFundingBot() {
-      document.getElementById('login-container').style.display = 'none';
-      document.getElementById('register-container').style.display = 'none';
-      document.getElementById('funding-container').style.display = 'block';
-    }
-
-    // Kiểm tra trạng thái đăng nhập khi load trang
-    window.onload = function() {
-      const user = localStorage.getItem('loggedInUser');
-      if (user) {
-        showFundingBot();
-      }
-    };
-
-    
-  </script>
+// Tự động chuyển vào bot nếu đã đăng nhập
+window.onload = function() {
+  const user = localStorage.getItem('loggedInUser');
+  if (user) {
+    window.parent.postMessage('loginSuccess', '*');
+  }
+};
+</script>
 </body>
 </html>
