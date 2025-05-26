@@ -6,6 +6,9 @@
   <title>Before & After Popups</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    body{
+background: #1e1e2f;
+    }
     .popup {
       @apply fixed bottom-0 left-0 w-full h-[70vh] bg-white shadow-lg transition-transform duration-500 z-40;
       transform: translateY(100%);
@@ -38,7 +41,7 @@
       Before
       <button onclick="closePopup('before')" class="text-gray-600 hover:text-black">Đóng</button>
     </div>
-    <iframe src="/before.html" class="popup-iframe"></iframe>
+    <iframe src="before.html" class="popup-iframe"></iframe>
   </div>
 
   <!-- Popup After -->
@@ -47,7 +50,7 @@
       After
       <button onclick="closePopup('after')" class="text-gray-600 hover:text-black">Đóng</button>
     </div>
-    <iframe src="/after.html" class="popup-iframe"></iframe>
+    <iframe src="after.html" class="popup-iframe"></iframe>
   </div>
 
   <!-- JS -->
