@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Binance Futures Funding Rate</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #121212; color: #eee; padding: 20px; }
-    table { border-collapse: collapse; width: 100%; max-width: 900px; margin: auto; }
-    th, td { border: 1px solid #444; padding: 8px 12px; text-align: center; }
-    th { background-color: #222; }
-    tr:nth-child(even) { background-color: #1a1a1a; }
-  </style>
+<meta charset="UTF-8" />
+<title>Binance Futures Latest Funding Rates</title>
+<style>
+  body { background: #1e1e2f; color: white; font-family: Arial, sans-serif; padding: 20px; }
+  table { border-collapse: collapse; width: 100%; max-width: 800px; margin: auto; }
+  th, td { border: 1px solid #444; padding: 8px 12px; text-align: center; }
+  th { background: #333; }
+  tbody tr:nth-child(odd) { background: #2a2a44; }
+  tbody tr:nth-child(even) { background: #222238; }
+</style>
 </head>
 <body>
 
-<h1>Funding Rate - Binance Futures (USD-M)</h1>
+<h2>Latest Funding Rate for All Binance Futures Symbols</h2>
 <table>
   <thead>
     <tr>
@@ -23,57 +24,76 @@
     </tr>
   </thead>
   <tbody id="funding-table-body">
-    <tr><td colspan="3">Loading...</td></tr>
+    <tr><td colspan="3">Loading data...</td></tr>
   </tbody>
 </table>
 
 <script>
-  async function fetchFundingRates() {
-    const tableBody = document.getElementById('funding-table-body');
-    tableBody.innerHTML = '<tr><td colspan="3">Loading...</td></tr>';
+  async function fetchExchangeInfo() {
+    const res = await fetch('https://fapi.binance.com/fapi/v1/exchangeInfo');
+    const data = await res.json();
+    return data.symbols.filter(s => s.contractType === 'PERPETUAL' || s.contractType === 'CURRENT_MONTH' || s.contractType === 'NEXT_MONTH');
+  }
 
-    try {
-      // 1. Lấy danh sách symbol futures
-      const exchangeInfoRes = await fetch('https://fapi.binance.com/fapi/v1/exchangeInfo');
-      const exchangeInfo = await exchangeInfoRes.json();
+  async function fetchFundingRate(symbol) {
+    const url = `https://fapi.binance.com/fapi/v1/fundingRate?symbol=${symbol}&limit=1`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (Array.isArray(data) && data.length > 0) {
+      return data[0];
+    }
+    return null;
+  }
 
-      const symbols = exchangeInfo.symbols
-        .filter(s => s.contractType === "PERPETUAL") // chỉ lấy perpetual contract
-        .map(s => s.symbol);
+  async function loadFundingRates() {
+    const tbody = document.getElementById('funding-table-body');
+    tbody.innerHTML = '<tr><td colspan="3">Loading symbols...</td></tr>';
 
-      // Giới hạn số đồng để tránh request quá nhiều, bạn có thể tăng nếu muốn
-      const limitedSymbols = symbols.slice(0, 30);
+    const symbols = await fetchExchangeInfo();
+    if (symbols.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3">No symbols found</td></tr>';
+      return;
+    }
 
-      // 2. Lấy funding rate từng symbol (latest)
-      // Binance API cho phép lấy funding rate với param limit=1 lấy bản mới nhất
-      // fetch funding rate từng symbol (chạy tuần tự để tránh quá tải server)
-      let rows = '';
+    tbody.innerHTML = '';
 
-      for (const symbol of limitedSymbols) {
-        const url = `https://fapi.binance.com/fapi/v1/fundingRate?symbol=${symbol}&limit=1`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.length > 0) {
-          const fr = parseFloat(data[0].fundingRate);
-          const time = new Date(data[0].fundingTime).toUTCString();
-          rows += `
-            <tr>
-              <td>${symbol}</td>
-              <td>${(fr * 100).toFixed(5)}%</td>
-              <td>${time}</td>
-            </tr>`;
+    for (let i = 0; i < symbols.length; i++) {
+      const sym = symbols[i].symbol;
+      tbody.innerHTML += `<tr><td>${sym}</td><td>Loading...</td><td>Loading...</td></tr>`;
+    }
+
+    // Now fetch funding rate for each symbol with delay to avoid rate limit
+    for (let i = 0; i < symbols.length; i++) {
+      const sym = symbols[i].symbol;
+      try {
+        const funding = await fetchFundingRate(sym);
+        if (funding) {
+          // Format funding time
+          const date = new Date(funding.fundingTime);
+          const dateStr = date.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+          // Update row in tbody
+          const rows = tbody.querySelectorAll('tr');
+          const row = rows[i];
+          row.cells[1].textContent = funding.fundingRate;
+          row.cells[2].textContent = dateStr;
+        } else {
+          const rows = tbody.querySelectorAll('tr');
+          const row = rows[i];
+          row.cells[1].textContent = 'N/A';
+          row.cells[2].textContent = 'N/A';
         }
+      } catch (e) {
+        const rows = tbody.querySelectorAll('tr');
+        const row = rows[i];
+        row.cells[1].textContent = 'Error';
+        row.cells[2].textContent = 'Error';
       }
-
-      tableBody.innerHTML = rows || '<tr><td colspan="3">No data found</td></tr>';
-
-    } catch (error) {
-      console.error(error);
-      tableBody.innerHTML = `<tr><td colspan="3">Error loading data</td></tr>`;
+      // Delay 100ms between calls (adjust if you get rate limited)
+      await new Promise(r => setTimeout(r, 100));
     }
   }
 
-  fetchFundingRates();
+  loadFundingRates();
 </script>
 
 </body>
