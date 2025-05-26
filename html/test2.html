@@ -129,11 +129,11 @@ const user = localStorage.getItem('loggedInUser');
     const data = await binanceFuturesApi('/fapi/v2/balance', apiKey, secret);
     const usdt = data.find(b => b.asset === 'USDT');
     return usdt ? usdt.balance : '0';
-  
+  }
 console.log('Balance raw data:', data);
 const usdt = data.find(b => b.asset === 'USDT');
 console.log('USDT balance found:', usdt);
-  }
+  
   async function main() {
     const statusEl = document.getElementById('status');
     const tbody = document.getElementById('table-body');
