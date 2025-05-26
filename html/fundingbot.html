@@ -21,97 +21,7 @@
   overflow: hidden;
     }  
   
-  
     
-  
-    .container {
-      display: flex;
-      width: 100%;
-      height: 60px;
-      justify-content: center;
-      gap: 20px;
-    }
-
-    .bot {
-      
-      flex: 0 1 300px;
-      border: 1px solid #aaa;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      transition: all 0.3s ease;
-      padding: 10px;
-      border-radius: 10px;
-      width: 100% !important;
-    min-width: unset;
-    }
-
-    .bot button {
-      height: 40px;
-      background: #222;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      padding: 0 5px;
-  
-      color:white;
-    }
-    
-  button {
-      width: 100%;
-      padding: 5px;
-      font-size: 1rem;
-      color: white;
-      background-color: #007bff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    .input-wrapper {
-      position: relative;
-      width: 180px;
-      display: none;
-    }
-
-    .input-wrapper input {
-      width: 100%;
-      height: 40px;
-      padding: 0 5px 0 5px;
-      border: 1px solid #aaa;
-      border-radius: 6px;
-    }
-
-    .input-wrapper .close {
-      position: absolute;
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 18px;
-      cursor: pointer;
-      user-select: none;
-      color: #666;
-    }
-
-    .start {
-      background-color: #4CAF50 !important;
-      color: white;
-    }
-
-    .stop {
-      background-color: #f44336 !important;
-      color: white;
-    }
-
-    .input-group {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-    }
     .api-sub {  
       position: fixed;  
       top: 0;  
@@ -135,18 +45,7 @@
     }  
   /* tab003*/
   
-    .tab-003{  
-      max-width: 400px;  
-      margin: 40px auto 0;  
-      background: #222;  
-      padding: 20px;  
-      border-radius: 12px;  
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);  
-      border: 1px solid #555;  
-      color: white;  
-      font-family: 'Baloo 2', cursive;  
     
-    }  
   
     /* Sửa lại popup api-02 giống popup kiểu fixed trượt lên */  
   
@@ -228,10 +127,6 @@
       height: 80vh;
     }  
   
-  .tab-002{
-    padding-left: 3px;
-    font-family: 'Roboto', Arial, sans-serif;
-  }
  .all {
       max-width: 480px;
       margin: auto;
@@ -251,28 +146,7 @@
   <div class="all">
   
   <iframe src="top.html" width="100%" height="400px" style="border:none;"></iframe>
-    <div class="tab-003">
-    <div class="container">
-      <div class="bot" id="bot1">
-        <div class="input-group">
-          <div class="input-wrapper">
-            <input type="number" placeholder="Nhập số tiền" />
-            <span class="close" onclick="resetBot('bot1')">×</span>
-          </div>
-          <button onclick="handleClick('bot1')">BOT trước funding</button>
-        </div>
-      </div>
-      <div class="bot" id="bot2">
-        <div class="input-group">
-          <div class="input-wrapper">
-            <input type="number" placeholder="Nhập số tiền" />
-            <span class="close" onclick="resetBot('bot2')">×</span>
-          </div>
-          <button onclick="handleClick('bot2')">BOT sau funding</button>
-        </div>
-      </div>
-    </div>
-  </div>
+
     
     <div class="tab-004">  
       <!-- Nút Cài đặt API -->  
