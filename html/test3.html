@@ -44,13 +44,16 @@ async function signedRequest(apiKey, secret, endpoint, base = 'https://api.binan
 }
 
 async function getApiKeysFromSupabase(userId) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/users?user_id=eq.${encodeURIComponent(userId)}`, {
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      Accept: 'application/json'
-    }
-  });
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/users?user_id=eq.${userId}`, {
+  headers: {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    Accept: 'application/json'
+  }
+});
+console.log("Response status:", res.status);
+const data = await res.json();
+console.log("Supabase response:", data);
   const data = await res.json();
   if (!data.length) throw new Error('❌ Không tìm thấy user trong Supabase');
   return { apiKey: data[0].apikey_binance, apiSecret: data[0].secret_binance };
