@@ -15,7 +15,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <script>
 const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'; // rút gọn cho an toàn
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
 
 const logEl = document.getElementById('log');
 function log(msg) {
@@ -23,15 +23,21 @@ function log(msg) {
   logEl.textContent += '\n' + msg;
 }
 
-// Chỉ lấy userId từ localStorage, không hỏi
 const userId = localStorage.getItem('loggedInUser');
 if (!userId) {
   log('❌ Không tìm thấy user_id trong localStorage (loggedInUser)');
   throw new Error('Missing user_id');
 }
 
+async function getServerTime() {
+  const res = await fetch('https://api.binance.com/api/v3/time');
+  if (!res.ok) throw new Error('Failed to get server time');
+  const data = await res.json();
+  return data.serverTime;
+}
+
 async function signedRequest(apiKey, secret, endpoint, base = 'https://api.binance.com', params = {}) {
-  params.timestamp = Date.now();
+  params.timestamp = await getServerTime();
   const query = new URLSearchParams(params).toString();
   const signature = CryptoJS.HmacSHA256(query, secret).toString(CryptoJS.enc.Hex);
   const url = `${base}${endpoint}?${query}&signature=${signature}`;
@@ -48,6 +54,7 @@ async function getApiKeysFromSupabase(userId) {
       Accept: 'application/json'
     }
   });
+  if (!res.ok) throw new Error('Supabase request failed: ' + res.status);
   const data = await res.json();
   if (!data.length) throw new Error('❌ Không tìm thấy user trong Supabase');
   return { apiKey: data[0].apikey_binance, apiSecret: data[0].secret_binance };
@@ -60,14 +67,14 @@ async function fetchBalances() {
 
     // Spot
     log('▶ Lấy số dư SPOT...');
-    const spotData = await signedRequest(apiKey, apiSecret, '/sapi/v1/capital/config/getall');
-    const spotBalances = spotData.filter(b => parseFloat(b.free) > 0 || parseFloat(b.locked) > 0);
+    const spotData = await signedRequest(apiKey, apiSecret, '/api/v3/account');
+    const spotBalances = spotData.balances.filter(b => parseFloat(b.free) > 0 || parseFloat(b.locked) > 0);
     log('== SPOT ==');
     spotBalances.forEach(b => {
-      log(`${b.coin}: ${parseFloat(b.free) + parseFloat(b.locked)}`);
+      log(`${b.asset}: ${parseFloat(b.free) + parseFloat(b.locked)}`);
     });
 
-    // USDM
+    // USDM Futures
     log('\n▶ Lấy số dư USDM...');
     const usdmData = await signedRequest(apiKey, apiSecret, '/fapi/v2/account', 'https://fapi.binance.com');
     const usdmBalances = usdmData.assets.filter(b => parseFloat(b.walletBalance) !== 0);
@@ -76,7 +83,7 @@ async function fetchBalances() {
       log(`${b.asset}: ${b.walletBalance}`);
     });
 
-    // COINM
+    // COINM Futures
     log('\n▶ Lấy số dư COINM...');
     const coinmData = await signedRequest(apiKey, apiSecret, '/dapi/v1/account', 'https://dapi.binance.com');
     const coinmBalances = coinmData.assets.filter(b => parseFloat(b.walletBalance) !== 0);
