@@ -233,19 +233,10 @@
   }  
 
 // dang xuat
-  function logoutParent() {
-  try {
-    if (parent && typeof parent.logout === 'function') {
-      parent.logout();
-    } else {
-      parent.location.href = '/index.html'; // đường dẫn tuyệt đối để chắc chắn
-    }
-  } catch (err) {
-    console.error('Không gọi được parent.logout:', err);
-    parent.location.href = '/index.html';
-  }
+  // Gửi tín hiệu yêu cầu logout lên cha
+function logoutParent() {
+  window.parent.postMessage('logout', '*');
 }
-
 </script>
     
     
