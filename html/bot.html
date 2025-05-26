@@ -15,10 +15,6 @@
       transform: translateY(0%);
     }
 
-    .popup-header {
-      @apply flex justify-between items-center px-4 py-2 border-b text-lg font-semibold;
-    }
-
     .popup-iframe {
       @apply w-full h-full border-none;
     }
@@ -34,20 +30,24 @@
 
   <!-- Popup Before -->
   <div id="popup-before" class="popup hidden">
-    <div class="popup-header">
-      Before
-      <button onclick="closePopup('before')" class="text-gray-600 hover:text-black">Đóng</button>
+    <div class="mx-auto max-w-[480px]">
+      <div class="flex justify-between items-center px-4 py-2 border-b text-lg font-semibold text-blue-600">
+        <span>Before</span>
+        <button onclick="closePopup('before')" class="hover:underline">Đóng</button>
+      </div>
+      <iframe src="/before.html" class="popup-iframe"></iframe>
     </div>
-    <iframe src="/before.html" class="popup-iframe"></iframe>
   </div>
 
   <!-- Popup After -->
   <div id="popup-after" class="popup hidden">
-    <div class="popup-header">
-      After
-      <button onclick="closePopup('after')" class="text-gray-600 hover:text-black">Đóng</button>
+    <div class="mx-auto max-w-[480px]">
+      <div class="flex justify-between items-center px-4 py-2 border-b text-lg font-semibold text-blue-600">
+        <span>After</span>
+        <button onclick="closePopup('after')" class="hover:underline">Đóng</button>
+      </div>
+      <iframe src="/after.html" class="popup-iframe"></iframe>
     </div>
-    <iframe src="/after.html" class="popup-iframe"></iframe>
   </div>
 
   <!-- JS -->
