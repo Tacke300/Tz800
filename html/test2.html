@@ -31,8 +31,6 @@
 </table>
 
 <script>
-  import CryptoJS from 'https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/+esm';
-
   // --- Supabase config ---
   const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';  // Thay bằng URL dự án Supabase bạn
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';               // Thay bằng public anon key Supabase
@@ -66,7 +64,6 @@
 
   // Gọi Binance futures API với API key/secret, return JSON
   async function binanceFuturesApi(path, apiKey, secret, params = {}) {
-    // Thêm timestamp và signature
     params.timestamp = getTimestamp();
     const query = new URLSearchParams(params).toString();
     const signature = signQuery(query, secret);
@@ -96,32 +93,25 @@
     tbody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
 
     try {
-      // 1. Lấy user_id từ localStorage
       const user_id = localStorage.getItem('user_id');
       if (!user_id) throw new Error('User ID not found in localStorage');
 
       statusEl.textContent = `Fetching API keys for user ${user_id}...`;
 
-      // 2. Lấy API key và secret của user từ Supabase
       const keys = await getBinanceApiKeys(user_id);
       statusEl.textContent = 'Got API keys. Fetching Binance data...';
 
-      // 3. Lấy thông tin positionRisk (vị trí hiện tại) của user
       const positions = await binanceFuturesApi('/fapi/v2/positionRisk', keys.apikey_binance, keys.secret_binance);
-
-      // 4. Lấy thông tin exchangeInfo (max leverage per symbol)
       const exchangeInfo = await getExchangeInfo();
+
       const symbolInfoMap = {};
       for (const sym of exchangeInfo.symbols) {
-        // Lấy max leverage trong leverageFilter
         let maxLev = 'N/A';
         const levFilter = sym.filters.find(f => f.filterType === 'leverageFilter');
         if (levFilter) maxLev = levFilter.maxLeverage;
         symbolInfoMap[sym.symbol] = maxLev;
       }
 
-      // 5. Kết hợp data để hiển thị
-      // Tạo map position theo symbol cho dễ lookup
       const positionMap = {};
       positions.forEach(pos => {
         positionMap[pos.symbol] = pos;
@@ -152,13 +142,14 @@
     }
   }
 
-  // Load CryptoJS thư viện trước rồi chạy main
-  async function loadCryptoAndRun() {
+  function loadCryptoAndRun() {
     if (typeof CryptoJS === 'undefined') {
-      // Nếu chưa có CryptoJS thì tải
       const script = document.createElement('script');
       script.src = 'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js';
       script.onload = main;
+      script.onerror = () => {
+        document.getElementById('status').textContent = 'Failed to load CryptoJS';
+      };
       document.head.appendChild(script);
     } else {
       main();
@@ -166,7 +157,7 @@
   }
 
   loadCryptoAndRun();
-
 </script>
+
 </body>
 </html>
