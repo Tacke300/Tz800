@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Điều khiển Funding Bot</title>
+</head>
+<body>
+  <h2>Funding Bot Control Panel</h2>
+
+  <button onclick="startBot('mini')">Chạy Bot Mini</button>
+  <button onclick="startBot('big')">Chạy Bot Big</button>
+
+  <h3>Bot Tùy Chỉnh</h3>
+  <label>Đòn bẩy (1-100): <input type="number" id="lev" min="1" max="100"></label><br>
+  <label>TP %: <input type="number" id="tp" min="1" max="500"></label><br>
+  <label>SL %: <input type="number" id="sl" min="1" max="500"></label><br>
+  <label>Số $ vào lệnh: <input type="number" id="amount" min="1"></label><br>
+  <button onclick="startBot('set')">Chạy Bot Set</button>
+
+  <h3>Điều Khiển</h3>
+  <button onclick="stopBot()">Dừng Bot</button>
+  <p id="status">Trạng thái: ...</p>
+
+  <script>
+    const BASE_URL = 'http://34.145.69.100:3000';
+
+    async function startBot(type) {
+      let url = `${BASE_URL}/start?type=${type}`;
+      if (type === 'set') {
+        const lev = document.getElementById('lev').value;
+        const tp = document.getElementById('tp').value;
+        const sl = document.getElementById('sl').value;
+        const amount = document.getElementById('amount').value;
+        url += `&lev=${lev}&tp=${tp}&sl=${sl}&amount=${amount}`;
+      }
+      const res = await fetch(url);
+      const text = await res.text();
+      document.getElementById('status').innerText = text;
+    }
+
+    async function stopBot() {
+      const res = await fetch(`${BASE_URL}/stop`);
+      const text = await res.text();
+      document.getElementById('status').innerText = text;
+    }
+
+    setInterval(async () => {
+      const res = await fetch(`${BASE_URL}/status`);
+      const text = await res.text();
+      document.getElementById('status').innerText = text;
+    }, 3000);
+  </script>
+</body>
+</html>
