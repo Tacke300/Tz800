@@ -176,7 +176,7 @@ app.get('/logs', (req, res) => {
   res.json(logs); // Gửi log đúng định dạng JSON để HTML đọc được
 });
 
-app.listen(3333, () => {
+app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
   addLog(`Server started on port ${port}`);
 });
