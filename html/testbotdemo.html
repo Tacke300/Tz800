@@ -1,88 +1,30 @@
+<!-- public/index.html -->
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Bot Funding Carry Đảo Ngược</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    #log { height: 300px; overflow-y: scroll; background: #eee; padding: 10px; }
-    button { margin-right: 10px; }
-  </style>
+  <title>USDT Balance</title>
 </head>
 <body>
-  <h1>Bot Funding Carry Đảo Ngược</h1>
-  <div>
-    <label>User ID: <input type="text" id="user_id" /></label><br/><br/>
-    <label>Bot Type: 
-      <select id="botType">
-        <option value="bot_mini">Bot Mini</option>
-        <option value="bot_big">Bot Big</option>
-        <option value="bot_set">Bot Set</option>
-      </select>
-    </label><br/><br/>
-    <label>Leverage: <input type="number" id="leverage" value="50" min="1" max="125" /></label><br/><br/>
-    <label>TP % (bot_set): <input type="number" id="tpPercent" value="15" /></label><br/><br/>
-    <label>SL % (bot_set): <input type="number" id="slPercent" value="15" /></label><br/><br/>
+  <h1>USDT Balance: <span id="balance">Loading...</span></h1>
+  <h1>Trading Bot Control</h1>
+  <button onclick="startBot()">Start</button>
+  <button onclick="stopBot()">Stop</button>
+  <h2>Logs:</h2>
+  <pre id="log"></pre>
 
-    <button id="startBtn">Bắt đầu bot</button>
-    <button id="stopBtn" disabled>Dừng bot</button>
-  </div>
 
-  <h2>Log Bot</h2>
-  <div id="log"></div>
+
 
   <script>
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    const logDiv = document.getElementById('log');
-
-    function addLog(text) {
-      const p = document.createElement('p');
-      p.textContent = text;
-      logDiv.appendChild(p);
-      logDiv.scrollTop = logDiv.scrollHeight;
-    }
-
-    async function fetchStatus() {
-      const res = await fetch('/api/bot/status');
-      const data = await res.json();
-      if(data.log) {
-        logDiv.innerHTML = '';
-        data.log.forEach(line => addLog(line));
-      }
-      startBtn.disabled = data.running;
-      stopBtn.disabled = !data.running;
-    }
-
-    startBtn.onclick = async () => {
-      const user_id = document.getElementById('user_id').value.trim();
-      if (!user_id) {
-        alert('Nhập user_id!');
-        return;
-      }
-      const botType = document.getElementById('botType').value;
-      const leverage = parseInt(document.getElementById('leverage').value);
-      const tpPercent = parseFloat(document.getElementById('tpPercent').value);
-      const slPercent = parseFloat(document.getElementById('slPercent').value);
-
-      const res = await fetch('/api/bot/start', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ user_id, botType, leverage, tpPercent, slPercent }),
+    fetch('/balance')
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('balance').innerText = data.balance;
+      })
+      .catch(error => {
+        document.getElementById('balance').innerText = 'Error fetching balance';
+        console.error(error);
       });
-      const data = await res.json();
-      alert(data.message);
-      fetchStatus();
-    };
-
-    stopBtn.onclick = async () => {
-      const res = await fetch('/api/bot/stop', { method: 'POST' });
-      const data = await res.json();
-      alert(data.message);
-      fetchStatus();
-    };
-
-    setInterval(fetchStatus, 5000);
-    fetchStatus();
   </script>
 </body>
 </html>
