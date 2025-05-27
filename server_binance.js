@@ -146,7 +146,7 @@ app.get('/stop', (req, res) => {
 
 // Route xem log
 app.get('/logs', (req, res) => {
-  res.send('<pre>' + logs.join('\n') + '</pre>');
+  res.json(logs); // Gửi log đúng định dạng JSON để HTML đọc được
 });
 
 app.listen(port, () => {
