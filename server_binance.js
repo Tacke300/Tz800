@@ -63,7 +63,7 @@ cron.schedule('*/1 * * * *', async () => {
   addLog(`>>> [Cron] Đã tới giờ hoàng đạo kiếm tiền uống bia, đang kiểm tra funding...`);
   
   try {
-    const fundingRates = await binance.futuresFundingRate(false, 1000);
+    const fundingRates = await binance.futuresFundingRate();
     const negativeRates = fundingRates
       .filter(rate => parseFloat(rate.fundingRate) < -0.0001)
       .sort((a, b) => parseFloat(a.fundingRate) - parseFloat(b.fundingRate));
