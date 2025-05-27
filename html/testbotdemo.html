@@ -25,6 +25,7 @@
       animation: moveGradient 5s ease infinite;
       margin-bottom: 20px;
       text-align: center;
+      height: 30vh;
     }
 
     @keyframes moveGradient {
@@ -34,12 +35,12 @@
     }
 
     #log {
-      height: 60vh;
+      height: 50vh;
       width: 90%;
       overflow-y: auto;
       background: #111;
       padding: 10px;
-      font-size: 18px;
+      font-size: 22px;
       border: 1px solid #333;
       margin-bottom: 20px;
       font-family: Arial, Helvetica, sans-serif;
@@ -48,6 +49,7 @@
     .button-row {
       display: flex;
       gap: 20px;
+      height: 20vh;
     }
 
     button {
@@ -91,10 +93,12 @@
   <div class="button-row">
     <button class="start-btn" onclick="startBot()">Start Bot</button>
     <button class="stop-btn" onclick="stopBot()">Stop Bot</button>
+
+    
   </div>
+<div class="copyright">&copy; 2025 TunggBeoo. All rights reserved.</div>
 
-  <div class="copyright">&copy; 2025 TunggBeoo. All rights reserved.</div>
-
+  
   <script>
     const logDiv = document.getElementById('log');
 
