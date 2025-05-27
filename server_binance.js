@@ -162,7 +162,7 @@ async function placeShortOrder(symbol) {
   }
 }
 
-let botRunning = false;
+
 
 app.get('/start', (req, res) => {
   if (!botRunning) {
