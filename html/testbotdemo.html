@@ -1,45 +1,44 @@
-<!-- public/index.html -->
 <!DOCTYPE html>
 <html>
 <head>
-  <title>USDT Balance</title>
+  <title>Bot Logs</title>
+  <style>
+    body { font-family: monospace; background:#222; color:#eee; }
+    #log { height: 500px; overflow-y: scroll; background:#000; padding:10px; }
+    button { margin: 5px; }
+  </style>
 </head>
 <body>
-  <h1>USDT Balance: <span id="balance">Loading...</span></h1>
-  <h1>Trading Bot Control</h1>
-  <button onclick="startBot()">Start</button>
-  <button onclick="stopBot()">Stop</button>
-  <h2>Logs:</h2>
-  <pre id="log"></pre>
-
-
-
+  <h2>Bot Logs</h2>
+  <div id="log"></div>
+  <button onclick="startBot()">Start Bot</button>
+  <button onclick="stopBot()">Stop Bot</button>
 
   <script>
-    fetch('/balance')
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById('balance').innerText = data.balance;
-      })
-      .catch(error => {
-        document.getElementById('balance').innerText = 'Error fetching balance';
-        console.error(error);
-      });
+    const logDiv = document.getElementById('log');
+
+    async function fetchLogs() {
+      try {
+        const res = await fetch('/logs');
+        const logs = await res.json();
+        logDiv.innerHTML = logs.map(l => l.replace(/</g,'&lt;')).join('<br>');
+        logDiv.scrollTop = logDiv.scrollHeight;
+      } catch (e) {
+        console.error('Failed to fetch logs', e);
+      }
+    }
+
     function startBot() {
-      fetch('/start')
-        .then(response => response.text())
-        .then(data => {
-          document.getElementById('log').innerText += data + '\n';
-        });
+      fetch('/start').then(res => res.text()).then(alert);
     }
 
     function stopBot() {
-      fetch('/stop')
-        .then(response => response.text())
-        .then(data => {
-          document.getElementById('log').innerText += data + '\n';
-        });
+      fetch('/stop').then(res => res.text()).then(alert);
     }
+
+    // Tự động lấy log mỗi 3 giây
+    setInterval(fetchLogs, 3000);
+    fetchLogs();
   </script>
 </body>
 </html>
