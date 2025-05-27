@@ -1,45 +1,32 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Bot Funding Design By TunggBeoo</title>
-  <style>
-    body { font-family: monospace; background:#000; color:#eee;display: flex;flex-direction: column; justify-content: center;  align-items: center;  height: 100vh;  }
-    #log { height: 70vh; overflow-y: scroll; background:#000; padding:10px; font-size: 10px;}
-    button { margin: 5px; font-size: 50px; color: red; background: #000; height: 10vh; }
-    .top {color: red, height: 20vh;   } 
-  </style>
-</head>
-<body>
-  <h2 id="top">Bot Funding Design By TunggBeoo </h2>
-  <div id="log"></div>
-  <button onclick="startBot()">Start Bot</button>
-  <button onclick="stopBot()">Stop Bot</button>
+<style>
+  button {
+    font-size: 20px;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+  }
 
-  <script>
-    const logDiv = document.getElementById('log');
+  button:hover {
+    transform: scale(1.05);
+  }
 
-    async function fetchLogs() {
-      try {
-        const res = await fetch('/logs');
-        const logs = await res.json();
-        logDiv.innerHTML = logs.map(l => l.replace(/</g,'&lt;')).join('<br>');
-        logDiv.scrollTop = logDiv.scrollHeight;
-      } catch (e) {
-        console.error('Failed to fetch logs', e);
-      }
-    }
+  .start-btn {
+    background-color: #4CAF50;
+    color: white;
+  }
 
-    function startBot() {
-      fetch('/start').then(res => res.text()).then(alert);
-    }
+  .start-btn:hover {
+    background-color: #45a049;
+  }
 
-    function stopBot() {
-      fetch('/stop').then(res => res.text()).then(alert);
-    }
+  .stop-btn {
+    background-color: #ff4d4d;
+    color: white;
+  }
 
-    // Tự động lấy log mỗi 3 giây
-    setInterval(fetchLogs, 3000);
-    fetchLogs();
-  </script>
-</body>
-</html>
+  .stop-btn:hover {
+    background-color: #ff1a1a;
+  }
+</style>
