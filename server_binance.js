@@ -1,15 +1,25 @@
-// server.js dieu.1 lay usdt
 const express = require('express');
 const Binance = require('node-binance-api');
 const app = express();
 const port = 3000;
 
+let logs = []; // Mảng lưu log
+
+function addLog(message) {
+  const time = new Date().toLocaleString();
+  const logEntry = `[${time}] ${message}`;
+  console.log(logEntry);
+  logs.push(logEntry);
+  // Giữ log tối đa 100 dòng
+  if (logs.length > 100) logs.shift();
+}
 
 app.get('/', (req, res) => {
   res.send('Funding bot is running!');
 });
+
 const binance = new Binance().options({
-  APIKEY: 'ynfUQ5PxqWQJdwPsAVREudagiF1WEN3HAENgLZIwWC3VrsNnT74wlRwY29hGXZky',
+  APIKEY: 'ynfUQ5PxqqWQJdwPsAVREudagiF1WEN3HAENgLZIwWC3VrsNnT74wlRwY29hGXZky',
   APISECRET: 'pYTcusasHde67ajzvaOmgmSReqbZ7f0j2uwfR3VaeHai1emhuWRcacmlBCnrRglH'
 });
 
@@ -19,42 +29,43 @@ app.get('/balance', async (req, res) => {
     const usdtAsset = account.assets.find(asset => asset.asset === 'USDT');
     res.json({ balance: usdtAsset.availableBalance });
   } catch (error) {
+    addLog('Error in /balance: ' + error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 app.use(express.static('public'));
 
-
-
-//dieu 3 lay funding 
-// server.js (tiếp tục)
+// Cron job lấy funding
 const cron = require('node-cron');
 
 let selectedSymbol = null;
 
 cron.schedule('57 * * * *', async () => {
+  if (!botRunning) {
+    addLog('Bot is stopped. Skipping funding check.');
+    return;
+  }
   try {
     const fundingRates = await binance.futuresFundingRate(false, 1000);
     const negativeRates = fundingRates
       .filter(rate => parseFloat(rate.fundingRate) < -0.005)
       .sort((a, b) => parseFloat(a.fundingRate) - parseFloat(b.fundingRate));
-    
+
     if (negativeRates.length > 0) {
       selectedSymbol = negativeRates[0].symbol;
-      console.log(`Selected symbol for trading: ${selectedSymbol}`);
+      addLog(`Selected symbol for trading: ${selectedSymbol}`);
       // Tiếp tục với Điều 4
+      await placeShortOrder(selectedSymbol);
     } else {
-      console.log('No suitable symbol found. Bot will sleep until next check.');
+      addLog('No suitable symbol found. Bot will sleep until next check.');
       selectedSymbol = null;
     }
   } catch (error) {
-    console.error('Error fetching funding rates:', error);
+    addLog('Error fetching funding rates: ' + error.message);
   }
 });
 
-
-// server.js (tiếp tục) lay lev
 async function getMaxLeverage(symbol) {
   try {
     const exchangeInfo = await binance.futuresExchangeInfo();
@@ -62,12 +73,16 @@ async function getMaxLeverage(symbol) {
     const leverageFilter = symbolInfo.filters.find(f => f.filterType === 'LEVERAGE');
     return leverageFilter.maxLeverage;
   } catch (error) {
-    console.error('Error fetching max leverage:', error);
+    addLog('Error fetching max leverage: ' + error.message);
     return null;
   }
 }
 
-// server.js (tiếp tục) mo short
+async function getCurrentPrice(symbol) {
+  const prices = await binance.futuresPrices();
+  return parseFloat(prices[symbol]);
+}
+
 async function placeShortOrder(symbol) {
   try {
     const account = await binance.futuresAccount();
@@ -77,36 +92,28 @@ async function placeShortOrder(symbol) {
     const quantity = ((balance * 0.8) * maxLeverage) / await getCurrentPrice(symbol);
     await binance.futuresLeverage(symbol, maxLeverage);
     const order = await binance.futuresMarketSell(symbol, quantity.toFixed(3));
-    console.log(`Short order placed for ${symbol} with quantity ${quantity.toFixed(3)}`);
+    addLog(`Short order placed for ${symbol} with quantity ${quantity.toFixed(3)}`);
 
-    // Đặt TP/SL và hẹn giờ đóng lệnh sau 3 phút nếu chưa khớp
     setTimeout(async () => {
       const positions = await binance.futuresPositionRisk();
       const position = positions.find(p => p.symbol === symbol);
       if (parseFloat(position.positionAmt) !== 0) {
         await binance.futuresMarketBuy(symbol, Math.abs(parseFloat(position.positionAmt)));
-        console.log(`Position closed for ${symbol} after 3 minutes`);
+        addLog(`Position closed for ${symbol} after 3 minutes`);
       }
     }, 180000); // 3 phút
   } catch (error) {
-    console.error('Error placing short order:', error);
+    addLog('Error placing short order: ' + error.message);
   }
 }
 
-async function getCurrentPrice(symbol) {
-  const prices = await binance.futuresPrices();
-  return parseFloat(prices[symbol]);
-}
-
-
-// server.js (tiếp tục) chay dung
 let botRunning = false;
 
 app.get('/start', (req, res) => {
   if (!botRunning) {
     botRunning = true;
+    addLog('Bot started');
     res.send('Bot started');
-    // Gọi các hàm cần thiết để bắt đầu bot
   } else {
     res.send('Bot is already running');
   }
@@ -115,13 +122,19 @@ app.get('/start', (req, res) => {
 app.get('/stop', (req, res) => {
   if (botRunning) {
     botRunning = false;
+    addLog('Bot stopped');
     res.send('Bot stopped');
-    // Gọi các hàm cần thiết để dừng bot
   } else {
     res.send('Bot is not running');
   }
 });
 
+// Route xem log
+app.get('/logs', (req, res) => {
+  res.send('<pre>' + logs.join('\n') + '</pre>');
+});
+
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
+  addLog(`Server started on port ${port}`);
 });
