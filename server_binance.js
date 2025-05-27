@@ -37,32 +37,47 @@ app.get('/balance', async (req, res) => {
 app.use(express.static('public'));
 
 // Cron job lấy funding
+
+
 const cron = require('node-cron');
+
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 let selectedSymbol = null;
 
 cron.schedule('57 * * * *', async () => {
-  if (!botRunning) {
-    addLog('Bot is stopped. Skipping funding check.');
-    return;
-  }
   try {
     const fundingRates = await binance.futuresFundingRate(false, 1000);
     const negativeRates = fundingRates
       .filter(rate => parseFloat(rate.fundingRate) < -0.005)
       .sort((a, b) => parseFloat(a.fundingRate) - parseFloat(b.fundingRate));
-
+    
     if (negativeRates.length > 0) {
-      selectedSymbol = negativeRates[0].symbol;
-      addLog(`Selected symbol for trading: ${selectedSymbol}`);
-      // Tiếp tục với Điều 4
+      const best = negativeRates[0];
+      selectedSymbol = best.symbol;
+      console.log(`Selected symbol for trading: ${selectedSymbol}`);
+
+      const fundingTime = best.fundingTime; // timestamp in ms
+      const now = Date.now();
+
+      const waitTime = fundingTime - now;
+      if (waitTime > 0) {
+        console.log(`Waiting ${waitTime} ms until funding time`);
+        await delay(waitTime);
+      }
+
+      // Đợi thêm 0.5 giây để chắc chắn funding được trả
+      await delay(500);
+
+      // Mở lệnh short tại đây
       await placeShortOrder(selectedSymbol);
+
     } else {
-      addLog('No suitable symbol found. Bot will sleep until next check.');
+      console.log('No suitable symbol found. Bot will sleep until next check.');
       selectedSymbol = null;
     }
   } catch (error) {
-    addLog('Error fetching funding rates: ' + error.message);
+    console.error('Error fetching funding rates:', error);
   }
 });
 
