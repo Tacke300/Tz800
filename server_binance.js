@@ -51,8 +51,13 @@ app.listen(port, () => {
   addLog(`Server started on port ${port}`);
 });
 // kkkkkkkkk
-cron.schedule('*/1 * * * *', async () => { //sua no 555555555555555
+let botRunning = false; // Cờ điều khiển bot
+
+// Cron chạy mỗi phút nhưng chỉ thực thi khi botRunning = true
+cron.schedule('*/1 * * * *', async () => {
+  if (!botRunning) return; // Không chạy nếu bot đã dừng
   addLog(`>>> [Cron] Đã tới giờ hoàng đạo kiếm tiền uống bia, đang kiểm tra funding...`);
+  
   try {
     const fundingRates = await binance.futuresFundingRate(false, 1000);
     const negativeRates = fundingRates
