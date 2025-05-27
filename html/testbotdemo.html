@@ -1,164 +1,88 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Funding Bot Control</title>
+  <title>Bot Funding Carry Đảo Ngược</title>
   <style>
-    #log {
-      background: #f9f9f9;
-      border: 1px solid #ccc;
-      padding: 10px;
-      height: 200px;
-      overflow-y: auto;
-      font-size: 14px;
-      white-space: pre-line;
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #log { height: 300px; overflow-y: scroll; background: #eee; padding: 10px; }
+    button { margin-right: 10px; }
   </style>
 </head>
 <body>
-  <h2>Funding Bot Control Panel</h2>
+  <h1>Bot Funding Carry Đảo Ngược</h1>
+  <div>
+    <label>User ID: <input type="text" id="user_id" /></label><br/><br/>
+    <label>Bot Type: 
+      <select id="botType">
+        <option value="bot_mini">Bot Mini</option>
+        <option value="bot_big">Bot Big</option>
+        <option value="bot_set">Bot Set</option>
+      </select>
+    </label><br/><br/>
+    <label>Leverage: <input type="number" id="leverage" value="50" min="1" max="125" /></label><br/><br/>
+    <label>TP % (bot_set): <input type="number" id="tpPercent" value="15" /></label><br/><br/>
+    <label>SL % (bot_set): <input type="number" id="slPercent" value="15" /></label><br/><br/>
 
-  <!-- Hiển thị trạng thái bot đang chạy -->
-  <p id="bot-status">Không có bot nào đang chạy</p>
-
-  <!-- Form chạy bot_set với inputs -->
-  <div id="bot-set-form" style="display:none;">
-    <h3>Chạy bot_set</h3>
-    <label>Đòn bẩy (1-100): <input type="number" id="lev" min="1" max="100" value="20"/></label><br/>
-    <label>Take Profit % vốn: <input type="number" id="tp" min="1" max="100" value="15"/></label><br/>
-    <label>Stop Loss % vốn: <input type="number" id="sl" min="1" max="100" value="10"/></label><br/>
-    <label>Số tiền USDT vào lệnh: <input type="number" id="investAmount" min="1" value="10"/></label><br/>
-    <button onclick="runBotSet()">Chạy bot_set</button>
+    <button id="startBtn">Bắt đầu bot</button>
+    <button id="stopBtn" disabled>Dừng bot</button>
   </div>
 
-  <button onclick="runBot('bot_mini')">Chạy bot_mini</button>
-  <button onclick="runBot('bot_big')">Chạy bot_big</button>
-  <button onclick="showBotSetForm()">Chạy bot_set</button>
-  <button onclick="stopBot()">Dừng bot</button>
-
-  <!-- Vùng log tiến trình -->
-  <h3>Log tiến trình</h3>
+  <h2>Log Bot</h2>
   <div id="log"></div>
 
   <script>
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
     const logDiv = document.getElementById('log');
-    function log(msg, isError = false) {
-      const timestamp = new Date().toLocaleTimeString();
-      const entry = `[${timestamp}] ${msg}`;
-      const p = document.createElement('div');
-      p.textContent = entry;
-      if (isError) p.style.color = 'red';
+
+    function addLog(text) {
+      const p = document.createElement('p');
+      p.textContent = text;
       logDiv.appendChild(p);
       logDiv.scrollTop = logDiv.scrollHeight;
     }
 
-    const user_id = localStorage.getItem('loggedInUser') || prompt('Nhập user_id của bạn');
-    localStorage.setItem('loggedInUser', user_id);
-
-    const statusElem = document.getElementById('bot-status');
-    const botSetForm = document.getElementById('bot-set-form');
-
-    function showBotSetForm() {
-      botSetForm.style.display = 'block';
-      log("Hiển thị form bot_set");
-    }
-
-    async function runBotSet() {
-      const lev = Number(document.getElementById('lev').value);
-      const tp = Number(document.getElementById('tp').value);
-      const sl = Number(document.getElementById('sl').value);
-      const investAmount = Number(document.getElementById('investAmount').value);
-
-      if (lev < 1 || lev > 100) return alert('Đòn bẩy phải từ 1 tới 100');
-      if (tp < 1 || tp > 100) return alert('TP phải từ 1 tới 100');
-      if (sl < 1 || sl > 100) return alert('SL phải từ 1 tới 100');
-      if (investAmount < 1) return alert('Số tiền đầu tư phải >= 1');
-
-      log(`Gửi yêu cầu chạy bot_set với lev=${lev}, tp=${tp}, sl=${sl}, amount=${investAmount}`);
-      try {
-        const res = await fetch('/api/run-bot', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            user_id,
-            bot_type: 'bot_set',
-            params: { leverage: lev, tpPercent: tp, slPercent: sl, investAmount }
-          })
-        });
-        const data = await res.json();
-        log(`Phản hồi bot_set: ${JSON.stringify(data)}`);
-        alert(data.message || JSON.stringify(data));
-      } catch (err) {
-        log(`Lỗi khi chạy bot_set: ${err.message}`, true);
-      }
-    }
-
-    async function runBot() {
-  if (!user_id) {
-    alert('Bạn chưa đăng nhập');
-    return;
-  }
-  const bot_type = botTypeSelect.value;
-  let params = {};
-  if (bot_type === 'bot_set') {
-    params = {
-      leverage: document.getElementById('inputLeverage').value,
-      tpPercent: document.getElementById('inputTP').value,
-      slPercent: document.getElementById('inputSL').value,
-      investAmount: document.getElementById('inputInvest').value,
-    };
-  }
-  console.log('Gửi yêu cầu chạy bot với params:', { user_id, bot_type, params });
-  const res = await fetch('/api/run-bot', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id, bot_type, params }),
-  });
-  const data = await res.json();
-  console.log('Phản hồi từ server:', data);
-  alert(data.message || data.error);
-  getBotStatus();
-}
-
-    async function stopBot() {
-      log("Gửi yêu cầu dừng bot");
-      try {
-        const res = await fetch('/api/stop-bot', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id })
-        });
-        const data = await res.json();
-        log(`Phản hồi dừng bot: ${JSON.stringify(data)}`);
-        alert(data.message || JSON.stringify(data));
-      } catch (err) {
-        log(`Lỗi khi dừng bot: ${err.message}`, true);
-      }
-    }
-
-    async function pollStatus() {
-  try {
-    const res = await fetch(`/api/bot-status?user_id=${user_id}`);
-    const contentType = res.headers.get('content-type');
-
-    if (contentType && contentType.includes('application/json')) {
+    async function fetchStatus() {
+      const res = await fetch('/api/bot/status');
       const data = await res.json();
-      if (data.runningBot) {
-        statusElem.textContent = `Bot đang chạy: ${data.runningBot}`;
-      } else {
-        statusElem.textContent = 'Không có bot nào đang chạy';
+      if(data.log) {
+        logDiv.innerHTML = '';
+        data.log.forEach(line => addLog(line));
       }
-    } else {
-      const text = await res.text();
-      console.error('Lỗi khi lấy trạng thái bot: không phải JSON:', text);
-      statusElem.textContent = 'Lỗi server: phản hồi không hợp lệ';
+      startBtn.disabled = data.running;
+      stopBtn.disabled = !data.running;
     }
-  } catch (err) {
-    console.error('Lỗi khi lấy trạng thái bot:', err);
-    statusElem.textContent = 'Lỗi khi kết nối tới server';
-  }
-}
-    
+
+    startBtn.onclick = async () => {
+      const user_id = document.getElementById('user_id').value.trim();
+      if (!user_id) {
+        alert('Nhập user_id!');
+        return;
+      }
+      const botType = document.getElementById('botType').value;
+      const leverage = parseInt(document.getElementById('leverage').value);
+      const tpPercent = parseFloat(document.getElementById('tpPercent').value);
+      const slPercent = parseFloat(document.getElementById('slPercent').value);
+
+      const res = await fetch('/api/bot/start', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ user_id, botType, leverage, tpPercent, slPercent }),
+      });
+      const data = await res.json();
+      alert(data.message);
+      fetchStatus();
+    };
+
+    stopBtn.onclick = async () => {
+      const res = await fetch('/api/bot/stop', { method: 'POST' });
+      const data = await res.json();
+      alert(data.message);
+      fetchStatus();
+    };
+
+    setInterval(fetchStatus, 5000);
+    fetchStatus();
   </script>
 </body>
 </html>
