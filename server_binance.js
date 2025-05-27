@@ -45,12 +45,12 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 let selectedSymbol = null;
 
-cron.schedule('*/1 * * * *', async () => {
+cron.schedule('*/1 * * * *', async () => { //sua no 555555555555555
   addLog(`>>> [Cron] Đã tới giờ hoàng đạo kiếm tiền uống bia, đang kiểm tra funding...`);
   try {
     const fundingRates = await binance.futuresFundingRate(false, 1000);
     const negativeRates = fundingRates
-      .filter(rate => parseFloat(rate.fundingRate) < -0.0001)
+      .filter(rate => parseFloat(rate.fundingRate) < -0.0001) //sua 0.0055555555555555
       .sort((a, b) => parseFloat(a.fundingRate) - parseFloat(b.fundingRate));
     
     if (negativeRates.length > 0) {
