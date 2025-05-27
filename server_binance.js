@@ -166,7 +166,7 @@ let botRunning = false;
 app.get('/start', (req, res) => {
   if (!botRunning) {
     botRunning = true;
-    addLog('Bot started');
+    addLog('Bot bắt đầu múa');
     res.send('Bot started');
   } else {
     res.send('Bot is already running');
@@ -176,7 +176,7 @@ app.get('/start', (req, res) => {
 app.get('/stop', (req, res) => {
   if (botRunning) {
     botRunning = false;
-    addLog('Bot stopped');
+    addLog('Bot đã đắp mộ cuộc tình');
     res.send('Bot stopped');
   } else {
     res.send('Bot is not running');
