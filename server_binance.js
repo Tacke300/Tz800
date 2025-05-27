@@ -1,6 +1,6 @@
-import express from 'express';
-import { createClient } from '@supabase/supabase-js';
-import Binance from 'node-binance-api';
+const express = require('express');
+const { createClient } = require('@supabase/supabase-js');
+const Binance = require('node-binance-api');
 
 const app = express();
 app.use(express.json());
@@ -102,13 +102,13 @@ app.post('/api/run-bot', async (req, res) => {
     }
 
     // 8. Gửi lệnh LONG với thông tin từ params
-    const { amount, tp, sl } = params; // params từ frontend
+    const { amount, tp, sl } = params;
 
     // Mở lệnh market LONG
     await binance.futuresLeverage(symbol, leverage);
     await binance.futuresMarketBuy(symbol, amount);
 
-    // Cài TP/SL (giả sử lấy giá entry để tính)
+    // Cài TP/SL
     const positions = await binance.futuresPositionRisk();
     const position = positions.find(p => p.symbol === symbol);
     const entryPrice = parseFloat(position.entryPrice);
@@ -124,7 +124,9 @@ app.post('/api/run-bot', async (req, res) => {
     delete runningBots[user_id];
     return res.status(500).json({ error: 'Lỗi khi chạy bot: ' + err.message });
   }
-  app.listen(3000, () => {
-  console.log('Server running on port 3000');
 });
+
+// Chạy server
+app.listen(3000, () => {
+  console.log('Server running on port 3000');
 });
