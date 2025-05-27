@@ -25,6 +25,21 @@
         document.getElementById('balance').innerText = 'Error fetching balance';
         console.error(error);
       });
+    function startBot() {
+      fetch('/start')
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById('log').innerText += data + '\n';
+        });
+    }
+
+    function stopBot() {
+      fetch('/stop')
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById('log').innerText += data + '\n';
+        });
+    }
   </script>
 </body>
 </html>
