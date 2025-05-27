@@ -1,152 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Funding Carry Bot</title>
+  <meta charset="UTF-8" />
+  <title>Funding Bot Control</title>
 </head>
 <body>
-<h2>Funding Carry Bot Control</h2>
+  <h2>Funding Bot Control Panel</h2>
 
-<p id="runningBot"></p>
+  <!-- Hiển thị trạng thái bot đang chạy -->
+  <p id="bot-status">Không có bot nào đang chạy</p>
 
-<label for="botSelect">Chọn Bot:</label>
-<select id="botSelect">
-  <option value="">--Chọn bot--</option>
-  <option value="bot_mini">Bot Mini</option>
-  <option value="bot_big">Bot Big</option>
-  <option value="bot_set">Bot Set</option>
-</select>
+  <!-- Form chạy bot_set với inputs -->
+  <div id="bot-set-form" style="display:none;">
+    <h3>Chạy bot_set</h3>
+    <label>Đòn bẩy (1-100): <input type="number" id="lev" min="1" max="100" value="20"/></label><br/>
+    <label>Take Profit % vốn: <input type="number" id="tp" min="1" max="100" value="15"/></label><br/>
+    <label>Stop Loss % vốn: <input type="number" id="sl" min="1" max="100" value="10"/></label><br/>
+    <label>Số tiền USDT vào lệnh: <input type="number" id="investAmount" min="1" value="10"/></label><br/>
+    <button onclick="runBotSet()">Chạy bot_set</button>
+  </div>
 
-<div id="botSetInputs" style="display:none;">
-  <label>Đòn bẩy (1-100): <input type="number" id="levInput" min="1" max="100" value="20"/></label><br/>
-  <label>Take Profit % vốn: <input type="number" id="tpInput" min="1" max="100" value="15"/></label><br/>
-  <label>Stop Loss % vốn: <input type="number" id="slInput" min="1" max="100" value="15"/></label><br/>
-  <label>Số $ đầu tư: <input type="number" id="amountInput" min="1" value="100"/></label><br/>
-</div>
+  <button onclick="runBot('bot_mini')">Chạy bot_mini</button>
+  <button onclick="runBot('bot_big')">Chạy bot_big</button>
+  <button onclick="showBotSetForm()">Chạy bot_set</button>
+  <button onclick="stopBot()">Dừng bot</button>
 
-<button id="startBtn">Bắt đầu Bot</button>
-<button id="stopBtn">Dừng Bot</button>
+  <script>
+    // Lấy user_id từ localStorage
+    const user_id = localStorage.getItem('loggedInUser') || prompt('Nhập user_id của bạn');
+    localStorage.setItem('loggedInUser', user_id);
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  // Supabase config
-  const supabaseUrl = 'https://your-project.supabase.co'
-  const supabaseKey = 'your-anon-or-service-role-key'
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const statusElem = document.getElementById('bot-status');
+    const botSetForm = document.getElementById('bot-set-form');
 
-  const user_id = localStorage.getItem('loggedInUser');
-  let runningBot = null; // lưu bot đang chạy
-
-  const runningBotP = document.getElementById('runningBot');
-  const botSelect = document.getElementById('botSelect');
-  const botSetInputs = document.getElementById('botSetInputs');
-  const startBtn = document.getElementById('startBtn');
-  const stopBtn = document.getElementById('stopBtn');
-
-  botSelect.addEventListener('change', () => {
-    if (botSelect.value === 'bot_set') {
-      botSetInputs.style.display = 'block';
-    } else {
-      botSetInputs.style.display = 'none';
-    }
-  });
-
-  async function checkUser() {
-    // Lấy apikey, secret, usdt_binance từ supabase
-    const { data, error } = await supabase
-      .from('users')
-      .select('apikey_binance,secret_binance,usdt_binance,pnl_today')
-      .eq('user_id', user_id)
-      .single();
-
-    if (error || !data) {
-      alert('Không tìm thấy user hoặc lỗi kết nối Supabase');
-      return null;
-    }
-    return data;
-  }
-
-  async function startBot() {
-    if (!user_id) {
-      alert('Bạn chưa đăng nhập!');
-      return;
-    }
-    if (runningBot) {
-      alert('Chỉ được chạy 1 bot. Dừng bot hiện tại trước.');
-      return;
-    }
-    const userData = await checkUser();
-    if (!userData) return;
-
-    const botType = botSelect.value;
-    if (!botType) {
-      alert('Vui lòng chọn bot.');
-      return;
+    // Hiển thị form bot_set
+    function showBotSetForm() {
+      botSetForm.style.display = 'block';
     }
 
-    // Các input cho bot_set
-    let lev, tp, sl, amount;
-    if (botType === 'bot_set') {
-      lev = parseInt(document.getElementById('levInput').value);
-      tp = parseInt(document.getElementById('tpInput').value);
-      sl = parseInt(document.getElementById('slInput').value);
-      amount = parseFloat(document.getElementById('amountInput').value);
-      if (lev < 1 || lev > 100 || tp < 1 || tp > 100 || sl < 1 || sl > 100 || amount <= 0) {
-        alert('Vui lòng nhập giá trị hợp lệ trong bot set.');
-        return;
-      }
+    // Gửi lệnh chạy bot_set với params từ input
+    async function runBotSet() {
+      const lev = Number(document.getElementById('lev').value);
+      const tp = Number(document.getElementById('tp').value);
+      const sl = Number(document.getElementById('sl').value);
+      const investAmount = Number(document.getElementById('investAmount').value);
+
+      if (lev < 1 || lev > 100) return alert('Đòn bẩy phải từ 1 tới 100');
+      if (tp < 1 || tp > 100) return alert('TP phải từ 1 tới 100');
+      if (sl < 1 || sl > 100) return alert('SL phải từ 1 tới 100');
+      if (investAmount < 1) return alert('Số tiền đầu tư phải >= 1');
+
+      const res = await fetch('/api/run-bot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id,
+          bot_type: 'bot_set',
+          params: { leverage: lev, tpPercent: tp, slPercent: sl, investAmount }
+        })
+      });
+      const data = await res.json();
+      alert(data.message || JSON.stringify(data));
     }
 
-    // Gửi yêu cầu backend khởi chạy bot qua API hoặc websocket (giả định)
-    fetch('/api/start_bot', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_id,
-        botType,
-        lev,
-        tp,
-        sl,
-        amount
-      })
-    })
-    .then(res => res.json())
-    .then(res => {
-      if (res.success) {
-        runningBot = botType;
-        runningBotP.textContent = `Bot đang chạy: ${runningBot}`;
+    // Chạy bot_mini hoặc bot_big
+    async function runBot(bot_type) {
+      const res = await fetch('/api/run-bot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id, bot_type })
+      });
+      const data = await res.json();
+      alert(data.message || JSON.stringify(data));
+    }
+
+    // Dừng bot
+    async function stopBot() {
+      const res = await fetch('/api/stop-bot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id })
+      });
+      const data = await res.json();
+      alert(data.message || JSON.stringify(data));
+    }
+
+    // Poll trạng thái bot từ server mỗi 5s để cập nhật
+    async function pollStatus() {
+      const res = await fetch(`/api/bot-status?user_id=${user_id}`);
+      const data = await res.json();
+      if (data.runningBot) {
+        statusElem.textContent = `Bot đang chạy: ${data.runningBot}`;
       } else {
-        alert('Lỗi khởi chạy bot: ' + res.message);
+        statusElem.textContent = 'Không có bot nào đang chạy';
       }
-    });
-  }
-
-  async function stopBot() {
-    if (!runningBot) {
-      alert('Chưa có bot nào đang chạy.');
-      return;
     }
-    fetch('/api/stop_bot', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({user_id})
-    })
-    .then(res => res.json())
-    .then(res => {
-      if (res.success) {
-        runningBot = null;
-        runningBotP.textContent = '';
-      } else {
-        alert('Lỗi dừng bot: ' + res.message);
-      }
-    });
-  }
+    setInterval(pollStatus, 5000);
+    pollStatus();
 
-  startBtn.onclick = startBot;
-  stopBtn.onclick = stopBot;
-
-  // Có thể thêm đoạn lấy trạng thái bot khi load trang để cập nhật giao diện
-</script>
+  </script>
 </body>
 </html>
