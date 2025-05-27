@@ -34,7 +34,7 @@ app.get('/balance', async (req, res) => {
   }
 });
 
-app.use(express.static('public'));
+app.use(express.static(__dirname)); // Cho phép truy cập toàn bộ thư mục gốc
 
 // Cron job lấy funding
 
