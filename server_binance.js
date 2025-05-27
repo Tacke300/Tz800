@@ -124,4 +124,7 @@ app.post('/api/run-bot', async (req, res) => {
     delete runningBots[user_id];
     return res.status(500).json({ error: 'Lỗi khi chạy bot: ' + err.message });
   }
+  app.listen(3000, () => {
+  console.log('Server running on port 3000');
+});
 });
