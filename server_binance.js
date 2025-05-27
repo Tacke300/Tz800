@@ -126,11 +126,11 @@ async function placeShortOrder(symbol) {
     await binance.futuresLeverage(symbol, maxLeverage);
 
     const price = await getCurrentPrice(symbol);
-    const orderValue = balance * 0.8;
-    const quantity = (orderValue * maxLeverage) / price;
+    const capital = balance * 0.8;
+    const quantity = (capital * maxLeverage) / price;
 
+    // Mở lệnh SHORT bằng market
     const order = await binance.futuresMarketSell(symbol, quantity.toFixed(3));
-
     addLog(`>>> Đã mở lệnh SHORT ${symbol}`);
     addLog(`- Khối lượng: ${quantity.toFixed(3)}`);
     addLog(`- Đòn bẩy: ${maxLeverage}`);
@@ -139,41 +139,71 @@ async function placeShortOrder(symbol) {
 
     const entryPrice = parseFloat(order.avgFillPrice || price);
 
-    // Tự động đóng lệnh sau 3 phút
-    setTimeout(async () => {
+    // Tính giá TP và SL (giá trị TP/SL theo leverage trên vốn)
+    const tpSlValue = (maxLeverage / 100) * capital; // ví dụ 50% là leverage/100, bạn chỉnh lại nếu cần
+
+    // TP/SL là giá, vì short nên:
+    // PnL = (entryPrice - currentPrice) * qty
+    // TP khi giá <= entryPrice - tpSlValue/qty
+    // SL khi giá >= entryPrice + tpSlValue/qty
+    const tpPrice = entryPrice - tpSlValue / quantity;
+    const slPrice = entryPrice + tpSlValue / quantity;
+
+    addLog(`>>> Giá TP: ${tpPrice.toFixed(2)}, Giá SL: ${slPrice.toFixed(2)}`);
+
+    let checkCount = 0;
+    const maxCheck = 180; // 3 phút = 180 giây
+
+    const checkInterval = setInterval(async () => {
+      try {
+        checkCount++;
+        const currentPrice = await getCurrentPrice(symbol);
+
+        if (currentPrice <= tpPrice) {
+          addLog(`>>> Giá đạt TP: ${currentPrice.toFixed(2)}. Đóng lệnh SHORT ${symbol} ngay!`);
+          clearInterval(checkInterval);
+          await closeShortPosition(symbol);
+        } else if (currentPrice >= slPrice) {
+          addLog(`>>> Giá đạt SL: ${currentPrice.toFixed(2)}. Đóng lệnh SHORT ${symbol} ngay!`);
+          clearInterval(checkInterval);
+          await closeShortPosition(symbol);
+        } else if (checkCount >= maxCheck) {
+          addLog(`>>> Hết thời gian 3 phút. Đóng lệnh SHORT ${symbol}`);
+          clearInterval(checkInterval);
+          await closeShortPosition(symbol);
+        }
+      } catch (error) {
+        addLog('Lỗi trong check giá: ' + error.message);
+      }
+    }, 1000);
+
+  } catch (error) {
+    addLog('Lỗi mở lệnh short: ' + error.message);
+  }
+}
+
+async function closeShortPosition(symbol) {
   try {
     const positions = await binance.futuresPositionRisk();
     const position = positions.find(p => p.symbol === symbol);
 
-    if (parseFloat(position.positionAmt) !== 0) {
+    if (position && parseFloat(position.positionAmt) !== 0) {
       const closePrice = await getCurrentPrice(symbol);
       const qtyToClose = Math.abs(parseFloat(position.positionAmt));
       await binance.futuresMarketBuy(symbol, qtyToClose);
 
-      // Tính PnL = (entryPrice - closePrice) * qty (vì short lệnh)
+      const entryPrice = parseFloat(position.entryPrice);
       const pnl = (entryPrice - closePrice) * qtyToClose;
 
-      // Tính TP/SL theo % đòn bẩy nhân vốn
-      const capital = balance * 0.8; // vốn dùng mở lệnh ban đầu
-      const leverage = maxLeverage;
-
-      // TP/SL mục tiêu = leverage (%) của vốn
-      const tpSlValue = (leverage / 100) * capital;
-
-      let direction = 'Không lời lãi';
-      if (pnl >= tpSlValue) direction = 'TP (Take Profit)';
-      else if (pnl <= -tpSlValue) direction = 'SL (Stop Loss)';
-
-      addLog(`>>> Đóng lệnh sau 3 phút:`);
-      addLog(`- ${symbol} | Khối lượng: ${qtyToClose.toFixed(3)} | Đòn bẩy: ${leverage}`);
-      addLog(`- Giá vào: ${entryPrice} | Giá ra: ${closePrice}`);
-      addLog(`- Kết quả: ${direction}, Lợi nhuận: ${pnl.toFixed(2)} USDT`);
+      addLog(`>>> Đã đóng lệnh SHORT ${symbol} tại giá ${closePrice.toFixed(2)}`);
+      addLog(`>>> Lợi nhuận: ${pnl.toFixed(2)} USDT`);
+    } else {
+      addLog('>>> Không có vị thế SHORT để đóng.');
     }
   } catch (error) {
-    addLog(`Lỗi khi đóng lệnh tự động: ${error.message}`);
+    addLog('Lỗi khi đóng lệnh: ' + error.message);
   }
-}, 3 * 60 * 1000);  // đóng lệnh sau 3 phút
-
+}
 
 
 app.get('/start', (req, res) => {
