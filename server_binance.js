@@ -4,6 +4,10 @@ const Binance = require('node-binance-api');
 const app = express();
 const port = 3000;
 
+
+app.get('/', (req, res) => {
+  res.send('Funding bot is running!');
+});
 const binance = new Binance().options({
   APIKEY: 'ynfUQ5PxqWQJdwPsAVREudagiF1WEN3HAENgLZIwWC3VrsNnT74wlRwY29hGXZky',
   APISECRET: 'pYTcusasHde67ajzvaOmgmSReqbZ7f0j2uwfR3VaeHai1emhuWRcacmlBCnrRglH'
@@ -118,4 +122,8 @@ app.get('/stop', (req, res) => {
   } else {
     res.send('Bot is not running');
   }
+});
+
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
 });
