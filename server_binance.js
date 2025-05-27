@@ -64,6 +64,7 @@ cron.schedule('*/1 * * * *', async () => {
   
   try {
     const fundingRates = await binance.futuresFundingRate();
+    addLog(`>>> Đã lấy ${fundingRates.length} coin từ API Binance`);
     const negativeRates = fundingRates
       .filter(rate => parseFloat(rate.fundingRate) < -0.0001)
       .sort((a, b) => parseFloat(a.fundingRate) - parseFloat(b.fundingRate));
@@ -138,30 +139,42 @@ async function placeShortOrder(symbol) {
 
     const entryPrice = parseFloat(order.avgFillPrice || price);
 
+    // Tự động đóng lệnh sau 3 phút
     setTimeout(async () => {
-      const positions = await binance.futuresPositionRisk();
-      const position = positions.find(p => p.symbol === symbol);
+      try {
+        const positions = await binance.futuresPositionRisk();
+        const position = positions.find(p => p.symbol === symbol);
+        const positionAmt = parseFloat(position.positionAmt);
 
-      if (parseFloat(position.positionAmt) !== 0) {
-        const closePrice = await getCurrentPrice(symbol);
-        const qtyToClose = Math.abs(parseFloat(position.positionAmt));
-        await binance.futuresMarketBuy(symbol, qtyToClose);
+        if (positionAmt !== 0) {
+          const closePrice = await getCurrentPrice(symbol);
+          const qtyToClose = Math.abs(positionAmt);
 
-        const pnl = ((entryPrice - closePrice) * qtyToClose).toFixed(2);
-        const direction = closePrice < entryPrice ? 'TP' : closePrice > entryPrice ? 'SL' : 'Không lời lãi';
+          if (positionAmt < 0) {
+            await binance.futuresMarketBuy(symbol, qtyToClose.toFixed(3));
+          } else {
+            await binance.futuresMarketSell(symbol, qtyToClose.toFixed(3));
+          }
 
-        addLog(`>>> Không khớp TP/SL, lệnh đã đóng sau 3 phút:`);
-        addLog(`- ${symbol} | Khối lượng: ${qtyToClose} | Đòn bẩy: ${maxLeverage}`);
-        addLog(`- Giá vào: ${entryPrice} | Giá ra: ${closePrice}`);
-        addLog(`- Kết quả: ${direction}, Lợi nhuận: ${pnl} USDT`);
+          const pnl = ((entryPrice - closePrice) * qtyToClose * (positionAmt < 0 ? 1 : -1)).toFixed(2);
+          const direction = pnl > 0 ? 'TP' : pnl < 0 ? 'SL' : 'Hòa vốn';
+
+          addLog(`>>> Không khớp TP/SL, lệnh đã đóng sau 3 phút:`);
+          addLog(`- ${symbol} | Khối lượng: ${qtyToClose} | Đòn bẩy: ${maxLeverage}`);
+          addLog(`- Giá vào: ${entryPrice} | Giá ra: ${closePrice}`);
+          addLog(`- Kết quả: ${direction}, Lợi nhuận: ${pnl} USDT`);
+        } else {
+          addLog(`>>> Sau 3 phút kiểm tra: Không còn vị thế ${symbol} để đóng.`);
+        }
+      } catch (error) {
+        addLog(`Lỗi khi tự đóng lệnh sau 3 phút: ${error.message}`);
       }
-    });
+    }, 180000); // 3 phút
 
   } catch (error) {
     addLog(`Lỗi khi mở lệnh ${symbol}: ${error.message}`);
   }
 }
-
 
 
 app.get('/start', (req, res) => {
