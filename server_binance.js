@@ -93,13 +93,16 @@ cron.schedule('*/1 * * * *', async () => {
     addLog('Lỗi khi kiểm tra funding: ' + error.message);
   }
 });
-
 async function getMaxLeverage(symbol) {
   try {
-    const exchangeInfo = await binance.futuresExchangeInfo();
-    const symbolInfo = exchangeInfo.symbols.find(s => s.symbol === symbol);
-    const leverageFilter = symbolInfo.filters.find(f => f.filterType === 'LEVERAGE');
-    return leverageFilter.maxLeverage;
+    const leverageInfo = await binance.futuresLeverageBracket(symbol);
+    // leverageInfo là mảng, mỗi phần tử có maxLeverage
+    // Lấy maxLeverage lớn nhất trong mảng (thường là phần tử đầu)
+    if (leverageInfo && leverageInfo.length > 0) {
+      return leverageInfo[0].brackets[0].initialLeverage; 
+      // hoặc maxLeverage là leverageInfo[0].brackets[0].initialLeverage hoặc leverageInfo[0].maxLeverage (tùy cấu trúc)
+    }
+    return null;
   } catch (error) {
     addLog('Error fetching max leverage: ' + error.message);
     return null;
@@ -225,7 +228,13 @@ app.get('/stop', (req, res) => {
     res.send('Bot is not running');
   }
 });
-
+app.get('/status', (req, res) => {
+  res.json({
+    running: botRunning,
+    currentSymbol: selectedSymbol,
+    logCount: logs.length
+  });
+});
 // Route xem log
 app.get('/logs', (req, res) => {
   res.json(logs); // Gửi log đúng định dạng JSON để HTML đọc được
