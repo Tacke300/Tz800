@@ -126,21 +126,28 @@
     }
 
     async function pollStatus() {
-      try {
-        const res = await fetch(`/api/bot-status?user_id=${user_id}`);
-        const data = await res.json();
-        if (data.runningBot) {
-          statusElem.textContent = `Bot đang chạy: ${data.runningBot}`;
-        } else {
-          statusElem.textContent = 'Không có bot nào đang chạy';
-        }
-      } catch (err) {
-        log(`Lỗi khi lấy trạng thái bot: ${err.message}`, true);
-      }
-    }
+  try {
+    const res = await fetch(`/api/bot-status?user_id=${user_id}`);
+    const contentType = res.headers.get('content-type');
 
-    setInterval(pollStatus, 5000);
-    pollStatus();
+    if (contentType && contentType.includes('application/json')) {
+      const data = await res.json();
+      if (data.runningBot) {
+        statusElem.textContent = `Bot đang chạy: ${data.runningBot}`;
+      } else {
+        statusElem.textContent = 'Không có bot nào đang chạy';
+      }
+    } else {
+      const text = await res.text();
+      console.error('Lỗi khi lấy trạng thái bot: không phải JSON:', text);
+      statusElem.textContent = 'Lỗi server: phản hồi không hợp lệ';
+    }
+  } catch (err) {
+    console.error('Lỗi khi lấy trạng thái bot:', err);
+    statusElem.textContent = 'Lỗi khi kết nối tới server';
+  }
+}
+    
   </script>
 </body>
 </html>
