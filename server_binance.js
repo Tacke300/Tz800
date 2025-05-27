@@ -25,9 +25,7 @@ app.get('/balance', async (req, res) => {
 
 app.use(express.static('public'));
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
+
 
 //dieu 3 lay funding 
 // server.js (tiếp tục)
