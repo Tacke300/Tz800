@@ -3,8 +3,8 @@ const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 
 // Supabase config - thay bằng của bạn
-const SUPABASE_URL = "https://your-supabase-url.supabase.co";
-const SUPABASE_KEY = "your-supabase-anon-key";
+const SUPABASE_URL = "https://tramnanrzruzvkehpydl.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0";
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Binance API endpoints
