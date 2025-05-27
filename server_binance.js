@@ -96,4 +96,32 @@ app.post('/api/run-bot', async (req, res) => {
     // 7. Lấy leverage hiện tại của symbol (mặc định 20 nếu ko lấy được)
     const posRisk = await binance.futuresPositionRisk();
     let leverage = 20;
-    const pos = posRisk.find(p => p.symbol ===
+    const pos = posRisk.find(p => p.symbol === symbol);
+    if (pos && pos.leverage) {
+      leverage = parseInt(pos.leverage);
+    }
+
+    // 8. Gửi lệnh LONG với thông tin từ params
+    const { amount, tp, sl } = params; // params từ frontend
+
+    // Mở lệnh market LONG
+    await binance.futuresLeverage(symbol, leverage);
+    await binance.futuresMarketBuy(symbol, amount);
+
+    // Cài TP/SL (giả sử lấy giá entry để tính)
+    const positions = await binance.futuresPositionRisk();
+    const position = positions.find(p => p.symbol === symbol);
+    const entryPrice = parseFloat(position.entryPrice);
+    const takeProfit = entryPrice * (1 + tp / 100);
+    const stopLoss = entryPrice * (1 - sl / 100);
+
+    await binance.futuresSell(symbol, amount, takeProfit, { reduceOnly: true });
+    await binance.futuresSell(symbol, amount, stopLoss, { reduceOnly: true, stopPrice: stopLoss });
+
+    return res.json({ message: `Đã mở lệnh LONG ${symbol} với đòn bẩy ${leverage}x` });
+  } catch (err) {
+    console.error(err);
+    delete runningBots[user_id];
+    return res.status(500).json({ error: 'Lỗi khi chạy bot: ' + err.message });
+  }
+});
