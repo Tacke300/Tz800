@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Bot Logs</title>
+  <title>Bot Funding Design By TunggBeoo</title>
   <style>
-    body { font-family: monospace; background:#222; color:#eee; }
-    #log { height: 1000px; overflow-y: scroll; background:#000; padding:10px; font-size: 10px;}
-    button { margin: 5px; font-size: 25px color: white; background: #1e1e2f; }
+    body { font-family: monospace; background:#222; color:#eee;display: flex; justify-content: center;  align-items: center;  height: 100vh;  }
+    #log { height: 70vh; overflow-y: scroll; background:#000; padding:10px; font-size: 10px;}
+    button { margin: 5px; font-size: 100px color: red; background: #222; height: 10vh; }
+    .top {color: red, height: 20vh;   } 
   </style>
 </head>
 <body>
-  <h2>Bot Logs </h2>
+  <h2 id="top">Bot Funding Design By TunggBeoo </h2>
   <div id="log"></div>
   <button onclick="startBot()">Start Bot</button>
   <button onclick="stopBot()">Stop Bot</button>
