@@ -141,40 +141,39 @@ async function placeShortOrder(symbol) {
 
     // Tự động đóng lệnh sau 3 phút
     setTimeout(async () => {
-      try {
-        const positions = await binance.futuresPositionRisk();
-        const position = positions.find(p => p.symbol === symbol);
-        const positionAmt = parseFloat(position.positionAmt);
+  try {
+    const positions = await binance.futuresPositionRisk();
+    const position = positions.find(p => p.symbol === symbol);
 
-        if (positionAmt !== 0) {
-          const closePrice = await getCurrentPrice(symbol);
-          const qtyToClose = Math.abs(positionAmt);
+    if (parseFloat(position.positionAmt) !== 0) {
+      const closePrice = await getCurrentPrice(symbol);
+      const qtyToClose = Math.abs(parseFloat(position.positionAmt));
+      await binance.futuresMarketBuy(symbol, qtyToClose);
 
-          if (positionAmt < 0) {
-            await binance.futuresMarketBuy(symbol, qtyToClose.toFixed(3));
-          } else {
-            await binance.futuresMarketSell(symbol, qtyToClose.toFixed(3));
-          }
+      // Tính PnL = (entryPrice - closePrice) * qty (vì short lệnh)
+      const pnl = (entryPrice - closePrice) * qtyToClose;
 
-          const pnl = ((entryPrice - closePrice) * qtyToClose * (positionAmt < 0 ? 1 : -1)).toFixed(2);
-          const direction = pnl > 0 ? 'TP' : pnl < 0 ? 'SL' : 'Hòa vốn';
+      // Tính TP/SL theo % đòn bẩy nhân vốn
+      const capital = balance * 0.8; // vốn dùng mở lệnh ban đầu
+      const leverage = maxLeverage;
 
-          addLog(`>>> Không khớp TP/SL, lệnh đã đóng sau 3 phút:`);
-          addLog(`- ${symbol} | Khối lượng: ${qtyToClose} | Đòn bẩy: ${maxLeverage}`);
-          addLog(`- Giá vào: ${entryPrice} | Giá ra: ${closePrice}`);
-          addLog(`- Kết quả: ${direction}, Lợi nhuận: ${pnl} USDT`);
-        } else {
-          addLog(`>>> Sau 3 phút kiểm tra: Không còn vị thế ${symbol} để đóng.`);
-        }
-      } catch (error) {
-        addLog(`Lỗi khi tự đóng lệnh sau 3 phút: ${error.message}`);
-      }
-    }, 180000); // 3 phút
+      // TP/SL mục tiêu = leverage (%) của vốn
+      const tpSlValue = (leverage / 100) * capital;
 
+      let direction = 'Không lời lãi';
+      if (pnl >= tpSlValue) direction = 'TP (Take Profit)';
+      else if (pnl <= -tpSlValue) direction = 'SL (Stop Loss)';
+
+      addLog(`>>> Đóng lệnh sau 3 phút:`);
+      addLog(`- ${symbol} | Khối lượng: ${qtyToClose.toFixed(3)} | Đòn bẩy: ${leverage}`);
+      addLog(`- Giá vào: ${entryPrice} | Giá ra: ${closePrice}`);
+      addLog(`- Kết quả: ${direction}, Lợi nhuận: ${pnl.toFixed(2)} USDT`);
+    }
   } catch (error) {
-    addLog(`Lỗi khi mở lệnh ${symbol}: ${error.message}`);
+    addLog(`Lỗi khi đóng lệnh tự động: ${error.message}`);
   }
-}
+}, 3 * 60 * 1000);  // đóng lệnh sau 3 phút
+
 
 
 app.get('/start', (req, res) => {
