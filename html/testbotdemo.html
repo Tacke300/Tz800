@@ -1,32 +1,117 @@
-<style>
-  button {
-    font-size: 20px;
-    padding: 15px 30px;
-    border: none;
-    border-radius: 30px;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
-  }
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bot Funding Design By TunggBeoo</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #000;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
 
-  button:hover {
-    transform: scale(1.05);
-  }
+    h2 {
+      color: red;
+      margin-bottom: 10px;
+    }
 
-  .start-btn {
-    background-color: #4CAF50;
-    color: white;
-  }
+    #log {
+      width: 90%;
+      height: 60vh;
+      overflow-y: scroll;
+      background: #111;
+      border: 1px solid #444;
+      padding: 10px;
+      font-size: 12px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #222;
+      margin-bottom: 20px;
+    }
 
-  .start-btn:hover {
-    background-color: #45a049;
-  }
+    .button-container {
+      display: flex;
+      gap: 20px;
+    }
 
-  .stop-btn {
-    background-color: #ff4d4d;
-    color: white;
-  }
+    button {
+      font-size: 20px;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
 
-  .stop-btn:hover {
-    background-color: #ff1a1a;
-  }
-</style>
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    .start-btn {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .start-btn:hover {
+      background-color: #45a049;
+    }
+
+    .stop-btn {
+      background-color: #ff4d4d;
+      color: white;
+    }
+
+    .stop-btn:hover {
+      background-color: #ff1a1a;
+    }
+  </style>
+</head>
+<body>
+  <h2>Bot Funding Design By TunggBeoo</h2>
+
+  <div id="log">Đang tải log...</div>
+
+  <div class="button-container">
+    <button class="start-btn" onclick="startBot()">Start Bot</button>
+    <button class="stop-btn" onclick="stopBot()">Stop Bot</button>
+  </div>
+
+  <script>
+    const logDiv = document.getElementById('log');
+
+    async function fetchLogs() {
+      try {
+        const res = await fetch('/logs');
+        const logs = await res.json();
+        logDiv.innerHTML = logs.map(l => l.replace(/</g,'&lt;')).join('<br>');
+        logDiv.scrollTop = logDiv.scrollHeight;
+      } catch (e) {
+        logDiv.innerHTML = 'Không thể tải log...';
+        console.error('Failed to fetch logs', e);
+      }
+    }
+
+    function startBot() {
+      fetch('/start')
+        .then(res => res.text())
+        .then(msg => alert(msg))
+        .catch(err => alert("Lỗi khi start bot: " + err));
+    }
+
+    function stopBot() {
+      fetch('/stop')
+        .then(res => res.text())
+        .then(msg => alert(msg))
+        .catch(err => alert("Lỗi khi stop bot: " + err));
+    }
+
+    // Tự động cập nhật log mỗi 3 giây
+    setInterval(fetchLogs, 3000);
+    fetchLogs();
+  </script>
+</body>
+</html>
