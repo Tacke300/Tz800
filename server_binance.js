@@ -37,7 +37,7 @@ let selectedSymbol = null;
 
 cron.schedule('57 * * * *', async () => {
   try {
-    const fundingRates = await binance.futuresFundingRate();
+    const fundingRates = await binance.futuresFundingRate(false, 1000);
     const negativeRates = fundingRates
       .filter(rate => parseFloat(rate.fundingRate) < -0.005)
       .sort((a, b) => parseFloat(a.fundingRate) - parseFloat(b.fundingRate));
