@@ -9,8 +9,8 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const supabaseUrl = 'https://your-supabase-url.supabase.co';
-const supabaseKey = 'your-supabase-service-role-key'; // dùng service key để update dữ liệu
+const supabaseUrl = 'https://tramnanrzruzvkehpydl.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0'; // dùng service key để update dữ liệu
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Global biến trạng thái bot
