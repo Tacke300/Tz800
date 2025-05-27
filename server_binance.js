@@ -40,7 +40,7 @@ app.use(express.static(__dirname)); // Cho phép truy cập toàn bộ thư mụ
 
 
 const cron = require('node-cron');
-
+addLog('>>> [Cron] Bắt đầu chạy rồi nè!');
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 let selectedSymbol = null;
