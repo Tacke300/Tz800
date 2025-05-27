@@ -143,7 +143,7 @@ async function placeShortOrder(symbol) {
         addLog(`- Giá vào: ${entryPrice} | Giá ra: ${closePrice}`);
         addLog(`- Kết quả: ${direction}, Lợi nhuận: ${pnl} USDT`);
       }
-    }, 180000);
+    });
 
   } catch (error) {
     addLog(`Lỗi khi mở lệnh ${symbol}: ${error.message}`);
