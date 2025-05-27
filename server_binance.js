@@ -59,7 +59,7 @@ cron.schedule('57 * * * *', async () => {
 
   const fundingTime = best.fundingTime;
   const now = Date.now();
-  const waitTime = fundingTime - now;
+  const waitTime = fundingTime + 500 - now;
 
   addLog(`>>> Chọn được coin: ${selectedSymbol} với funding rate ${best.fundingRate}`);
   if (waitTime > 0) {
