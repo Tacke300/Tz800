@@ -93,21 +93,32 @@
       }
     }
 
-    async function runBot(bot_type) {
-      log(`Gửi yêu cầu chạy ${bot_type}`);
-      try {
-        const res = await fetch('/api/run-bot', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id, bot_type })
-        });
-        const data = await res.json();
-        log(`Phản hồi ${bot_type}: ${JSON.stringify(data)}`);
-        alert(data.message || JSON.stringify(data));
-      } catch (err) {
-        log(`Lỗi khi chạy ${bot_type}: ${err.message}`, true);
-      }
-    }
+    async function runBot() {
+  if (!user_id) {
+    alert('Bạn chưa đăng nhập');
+    return;
+  }
+  const bot_type = botTypeSelect.value;
+  let params = {};
+  if (bot_type === 'bot_set') {
+    params = {
+      leverage: document.getElementById('inputLeverage').value,
+      tpPercent: document.getElementById('inputTP').value,
+      slPercent: document.getElementById('inputSL').value,
+      investAmount: document.getElementById('inputInvest').value,
+    };
+  }
+  console.log('Gửi yêu cầu chạy bot với params:', { user_id, bot_type, params });
+  const res = await fetch('/api/run-bot', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id, bot_type, params }),
+  });
+  const data = await res.json();
+  console.log('Phản hồi từ server:', data);
+  alert(data.message || data.error);
+  getBotStatus();
+}
 
     async function stopBot() {
       log("Gửi yêu cầu dừng bot");
