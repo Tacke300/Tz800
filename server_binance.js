@@ -55,40 +55,41 @@ let botRunning = false; // Cờ điều khiển bot
 
 // Cron chạy mỗi phút nhưng chỉ thực thi khi botRunning = true
 cron.schedule('*/1 * * * *', async () => {
-  if (!botRunning) return; // Không chạy nếu bot đã dừng
+  if (!botRunning) {
+    addLog('[Cron] Bot đang tắt, không kiểm tra funding.');
+    return;
+  }
+
   addLog(`>>> [Cron] Đã tới giờ hoàng đạo kiếm tiền uống bia, đang kiểm tra funding...`);
   
   try {
     const fundingRates = await binance.futuresFundingRate(false, 1000);
     const negativeRates = fundingRates
-      .filter(rate => parseFloat(rate.fundingRate) < -0.0001) //sua 0.0055555555555555
+      .filter(rate => parseFloat(rate.fundingRate) < -0.0001)
       .sort((a, b) => parseFloat(a.fundingRate) - parseFloat(b.fundingRate));
     
     if (negativeRates.length > 0) {
-  const best = negativeRates[0];
-  selectedSymbol = best.symbol;
+      const best = negativeRates[0];
+      selectedSymbol = best.symbol;
 
-  const fundingTime = best.fundingTime;
-  const now = Date.now();
-  const waitTime = fundingTime + 500 - now;
+      const fundingTime = best.fundingTime;
+      const now = Date.now();
+      const waitTime = fundingTime + 500 - now;
 
-  addLog(`>>> Chọn được coin: ${selectedSymbol} với funding rate ${best.fundingRate}`);
-  if (waitTime > 0) {
-    addLog(`>>> Sẽ mở lệnh sau ${(waitTime / 1000).toFixed(1)} giây nữa`);
-    await delay(waitTime);
-  }
+      addLog(`>>> Chọn được coin: ${selectedSymbol} với funding rate ${best.fundingRate}`);
+      if (waitTime > 0) {
+        addLog(`>>> Sẽ mở lệnh sau ${(waitTime / 1000).toFixed(1)} giây nữa`);
+        await delay(waitTime);
+      }
 
-  await delay(500); // Đợi thêm sau funding
-
-  await placeShortOrder(selectedSymbol);
-
-} else {
-  addLog('>>> Không có coin sắp tới mở lệnh đâu. Đi uống bia chú em ơi!');
-  selectedSymbol = null;
-}
-    
+      await delay(500);
+      await placeShortOrder(selectedSymbol);
+    } else {
+      addLog('>>> Không có coin sắp tới mở lệnh đâu. Đi uống bia chú em ơi!');
+      selectedSymbol = null;
+    }
   } catch (error) {
-    console.error('Error fetching funding rates:', error);
+    addLog('Lỗi khi kiểm tra funding: ' + error.message);
   }
 });
 
