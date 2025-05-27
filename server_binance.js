@@ -46,6 +46,7 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 let selectedSymbol = null;
 
 cron.schedule('57 * * * *', async () => {
+  addLog(`>>> [Cron] Đã tới giờ hoàng đạo kiếm tiền uống bia, đang kiểm tra funding...`);
   try {
     const fundingRates = await binance.futuresFundingRate(false, 1000);
     const negativeRates = fundingRates
