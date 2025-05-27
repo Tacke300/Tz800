@@ -1,54 +1,152 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Control Bot</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Funding Carry Bot</title>
 </head>
 <body>
-  <h3>Chọn loại bot:</h3>
-  <button onclick="startBot('mini')">Chạy bot Mini</button>
-  <button onclick="startBot('big')">Chạy bot Big</button>
-  <button onclick="startBot('set')">Chạy bot Set</button>
-  <button onclick="stopBot()">Dừng Bot</button>
+<h2>Funding Carry Bot Control</h2>
 
-  <h3>Bot Set Input:</h3>
-  <input type="number" id="amount" placeholder="Số $ vào lệnh" min="1" max="10000" />
-  <input type="number" id="lev" placeholder="Đòn bẩy" min="1" max="125" />
-  <input type="number" id="tp" placeholder="TP theo % vốn" min="1" max="100" />
-  <input type="number" id="sl" placeholder="SL theo % vốn" min="1" max="100" />
+<p id="runningBot"></p>
 
-  <p id="status"></p>
+<label for="botSelect">Chọn Bot:</label>
+<select id="botSelect">
+  <option value="">--Chọn bot--</option>
+  <option value="bot_mini">Bot Mini</option>
+  <option value="bot_big">Bot Big</option>
+  <option value="bot_set">Bot Set</option>
+</select>
 
-  <script>
-    async function startBot(type) {
-      const user_id = localStorage.getItem('loggedInUser');
-      if (!user_id) return alert('Không có user');
+<div id="botSetInputs" style="display:none;">
+  <label>Đòn bẩy (1-100): <input type="number" id="levInput" min="1" max="100" value="20"/></label><br/>
+  <label>Take Profit % vốn: <input type="number" id="tpInput" min="1" max="100" value="15"/></label><br/>
+  <label>Stop Loss % vốn: <input type="number" id="slInput" min="1" max="100" value="15"/></label><br/>
+  <label>Số $ đầu tư: <input type="number" id="amountInput" min="1" value="100"/></label><br/>
+</div>
 
-      const params = new URLSearchParams({ user_id });
+<button id="startBtn">Bắt đầu Bot</button>
+<button id="stopBtn">Dừng Bot</button>
 
-      if (type === 'set') {
-        const amount = document.getElementById('amount').value;
-        const lev = document.getElementById('lev').value;
-        const tp = document.getElementById('tp').value;
-        const sl = document.getElementById('sl').value;
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Supabase config
+  const supabaseUrl = 'https://your-project.supabase.co'
+  const supabaseKey = 'your-anon-or-service-role-key'
+  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        if (!amount || !lev || !tp || !sl) return alert('Điền đủ thông tin bot set');
-        params.append('amount', amount);
-        params.append('lev', lev);
-        params.append('tp', tp);
-        params.append('sl', sl);
+  const user_id = localStorage.getItem('loggedInUser');
+  let runningBot = null; // lưu bot đang chạy
+
+  const runningBotP = document.getElementById('runningBot');
+  const botSelect = document.getElementById('botSelect');
+  const botSetInputs = document.getElementById('botSetInputs');
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+
+  botSelect.addEventListener('change', () => {
+    if (botSelect.value === 'bot_set') {
+      botSetInputs.style.display = 'block';
+    } else {
+      botSetInputs.style.display = 'none';
+    }
+  });
+
+  async function checkUser() {
+    // Lấy apikey, secret, usdt_binance từ supabase
+    const { data, error } = await supabase
+      .from('users')
+      .select('apikey_binance,secret_binance,usdt_binance,pnl_today')
+      .eq('user_id', user_id)
+      .single();
+
+    if (error || !data) {
+      alert('Không tìm thấy user hoặc lỗi kết nối Supabase');
+      return null;
+    }
+    return data;
+  }
+
+  async function startBot() {
+    if (!user_id) {
+      alert('Bạn chưa đăng nhập!');
+      return;
+    }
+    if (runningBot) {
+      alert('Chỉ được chạy 1 bot. Dừng bot hiện tại trước.');
+      return;
+    }
+    const userData = await checkUser();
+    if (!userData) return;
+
+    const botType = botSelect.value;
+    if (!botType) {
+      alert('Vui lòng chọn bot.');
+      return;
+    }
+
+    // Các input cho bot_set
+    let lev, tp, sl, amount;
+    if (botType === 'bot_set') {
+      lev = parseInt(document.getElementById('levInput').value);
+      tp = parseInt(document.getElementById('tpInput').value);
+      sl = parseInt(document.getElementById('slInput').value);
+      amount = parseFloat(document.getElementById('amountInput').value);
+      if (lev < 1 || lev > 100 || tp < 1 || tp > 100 || sl < 1 || sl > 100 || amount <= 0) {
+        alert('Vui lòng nhập giá trị hợp lệ trong bot set.');
+        return;
       }
-
-      const res = await fetch(`http://34.145.69.100:3000/start/${type}?${params.toString()}`);
-      const msg = await res.text();
-      document.getElementById('status').innerText = msg;
     }
 
-    async function stopBot() {
-      const res = await fetch('http://34.145.69.100:3000/stop');
-      const msg = await res.text();
-      document.getElementById('status').innerText = msg;
+    // Gửi yêu cầu backend khởi chạy bot qua API hoặc websocket (giả định)
+    fetch('/api/start_bot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id,
+        botType,
+        lev,
+        tp,
+        sl,
+        amount
+      })
+    })
+    .then(res => res.json())
+    .then(res => {
+      if (res.success) {
+        runningBot = botType;
+        runningBotP.textContent = `Bot đang chạy: ${runningBot}`;
+      } else {
+        alert('Lỗi khởi chạy bot: ' + res.message);
+      }
+    });
+  }
+
+  async function stopBot() {
+    if (!runningBot) {
+      alert('Chưa có bot nào đang chạy.');
+      return;
     }
-  </script>
+    fetch('/api/stop_bot', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({user_id})
+    })
+    .then(res => res.json())
+    .then(res => {
+      if (res.success) {
+        runningBot = null;
+        runningBotP.textContent = '';
+      } else {
+        alert('Lỗi dừng bot: ' + res.message);
+      }
+    });
+  }
+
+  startBtn.onclick = startBot;
+  stopBtn.onclick = stopBot;
+
+  // Có thể thêm đoạn lấy trạng thái bot khi load trang để cập nhật giao diện
+</script>
 </body>
 </html>
