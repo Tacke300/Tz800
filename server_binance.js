@@ -50,7 +50,7 @@ cron.schedule('*/1 * * * *', async () => {
   try {
     const fundingRates = await binance.futuresFundingRate(false, 1000);
     const negativeRates = fundingRates
-      .filter(rate => parseFloat(rate.fundingRate) < -0.005)
+      .filter(rate => parseFloat(rate.fundingRate) < -0.0001)
       .sort((a, b) => parseFloat(a.fundingRate) - parseFloat(b.fundingRate));
     
     if (negativeRates.length > 0) {
@@ -75,7 +75,7 @@ cron.schedule('*/1 * * * *', async () => {
   addLog('>>> Không có coin sắp tới mở lệnh đâu. Đi uống bia chú em ơi!');
   selectedSymbol = null;
 }
-    }
+    
   } catch (error) {
     console.error('Error fetching funding rates:', error);
   }
