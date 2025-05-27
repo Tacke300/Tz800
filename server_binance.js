@@ -53,28 +53,27 @@ cron.schedule('57 * * * *', async () => {
       .sort((a, b) => parseFloat(a.fundingRate) - parseFloat(b.fundingRate));
     
     if (negativeRates.length > 0) {
-      const best = negativeRates[0];
-      selectedSymbol = best.symbol;
-      console.log(`Selected symbol for trading: ${selectedSymbol}`);
+  const best = negativeRates[0];
+  selectedSymbol = best.symbol;
 
-      const fundingTime = best.fundingTime; // timestamp in ms
-      const now = Date.now();
+  const fundingTime = best.fundingTime;
+  const now = Date.now();
+  const waitTime = fundingTime - now;
 
-      const waitTime = fundingTime - now;
-      if (waitTime > 0) {
-        console.log(`Waiting ${waitTime} ms until funding time`);
-        await delay(waitTime);
-      }
+  addLog(`>>> Chọn được coin: ${selectedSymbol} với funding rate ${best.fundingRate}`);
+  if (waitTime > 0) {
+    addLog(`>>> Sẽ mở lệnh sau ${(waitTime / 1000).toFixed(1)} giây nữa`);
+    await delay(waitTime);
+  }
 
-      // Đợi thêm 0.5 giây để chắc chắn funding được trả
-      await delay(500);
+  await delay(500); // Đợi thêm sau funding
 
-      // Mở lệnh short tại đây
-      await placeShortOrder(selectedSymbol);
+  await placeShortOrder(selectedSymbol);
 
-    } else {
-      console.log('No suitable symbol found. Bot will sleep until next check.');
-      selectedSymbol = null;
+} else {
+  addLog('>>> Không có coin sắp tới mở lệnh đâu. Đi uống bia chú em ơi!');
+  selectedSymbol = null;
+}
     }
   } catch (error) {
     console.error('Error fetching funding rates:', error);
@@ -103,22 +102,50 @@ async function placeShortOrder(symbol) {
     const account = await binance.futuresAccount();
     const usdtAsset = account.assets.find(asset => asset.asset === 'USDT');
     const balance = parseFloat(usdtAsset.availableBalance);
+
+    if (balance < 0.15) {
+      addLog(`>>> Êi bơm lúa đi. Không đủ $ mở lệnh kìa ${symbol}. Còn có: ${balance} USDT`);
+      return;
+    }
+
     const maxLeverage = await getMaxLeverage(symbol);
-    const quantity = ((balance * 0.8) * maxLeverage) / await getCurrentPrice(symbol);
     await binance.futuresLeverage(symbol, maxLeverage);
+
+    const price = await getCurrentPrice(symbol);
+    const orderValue = balance * 0.8;
+    const quantity = (orderValue * maxLeverage) / price;
+
     const order = await binance.futuresMarketSell(symbol, quantity.toFixed(3));
-    addLog(`Short order placed for ${symbol} with quantity ${quantity.toFixed(3)}`);
+
+    addLog(`>>> Đã mở lệnh SHORT ${symbol}`);
+    addLog(`- Khối lượng: ${quantity.toFixed(3)}`);
+    addLog(`- Đòn bẩy: ${maxLeverage}`);
+    addLog(`- Giá vào: ${price}`);
+    addLog(`- Giá trị lệnh: ${(quantity * price).toFixed(2)} USDT`);
+
+    const entryPrice = parseFloat(order.avgFillPrice || price);
 
     setTimeout(async () => {
       const positions = await binance.futuresPositionRisk();
       const position = positions.find(p => p.symbol === symbol);
+
       if (parseFloat(position.positionAmt) !== 0) {
-        await binance.futuresMarketBuy(symbol, Math.abs(parseFloat(position.positionAmt)));
-        addLog(`Position closed for ${symbol} after 3 minutes`);
+        const closePrice = await getCurrentPrice(symbol);
+        const qtyToClose = Math.abs(parseFloat(position.positionAmt));
+        await binance.futuresMarketBuy(symbol, qtyToClose);
+
+        const pnl = ((entryPrice - closePrice) * qtyToClose).toFixed(2);
+        const direction = closePrice < entryPrice ? 'TP' : closePrice > entryPrice ? 'SL' : 'Không lời lãi';
+
+        addLog(`>>> Không khớp TP/SL, lệnh đã đóng sau 3 phút:`);
+        addLog(`- ${symbol} | Khối lượng: ${qtyToClose} | Đòn bẩy: ${maxLeverage}`);
+        addLog(`- Giá vào: ${entryPrice} | Giá ra: ${closePrice}`);
+        addLog(`- Kết quả: ${direction}, Lợi nhuận: ${pnl} USDT`);
       }
-    }, 180000); // 3 phút
+    }, 180000);
+
   } catch (error) {
-    addLog('Error placing short order: ' + error.message);
+    addLog(`Lỗi khi mở lệnh ${symbol}: ${error.message}`);
   }
 }
 
