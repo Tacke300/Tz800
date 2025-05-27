@@ -1,103 +1,126 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Funding Bot Control</title>
+  <title>Funding Carry Bot</title>
+  <style>
+    #log {
+      white-space: pre-line;
+      background: #111;
+      color: #0f0;
+      padding: 10px;
+      font-family: monospace;
+      max-height: 400px;
+      overflow-y: scroll;
+    }
+  </style>
 </head>
 <body>
-  <h2>Funding Bot Control Panel</h2>
+  <h2>Funding Carry Bot</h2>
+  <div id="log"></div>  <script>
+    const SUPABASE_URL = 'https://your-project.supabase.co';
+    const SUPABASE_KEY = 'your-supabase-api-key';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  <!-- Hiển thị trạng thái bot đang chạy -->
-  <p id="bot-status">Không có bot nào đang chạy</p>
-
-  <!-- Form chạy bot_set với inputs -->
-  <div id="bot-set-form" style="display:none;">
-    <h3>Chạy bot_set</h3>
-    <label>Đòn bẩy (1-100): <input type="number" id="lev" min="1" max="100" value="20"/></label><br/>
-    <label>Take Profit % vốn: <input type="number" id="tp" min="1" max="100" value="15"/></label><br/>
-    <label>Stop Loss % vốn: <input type="number" id="sl" min="1" max="100" value="10"/></label><br/>
-    <label>Số tiền USDT vào lệnh: <input type="number" id="investAmount" min="1" value="10"/></label><br/>
-    <button onclick="runBotSet()">Chạy bot_set</button>
-  </div>
-
-  <button onclick="runBot('bot_mini')">Chạy bot_mini</button>
-  <button onclick="runBot('bot_big')">Chạy bot_big</button>
-  <button onclick="showBotSetForm()">Chạy bot_set</button>
-  <button onclick="stopBot()">Dừng bot</button>
-
-  <script>
-    // Lấy user_id từ localStorage
-    const user_id = localStorage.getItem('loggedInUser') || prompt('Nhập user_id của bạn');
-    localStorage.setItem('loggedInUser', user_id);
-
-    const statusElem = document.getElementById('bot-status');
-    const botSetForm = document.getElementById('bot-set-form');
-
-    // Hiển thị form bot_set
-    function showBotSetForm() {
-      botSetForm.style.display = 'block';
+    function log(message) {
+      const logDiv = document.getElementById('log');
+      const timestamp = new Date().toLocaleTimeString();
+      logDiv.innerText += `[${timestamp}] ${message}\n`;
+      logDiv.scrollTop = logDiv.scrollHeight;
     }
 
-    // Gửi lệnh chạy bot_set với params từ input
-    async function runBotSet() {
-      const lev = Number(document.getElementById('lev').value);
-      const tp = Number(document.getElementById('tp').value);
-      const sl = Number(document.getElementById('sl').value);
-      const investAmount = Number(document.getElementById('investAmount').value);
-
-      if (lev < 1 || lev > 100) return alert('Đòn bẩy phải từ 1 tới 100');
-      if (tp < 1 || tp > 100) return alert('TP phải từ 1 tới 100');
-      if (sl < 1 || sl > 100) return alert('SL phải từ 1 tới 100');
-      if (investAmount < 1) return alert('Số tiền đầu tư phải >= 1');
-
-      const res = await fetch('/api/run-bot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id,
-          bot_type: 'bot_set',
-          params: { leverage: lev, tpPercent: tp, slPercent: sl, investAmount }
-        })
-      });
-      const data = await res.json();
-      alert(data.message || JSON.stringify(data));
+    function logError(error) {
+      const logDiv = document.getElementById('log');
+      const timestamp = new Date().toLocaleTimeString();
+      logDiv.innerText += `[${timestamp}] ERROR: ${error}\n`;
+      logDiv.scrollTop = logDiv.scrollHeight;
     }
 
-    // Chạy bot_mini hoặc bot_big
-    async function runBot(bot_type) {
-      const res = await fetch('/api/run-bot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id, bot_type })
-      });
-      const data = await res.json();
-      alert(data.message || JSON.stringify(data));
-    }
+    async function startBot() {
+      log("Đang lấy user_id từ localStorage...");
+      const userId = localStorage.getItem('loggedInUser');
+      if (!userId) {
+        logError("Không có user_id trong localStorage");
+        return;
+      }
+      log(`user_id: ${userId}`);
 
-    // Dừng bot
-    async function stopBot() {
-      const res = await fetch('/api/stop-bot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id })
-      });
-      const data = await res.json();
-      alert(data.message || JSON.stringify(data));
-    }
+      log("Đang kiểm tra user trên Supabase...");
+      let { data: user, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
 
-    // Poll trạng thái bot từ server mỗi 5s để cập nhật
-    async function pollStatus() {
-      const res = await fetch(`/api/bot-status?user_id=${user_id}`);
-      const data = await res.json();
-      if (data.runningBot) {
-        statusElem.textContent = `Bot đang chạy: ${data.runningBot}`;
-      } else {
-        statusElem.textContent = 'Không có bot nào đang chạy';
+      if (error || !user) {
+        logError("Không tìm thấy user hoặc lỗi Supabase: " + error?.message);
+        return;
+      }
+      log("User hợp lệ, đã lấy được API Key.");
+
+      const apiKey = user.apikey_binance;
+      const apiSecret = user.secret_binance;
+      const usdtBalance = user.usdt_binance;
+
+      log("Bắt đầu quét funding rate từ sàn...");
+      try {
+        const fundingData = await fetchFundingRates(apiKey, apiSecret);
+        log("Đã lấy funding rates.");
+
+        const filtered = filterTopNegativeFunding(fundingData);
+        if (filtered.length === 0) {
+          log("Không có coin nào đủ điều kiện âm < -0.005.");
+          return;
+        }
+
+        const bestCoin = pickNextFunding(filtered);
+        if (!bestCoin) {
+          log("Không có coin nào sắp tới trả funding.");
+          return;
+        }
+
+        log(`Chọn coin ${bestCoin.symbol} funding âm nhất sắp trả, chuẩn bị mở lệnh.`);
+
+        const lev = bestCoin.leverage;
+        const positionSize = calculatePositionSize(usdtBalance, lev);
+
+        log("Chuẩn bị mở lệnh SHORT...");
+        try {
+          const res = await openShortOrder(bestCoin.symbol, positionSize, lev, apiKey, apiSecret);
+          log("Lệnh SHORT đã gửi thành công.");
+        } catch (err) {
+          logError("Gửi lệnh thất bại: " + err.message);
+        }
+
+      } catch (err) {
+        logError("Lỗi khi lấy dữ liệu funding: " + err.message);
       }
     }
-    setInterval(pollStatus, 5000);
-    pollStatus();
 
-  </script>
-</body>
+    function fetchFundingRates(apiKey, apiSecret) {
+      // Dummy để ví dụ, bạn thay bằng logic gọi Binance API
+      log("Giả lập fetch funding...");
+      return Promise.resolve([
+        { symbol: "BTCUSDT", fundingRate: -0.006, leverage: 50, nextFunding: Date.now() + 2 * 60 * 1000 },
+        { symbol: "ETHUSDT", fundingRate: -0.004, leverage: 20, nextFunding: Date.now() + 5 * 60 * 1000 }
+      ]);
+    }
+
+    function filterTopNegativeFunding(data) {
+      return data.filter(c => c.fundingRate < -0.005);
+    }
+
+    function pickNextFunding(coins) {
+      return coins.sort((a, b) => a.nextFunding - b.nextFunding)[0];
+    }
+
+    function calculatePositionSize(balance, lev) {
+      return balance * 0.3; // giả lập bot_mini 30%
+    }
+
+    function openShortOrder(symbol, size, lev, apiKey, apiSecret) {
+      log(`Gửi lệnh short ${symbol} size ${size} lev ${lev}`);
+      return Promise.resolve({ status: "ok" });
+    }
+
+    startBot();
+  </script>  <!-- Thêm Supabase script -->  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script></body>
 </html>
