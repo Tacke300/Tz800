@@ -40,11 +40,17 @@ app.use(express.static(__dirname)); // Cho phép truy cập toàn bộ thư mụ
 
 
 const cron = require('node-cron');
+addLog('>>> [Cron] Bắt đầu chạy rồi nè!');
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 let selectedSymbol = null;
-
+// cuoi file 555555
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+  addLog(`Server started on port ${port}`);
+});
+// kkkkkkkkk
 cron.schedule('*/1 * * * *', async () => { //sua no 555555555555555
   addLog(`>>> [Cron] Đã tới giờ hoàng đạo kiếm tiền uống bia, đang kiểm tra funding...`);
   try {
@@ -177,7 +183,4 @@ app.get('/logs', (req, res) => {
   res.json(logs); // Gửi log đúng định dạng JSON để HTML đọc được
 });
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-  addLog(`Server started on port ${port}`);
-});
+
