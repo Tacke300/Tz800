@@ -26,10 +26,9 @@
 </table>
 
 <script>
-// ==== Supabase config ====
-const SUPABASE_URL = 'https://tramnanrzruzvkehpydl.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYW1uYW5yenJ1enZrZWhweWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3NTM1NTMsImV4cCI6MjA2MTMyOTU1M30.L0Ytkxi80AbYjkjpDfGyQtfyfqjfHLF98OrVce9Hi-0';
-const NOTE = 'binance_main';
+// === Gán API KEY và SECRET trực tiếp ===
+const APIKEY = 'ynfUQ5PxqWQJdwPsAVREudagiF1WEN3HAENgLZIwWC3VrsNnT74wlRwY29hGXZky';
+const APISECRET = 'pYTcusasHde67ajzvaOmgmSReqbZ7f0j2uwfR3VaeHai1emhuWRcacmlBCnrRglH';
 
 // ==== HMAC SHA256 function using SubtleCrypto (async) ====
 async function hmacSHA256(key, message) {
@@ -39,23 +38,7 @@ async function hmacSHA256(key, message) {
     'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
   );
   const signature = await crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(message));
-  // Convert ArrayBuffer to hex
   return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-// ==== Fetch API keys from Supabase ====
-async function getApiKeys(note) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/binance_api_keys?note=eq.${note}`, {
-    headers: {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    }
-  });
-  const data = await res.json();
-  if (!data.length) throw new Error('API keys not found in Supabase for note=' + note);
-  return { apiKey: data[0].api_key, apiSecret: data[0].api_secret };
 }
 
 // ==== Binance signed request ====
@@ -116,12 +99,11 @@ function renderLeverageTable(levMap) {
 
 async function main() {
   try {
-    const { apiKey, apiSecret } = await getApiKeys(NOTE);
-    const balance = await getUsdtBalance(apiKey, apiSecret);
+    const balance = await getUsdtBalance(APIKEY, APISECRET);
     document.getElementById('balance').textContent = 
       `Total Wallet Balance: ${balance.walletBalance} USDT | Available: ${balance.availableBalance} USDT`;
 
-    const levMap = await getMaxLeverage(apiKey, apiSecret);
+    const levMap = await getMaxLeverage(APIKEY, APISECRET);
     renderLeverageTable(levMap);
   } catch (e) {
     document.getElementById('balance').textContent = 'Error: ' + e.message;
