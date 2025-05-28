@@ -3,14 +3,12 @@ const Binance = require('node-binance-api');
 const app = express();
 const port = 3000;
 
-let logs = []; // Mảng lưu log
-
+let logs = [];
 function addLog(message) {
   const time = new Date().toLocaleString();
   const logEntry = `[${time}] ${message}`;
   console.log(logEntry);
   logs.push(logEntry);
-  // Giữ log tối đa 100 dòng
   if (logs.length > 100) logs.shift();
 }
 
@@ -25,35 +23,30 @@ const binance = new Binance().options({
 
 app.get('/balance', async (req, res) => {
   try {
+    addLog('>>> /balance được gọi');
     const account = await binance.futuresAccount();
     const usdtAsset = account.assets.find(asset => asset.asset === 'USDT');
     res.json({ balance: usdtAsset.availableBalance });
   } catch (error) {
-    addLog('Error in /balance: ' + error.message);
+    addLog('Lỗi trong /balance: ' + error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-app.use(express.static(__dirname)); // Cho phép truy cập toàn bộ thư mục gốc
-
-// Cron job lấy funding
-
+app.use(express.static(__dirname));
 
 const cron = require('node-cron');
 addLog('>>> [Cron] Bắt đầu chạy rồi nè!');
-
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-
 let selectedSymbol = null;
-// cuoi file 555555
+
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
   addLog(`Server started on port ${port}`);
 });
-// kkkkkkkkk
-let botRunning = false; // Cờ điều khiển bot
 
-// Cron chạy mỗi phút nhưng chỉ thực thi khi botRunning = true
+let botRunning = false;
+
 cron.schedule('*/1 * * * *', async () => {
   if (!botRunning) {
     addLog('[Cron] Bot đang tắt, không kiểm tra funding.');
@@ -61,18 +54,17 @@ cron.schedule('*/1 * * * *', async () => {
   }
 
   addLog(`>>> [Cron] Đã tới giờ hoàng đạo kiếm tiền uống bia, đang kiểm tra funding...`);
-  //await check_and_execute_funding_strategy();
   try {
     const fundingRates = await binance.futuresFundingRate();
     addLog(`>>> Đã lấy ${fundingRates.length} coin từ API Binance`);
+
     const negativeRates = fundingRates
       .filter(rate => parseFloat(rate.fundingRate) < -0.0001)
       .sort((a, b) => parseFloat(a.fundingRate) - parseFloat(b.fundingRate));
-    
+
     if (negativeRates.length > 0) {
       const best = negativeRates[0];
       selectedSymbol = best.symbol;
-
       const fundingTime = best.fundingTime;
       const now = Date.now();
       const waitTime = fundingTime + 500 - now;
@@ -83,6 +75,7 @@ cron.schedule('*/1 * * * *', async () => {
         await delay(waitTime);
       }
 
+      addLog(`>>> Delay 500ms sau funding để chắc chắn nhận funding`);
       await delay(500);
       await placeShortOrder(selectedSymbol);
     } else {
@@ -93,35 +86,39 @@ cron.schedule('*/1 * * * *', async () => {
     addLog('Lỗi khi kiểm tra funding: ' + error.message);
   }
 });
+
 async function getMaxLeverage(symbol) {
   try {
+    addLog(`>>> Đang lấy max leverage của ${symbol}`);
     const leverageInfo = await binance.futuresLeverageBracket(symbol);
-    // leverageInfo là mảng, mỗi phần tử có maxLeverage
-    // Lấy maxLeverage lớn nhất trong mảng (thường là phần tử đầu)
     if (leverageInfo && leverageInfo.length > 0) {
-      return leverageInfo[0].brackets[0].initialLeverage; 
-      // hoặc maxLeverage là leverageInfo[0].brackets[0].initialLeverage hoặc leverageInfo[0].maxLeverage (tùy cấu trúc)
+      const leverage = leverageInfo[0].brackets[0].initialLeverage;
+      addLog(`>>> Max leverage của ${symbol} là ${leverage}`);
+      return leverage;
     }
     return null;
   } catch (error) {
-    addLog('Error fetching max leverage: ' + error.message);
+    addLog('Lỗi lấy leverage: ' + error.message);
     return null;
   }
 }
 
 async function getCurrentPrice(symbol) {
   const prices = await binance.futuresPrices();
-  return parseFloat(prices[symbol]);
+  const price = parseFloat(prices[symbol]);
+  addLog(`>>> Giá hiện tại của ${symbol} là ${price}`);
+  return price;
 }
 
 async function placeShortOrder(symbol) {
   try {
+    addLog(`>>> Bắt đầu mở lệnh SHORT cho ${symbol}`);
     const account = await binance.futuresAccount();
     const usdtAsset = account.assets.find(asset => asset.asset === 'USDT');
     const balance = parseFloat(usdtAsset.availableBalance);
 
     if (balance < 0.15) {
-      addLog(`>>> Êi bơm lúa đi. Không đủ $ mở lệnh kìa ${symbol}. Còn có: ${balance} USDT`);
+      addLog(`>>> Không đủ balance để mở lệnh. Balance hiện tại: ${balance}`);
       return;
     }
 
@@ -132,7 +129,6 @@ async function placeShortOrder(symbol) {
     const capital = balance * 0.8;
     const quantity = (capital * maxLeverage) / price;
 
-    // Mở lệnh SHORT bằng market
     const order = await binance.futuresMarketSell(symbol, quantity.toFixed(3));
     addLog(`>>> Đã mở lệnh SHORT ${symbol}`);
     addLog(`- Khối lượng: ${quantity.toFixed(3)}`);
@@ -141,21 +137,14 @@ async function placeShortOrder(symbol) {
     addLog(`- Giá trị lệnh: ${(quantity * price).toFixed(2)} USDT`);
 
     const entryPrice = parseFloat(order.avgFillPrice || price);
-
-    // Tính giá TP và SL (giá trị TP/SL theo leverage trên vốn)
-    const tpSlValue = (maxLeverage / 100) * capital; // ví dụ 50% là leverage/100, bạn chỉnh lại nếu cần
-
-    // TP/SL là giá, vì short nên:
-    // PnL = (entryPrice - currentPrice) * qty
-    // TP khi giá <= entryPrice - tpSlValue/qty
-    // SL khi giá >= entryPrice + tpSlValue/qty
+    const tpSlValue = (maxLeverage / 100) * capital;
     const tpPrice = entryPrice - tpSlValue / quantity;
     const slPrice = entryPrice + tpSlValue / quantity;
 
     addLog(`>>> Giá TP: ${tpPrice.toFixed(2)}, Giá SL: ${slPrice.toFixed(2)}`);
 
     let checkCount = 0;
-    const maxCheck = 180; // 3 phút = 180 giây
+    const maxCheck = 180;
 
     const checkInterval = setInterval(async () => {
       try {
@@ -163,23 +152,22 @@ async function placeShortOrder(symbol) {
         const currentPrice = await getCurrentPrice(symbol);
 
         if (currentPrice <= tpPrice) {
-          addLog(`>>> Giá đạt TP: ${currentPrice.toFixed(2)}. Đóng lệnh SHORT ${symbol} ngay!`);
+          addLog(`>>> Giá đạt TP: ${currentPrice.toFixed(2)}. Đóng lệnh ngay.`);
           clearInterval(checkInterval);
           await closeShortPosition(symbol);
         } else if (currentPrice >= slPrice) {
-          addLog(`>>> Giá đạt SL: ${currentPrice.toFixed(2)}. Đóng lệnh SHORT ${symbol} ngay!`);
+          addLog(`>>> Giá đạt SL: ${currentPrice.toFixed(2)}. Đóng lệnh ngay.`);
           clearInterval(checkInterval);
           await closeShortPosition(symbol);
         } else if (checkCount >= maxCheck) {
-          addLog(`>>> Hết thời gian 3 phút. Đóng lệnh SHORT ${symbol}`);
+          addLog(`>>> Quá 3 phút chưa đạt TP/SL. Đóng lệnh.`);
           clearInterval(checkInterval);
           await closeShortPosition(symbol);
         }
       } catch (error) {
-        addLog('Lỗi trong check giá: ' + error.message);
+        addLog('Lỗi khi check TP/SL: ' + error.message);
       }
     }, 1000);
-
   } catch (error) {
     addLog('Lỗi mở lệnh short: ' + error.message);
   }
@@ -187,6 +175,7 @@ async function placeShortOrder(symbol) {
 
 async function closeShortPosition(symbol) {
   try {
+    addLog(`>>> Đang đóng lệnh SHORT cho ${symbol}`);
     const positions = await binance.futuresPositionRisk();
     const position = positions.find(p => p.symbol === symbol);
 
@@ -208,11 +197,10 @@ async function closeShortPosition(symbol) {
   }
 }
 
-
 app.get('/start', (req, res) => {
   if (!botRunning) {
     botRunning = true;
-    addLog('Bot bắt đầu múa');
+    addLog('>>> Bot bắt đầu múa');
     res.send('Bot started');
   } else {
     res.send('Bot is already running');
@@ -222,55 +210,31 @@ app.get('/start', (req, res) => {
 app.get('/stop', (req, res) => {
   if (botRunning) {
     botRunning = false;
-    addLog('Bot đã đắp mộ cuộc tình');
+    addLog('>>> Bot đã đắp mộ cuộc tình');
     res.send('Bot stopped');
   } else {
     res.send('Bot is not running');
   }
 });
+
 app.get('/status', (req, res) => {
-  res.json({
-    running: botRunning,
-    currentSymbol: selectedSymbol,
-    logCount: logs.length
-  });
+  addLog('>>> Gọi API /status');
+  res.json({ running: botRunning, currentSymbol: selectedSymbol, logCount: logs.length });
 });
-// Route xem log
+
 app.get('/logs', (req, res) => {
   const htmlLogs = logs.map(log => `<div class="log-entry">${log}</div>`).join('');
-  res.send(`
-    <html>
-      <head>
-        <title>Funding Bot Logs</title>
-        <style>
-          body {
-            font-family: 'Courier New', monospace;
-            background-color: #f9f9f9;
-            padding: 30px;
-            color: #111;
-          }
-          h2 {
-            color: #111;
-            border-bottom: 2px solid #ccc;
-            padding-bottom: 5px;
-            margin-bottom: 20px;
-          }
-          .log-entry {
-            background: #fff;
-            padding: 10px 15px;
-            margin: 10px 0;
-            border-left: 4px solid #999;
-            border-radius: 4px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            white-space: pre-wrap;
-            color: #222;
-          }
-        </style>
-      </head>
-      <body>
-        <h2>📜 Funding Bot Logs</h2>
-        ${htmlLogs}
-      </body>
-    </html>
-  `);
+  res.send(`<html>
+<head><title>Funding Bot Logs</title>
+<style>
+body { font-family: 'Courier New', monospace; background-color: #f9f9f9; padding: 30px; color: #111; }
+h2 { color: #111; border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-bottom: 20px; }
+.log-entry { background: #fff; padding: 10px 15px; margin: 10px 0; border-left: 4px solid #999; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); white-space: pre-wrap; color: #222; }
+</style>
+</head>
+<body>
+<h2>📜 Funding Bot Logs</h2>
+${htmlLogs}
+</body>
+</html>`);
 });
