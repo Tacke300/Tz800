@@ -237,7 +237,14 @@ app.get('/status', (req, res) => {
 });
 // Route xem log
 app.get('/logs', (req, res) => {
-  res.json(logs); // Gửi log đúng định dạng JSON để HTML đọc được
+  const htmlLogs = logs.map(log => `<div style="margin:4px 0">${log}</div><hr style="margin:2px 0">`).join('');
+  res.send(`
+    <html>
+      <head><title>Bot Logs</title></head>
+      <body style="font-family: monospace; padding: 20px;">
+        <h2>Funding Bot Logs</h2>
+        ${htmlLogs}
+      </body>
+    </html>
+  `);
 });
-
-
