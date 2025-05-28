@@ -62,7 +62,7 @@ cron.schedule('*/1 * * * *', async () => {
 
   addLog(`>>> [Cron] Đã tới giờ hoàng đạo kiếm tiền uống bia, đang kiểm tra funding...`);
   try {
-    const fundingRates = await binance.futuresFundingRate();
+    const fundingRates = await binance.futuresFundingRate(limit);
     addLog(`>>> Đã lấy ${fundingRates.length} coin từ API Binance`);
 
     const negativeRates = fundingRates
