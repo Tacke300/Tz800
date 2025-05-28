@@ -237,12 +237,38 @@ app.get('/status', (req, res) => {
 });
 // Route xem log
 app.get('/logs', (req, res) => {
-  const htmlLogs = logs.map(log => `<div style="margin:4px 0">${log}</div><hr style="margin:2px 0">`).join('');
+  const htmlLogs = logs.map(log => `<div class="log-entry">${log}</div>`).join('');
   res.send(`
     <html>
-      <head><title>Bot Logs</title></head>
-      <body style="font-family: monospace; padding: 20px;">
-        <h2>Funding Bot Logs</h2>
+      <head>
+        <title>Funding Bot Logs</title>
+        <style>
+          body {
+            font-family: 'Courier New', monospace;
+            background-color: #f9f9f9;
+            padding: 30px;
+            color: #111;
+          }
+          h2 {
+            color: #111;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+          }
+          .log-entry {
+            background: #fff;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-left: 4px solid #999;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            white-space: pre-wrap;
+            color: #222;
+          }
+        </style>
+      </head>
+      <body>
+        <h2>📜 Funding Bot Logs</h2>
         ${htmlLogs}
       </body>
     </html>
