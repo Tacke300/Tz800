@@ -32,7 +32,7 @@ app.get('/balance', async (req, res) => {
   } catch (error) {
     addLog('Lỗi trong /balance: ' + error.message);
     res.status(500).json({ error: error.message });
-  }
+  
 });
 
 app.use(express.static(__dirname));
