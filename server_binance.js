@@ -21,6 +21,17 @@ const binance = new Binance().options({
   APISECRET: 'pYTcusasHde67ajzvaOmgmSReqbZ7f0j2uwfR3VaeHai1emhuWRcacmlBCnrRglH'
 });
 
+binance.futuresFundingRate((error, response) => {
+  if (error) {
+    console.error("Error fetching funding rates:", error);
+    return;
+  }
+  response.forEach(item => {
+    console.log(item.symbol, item.fundingRate);
+    // xử lý item là object, có trường symbol, fundingRate...
+  });
+});
+
 app.get('/balance', async (req, res) => {
   try {
     addLog('>>> /balance được gọi');
