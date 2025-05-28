@@ -21,11 +21,7 @@ const binance = new Binance().options({
   APISECRET: 'pYTcusasHde67ajzvaOmgmSReqbZ7f0j2uwfR3VaeHai1emhuWRcacmlBCnrRglH'
 });
 
-binance.futuresFundingRate((error, response) => {
-  if (error) {
-    console.error("Error fetching funding rates:", error);
-    return;
-  }
+
   response.forEach(item => {
     console.log(item.symbol, item.fundingRate);
     // xử lý item là object, có trường symbol, fundingRate...
@@ -248,4 +244,19 @@ h2 { color: #111; border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-bot
 ${htmlLogs}
 </body>
 </html>`);
+});
+
+
+app.get('/funding', async (req, res) => {
+  try {
+    const fundingRates = await binance.futuresFundingRate();
+    const simplified = fundingRates.map(item => ({
+      symbol: item.symbol,
+      fundingRate: item.fundingRate,
+      time: new Date(item.fundingTime).toLocaleString()
+    }));
+    res.json(simplified);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
